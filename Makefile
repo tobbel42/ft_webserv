@@ -5,14 +5,16 @@ CC = c++
 CFLAGS = -Wall -Wextra -std=c++98 # -Werror 
 RM = rm -rf
 
-INC = 
+INC = MoteurDix.hpp
 IDIR = inc
 INC_FULL = $(addprefix $(IDIR)/, $(INC))
 
 TPP = 
 TPP_FULL = $(addprefix $(IDIR)/, $(TPP))
 
-SRC = main.cpp Server.cpp
+SRC = main.cpp\
+	Server.cpp\
+	MoteurDix.cpp
 SDIR = src
 SRC_FULL = $(addprefix $(SDIR)/, $(SRC))
 
@@ -22,13 +24,13 @@ OBJ = $(patsubst $(SDIR)/%.cpp, $(ODIR)/%.o, $(SRC_FULL))
 
 
 $(NAME): $(ODIR) $(OBJ) $(INC_FULL) $(TPP_FULL)
-	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME) -I $(IDIR)
 
 $(ODIR):
 	@mkdir -p $@
 
 $(ODIR)/%.o: $(SDIR)/%.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ -I $(IDIR)
 
 all: $(NAME)
 
@@ -43,7 +45,7 @@ re: fclean all
 bonus: CFLAGS += -DBONUS=1
 bonus: all
 
-debug: CFLAGS += -g
+debug: CFLAGS += -g -DVERBOSE=1
 debug: re
 
 release: CFLAGS += -Ofast
