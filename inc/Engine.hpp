@@ -7,8 +7,9 @@
 # include <sys/event.h>
 # include <Server.hpp>
 # include <utils.hpp>
+# include <stdio.h>
 
-# define ENGINE_MAX_PENDING_CONNECTIONS 10
+# define ENGINE_BACKLOG 10
 
 struct	s_kevent: public kevent
 {
@@ -40,8 +41,13 @@ class Engine
 		Engine( const Engine &copy );
 		Engine	&operator=( const Engine &rhs );
 
+		//ToDo: ErrorHandling
+
 		void		initServers( void );
+		void		closeServers( void );
+		void		listenServers( void );
 		void		launch( void );
+
 
 		void		debug( void );
 

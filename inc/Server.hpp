@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/13 10:22:56 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/24 15:19:46 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/03/24 16:28:16 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,10 +38,12 @@ public:
 private:
 	Server();
 
-	unsigned int m_ip;
-	unsigned int m_port;
-	sockaddr_in m_address;
-	int m_sockfd;
+	static bool		m_verbose;
+	unsigned int	m_ip;
+	unsigned int	m_port;
+	sockaddr_in 	m_address;
+	int 			m_sockfd;
+
 	void m_init();
 	
 };

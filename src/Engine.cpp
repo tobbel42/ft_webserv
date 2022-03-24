@@ -9,19 +9,20 @@
 Engine::Engine( void )
 {
 	if (m_verbose)
-		std::cout << "Engine: Constructor called" << std::endl;
+		std::cout << "Engine: Default Constructor called" << std::endl;
 }
 
 Engine::~Engine( void )
 {
 	if (m_verbose)
 		std::cout << "Engine: Destructor called" << std::endl;
+	this->closeServers();
 }
 
 Engine::Engine( const Engine &copy )
 {
 	if (m_verbose)
-		std::cout << "Engine: Copy constructor called" << std::endl;
+		std::cout << "Engine: Copy Constructor called" << std::endl;
 	*this = copy;
 }
 
@@ -72,15 +73,36 @@ void
 Engine::initServers( void )
 {
 	Server	newServ(INADDR_ANY, 8080);
-
-	std::cout << "init: " << newServ.getSockFd() << std::endl;
 	
-	m_servers.push_back(newServ);
-	
-	std::cout << "vec: " << m_servers.back().getSockFd() << std::endl;
-	
+	m_servers.push_back(newServ);	
 }
 
+void
+Engine::listenServers( void )
+{
+	int		errFlag;
+	for (ServIter iter = m_servers.begin(); iter != m_servers.end(); ++iter)
+	{
+		errFlag = listen((*iter).getSockFd(), ENGINE_BACKLOG);
+		if (errFlag)
+		{
+			std::cerr << "Listen error: " << strerror(errno) << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		setRead((*iter).getSockFd());
+	}
+}
+
+void
+Engine::closeServers( void )
+{
+	for (ServIter iter = m_servers.begin(); iter != m_servers.end(); ++iter)
+		close((*iter).getSockFd());
+}
+
+/*
+//Main loop of the server.
+*/
 void
 Engine::launch( void )
 {
@@ -88,26 +110,23 @@ Engine::launch( void )
 	m_kqueue = kqueue();
 
 	//start to listen to server, add the Sockets to the kqueue
-	for (ServIter iter = m_servers.begin(); iter != m_servers.end(); ++iter)
-	{
-		listen((*iter).getSockFd(), ENGINE_MAX_PENDING_CONNECTIONS);
-		setRead((*iter).getSockFd());
-	}
-
+	listenServers();
+	
 	int	n_events = 0;
-	timespec 	time;
-	time.tv_sec = 2;
-	time.tv_nsec = 0;
+
 	//the main server loop
 	while (true)
 	{
 		n_events = kevent(m_kqueue,
 			&(*m_changes.begin()), m_changes.size(),
 			&(*m_events.begin()), m_events.size(),
-			&time);
+			NULL);
 		std::cout << "\nEvents: " << n_events << std::endl;
 		this->debug();
+		break ;
 	}
+
+	//closing of sockets is happening in the Engine destructor
 }
 
 void
