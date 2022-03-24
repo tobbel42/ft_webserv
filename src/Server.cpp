@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/17 14:41:27 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/24 17:52:36 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/03/24 18:12:16 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,11 +109,15 @@ Server::operator==( t_fd fd )
 }
 
 void
-Server::acceptConnect( void )
+Server::acceptConnect( Engine & engine )
 {
-	t_fd		fd = accept(m_sockfd, reinterpret_cast<sockaddr*>(&m_address), &m_addLen );
+	t_fd		fd = accept(
+					m_sockfd,
+					reinterpret_cast<sockaddr*>(&m_address),
+					&m_addLen);
+
 	Connect		newConnect(fd);
 
 	m_connects.push_back(newConnect);
-	std::cout << m_connects.size();
+	engine.setRead(fd);
 }

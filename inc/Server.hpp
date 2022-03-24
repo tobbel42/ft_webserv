@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/13 10:22:56 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/24 17:50:11 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/03/24 18:14:08 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,9 @@
 #include <csignal>
 #include <utils.hpp>
 #include <Engine.hpp>
-
 #include <Connect.hpp>
+
+class Engine;
 
 class Server
 {
@@ -33,7 +34,7 @@ public:
 	Server& operator=(const Server& other);
 	
 	t_fd	getSockFd( void ) const;
-	void	acceptConnect( void );
+	void	acceptConnect( Engine & engine );
 
 	bool	operator==( t_fd fd );
 	

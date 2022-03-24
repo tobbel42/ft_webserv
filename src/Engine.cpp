@@ -68,7 +68,7 @@ operator<< ( std::ostream & out, s_kevent const & in )
 {
 	out << "\nident:\t" << in.ident;
 	out << "\nfilter:\t" << in.filter;
-	out << "\nflags:\t" << in.flags;
+	out << "\nflags:\t" << std::bitset<2>(in.flags);
 	out << "\nfflags:\t" << in.fflags;
 	out << "\ndata:\t" << in.data;
 	out << "\nudata:\t" << in.udata;
@@ -108,6 +108,28 @@ Engine::closeServers( void )
 		close((*iter).getSockFd());
 }
 
+
+void
+Engine::setRead( t_fd fd )
+{
+	s_kevent	event;
+
+	EV_SET(&event, fd, EVFILT_READ, EV_ADD, 0, 0, 0);
+	m_changes.push_back(event);
+	m_events.resize(m_changes.size());
+}
+
+void
+Engine::debug( void )
+{
+	std::cout << "\n\nEvents:" << std::endl;
+	for (KeventIter iter = m_events.begin(); iter != m_events.end(); ++iter)
+		std::cout << *iter << std::endl;
+	std::cout << "\n\nChanges:" << std::endl;
+	for (KeventIter iter = m_changes.begin(); iter != m_changes.end(); ++iter)
+		std::cout << *iter << std::endl;
+}
+
 /*
 //Main loop of the server.
 */
@@ -141,34 +163,22 @@ Engine::launch( void )
 		{
 			Server	*serv = findServ(m_events[i].ident);
 			if (serv == NULL)
+			{
+				//Connection
 				std::cout << "Connection Stuff" << std::endl;
+			}
 			else
-				serv->acceptConnect();
+			{
+				//ServerFD
+				if (!(m_events[i].flags & EV_EOF))
+					serv->acceptConnect(*this);
+				else
+					continue;
+			}
+				
 		}
 	}
 
 	//closing of sockets is happening in the Engine destructor
 }
-
-void
-Engine::setRead( t_fd fd )
-{
-	s_kevent	event;
-
-	EV_SET(&event, fd, EVFILT_READ, EV_ADD, 0, 0, 0);
-	m_changes.push_back(event);
-	m_events.resize(m_changes.size());
-}
-
-void
-Engine::debug( void )
-{
-	std::cout << "\n\nEvents:" << std::endl;
-	for (KeventIter iter = m_events.begin(); iter != m_events.end(); ++iter)
-		std::cout << *iter << std::endl;
-	std::cout << "\n\nChanges:" << std::endl;
-	for (KeventIter iter = m_changes.begin(); iter != m_changes.end(); ++iter)
-		std::cout << *iter << std::endl;
-}
-
 
