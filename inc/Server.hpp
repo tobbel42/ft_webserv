@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: skienzle <skienzle@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/13 10:22:56 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/18 10:33:31 by skienzle         ###   ########.fr       */
+/*   Updated: 2022/03/24 15:19:46 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include <csignal>
-
-
-
+#include <utils.hpp>
+#include <Engine.hpp>
 
 class Server
 {
@@ -31,16 +30,18 @@ public:
 	
 	Server& operator=(const Server& other);
 	
+	t_fd	getSockFd( void );
+
 	
 	
 	
 private:
 	Server();
-	void m_init();
 
 	unsigned int m_ip;
 	unsigned int m_port;
 	sockaddr_in m_address;
 	int m_sockfd;
+	void m_init();
 	
 };

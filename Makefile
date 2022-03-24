@@ -5,7 +5,9 @@ CC = c++
 CFLAGS = -Wall -Wextra -std=c++98 # -Werror 
 RM = rm -rf
 
-INC = MoteurDix.hpp
+INC = Engine.hpp\
+	Server.hpp\
+	utils.hpp
 IDIR = inc
 INC_FULL = $(addprefix $(IDIR)/, $(INC))
 
@@ -14,7 +16,7 @@ TPP_FULL = $(addprefix $(IDIR)/, $(TPP))
 
 SRC = main.cpp\
 	Server.cpp\
-	MoteurDix.cpp
+	Engine.cpp
 SDIR = src
 SRC_FULL = $(addprefix $(SDIR)/, $(SRC))
 
