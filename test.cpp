@@ -12,31 +12,11 @@
 
 #define PORT 8080
 
-
-//char	*ft_substr(char const *s, unsigned int start, size_t len)
-//{
-//	char	*s2;
-//	size_t	len_substr;
-
-//	if (!s)
-//		return (0);
-//	len_substr = strlen(&s[start]);
-//	if (len_substr > len)
-//		len_substr = len;
-//	s2 = malloc(sizeof(char) * len + 1);
-//	if (len == 0 || start >= strlen(s))
-//	{
-//		s2[0] = '\0';
-//		return (s2);
-//	}
-//	if (!s2)
-//		return (0);
-//	if (start > strlen(s))
-//		return (s2);
-//	ft_memcpy(s2, &s[start], len_substr);
-//	s2[len_substr] = '\0';
-//	return (s2);
-//}
+#include <sys/event.h>
+std::string generateHead(int size)
+{
+	return ("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length:" + std::to_string(size) + "\n\n");
+}
 
 int main(int argc, char const *argv[])
 {
@@ -72,63 +52,101 @@ int main(int argc, char const *argv[])
 		perror("In listen");
 		exit(EXIT_FAILURE);
 	}
+
+//	int kq;
+//struct kevent evSet;
+
+//	kq = kqueue();
+
+//	EV_SET(&evSet, server_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+//	if (kevent(kq, &evSet, 1, NULL, 0, NULL) == -1)
+//		perror("kevent");
+
+////struct kevent evSet;
+//    struct kevent evList[32];
+//    int nev, i;
+//    struct sockaddr_storage addr;
+//    socklen_t socklen = sizeof(addr);
+    //int fd;
 	while(1)
 	{
-		printf("\n+++++++ Waiting for new connection ++++++++\n\n");
-		if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
-		{
-			perror("In accept");
-			exit(EXIT_FAILURE);
-		}
 		
-		char buffer[30000] = {0};
-		valread = read( new_socket , buffer, 30000);
-		printf("%s\n",buffer );
-		int i = 0;
-		while(buffer[i] != '/')
-			i++;
-		int j = i;
-		while(buffer[j] != ' ')
-			j++;
-		printf("############FILENAME\n");
-		i++; // wegen /
-		std::cout << "i: " << i << "j: " << j << std::endl;
-	
-		std::string new_buffer = (std::string) buffer;
-		std::string filename = new_buffer.substr(i, j - i);
+		printf("\n+++++++ Waiting for new connection ++++++++\n\n");
+		//nev = kevent(kq, NULL, 0, evList, 32, NULL);
+        //if (nev < 1)
+        //    perror("kevent");
+		// for (i=0; i<nev; i++) {
+		//	 if (evList[i].flags & EV_EOF) {
+        //        printf("disconnect\n");
+        //        fd = evList[i].ident;
+        //        EV_SET(&evSet, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+        //        if (kevent(kq, &evSet, 1, NULL, 0, NULL) == -1)
+        //            perror("kevent");
+        //        //conn_delete(fd);
+        //    }
+		//	else if (evList[i].ident == server_fd)
+		//	{
+				if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
+				{
+					perror("In accept");
+					exit(EXIT_FAILURE);
+				}
+				
+				char buffer[30000] = {0};
+				valread = read( new_socket , buffer, 30000);
+				printf("%s\n",buffer );
+				printf("################################\n");
+				int i = 0;
+				while(buffer[i] != '/')
+					i++;
+				int j = i;
+				while(buffer[j] != ' ')
+					j++;
+				//printf("############FILENAME\n");
+				i++; // wegen /
+				//std::cout << "i: " << i << "j: " << j << std::endl;
+			
+				std::string new_buffer = buffer;
+				std::string filename = new_buffer.substr(i, j - i);
 
-		std::string return_req;
-		if (filename == "index.html")
-		{
+				std::string return_req;
+				if (filename == "index.html")
+				{
 
 
-			std::cout << filename << std::endl << std::endl;
-			std::ifstream file;
-			std::string line;
-			file.open(filename);
-			while (getline(file, line))
-			{
-				std::cout << line << "\n";
-			}
-			file.close();
-			//while (i < j)
-			//{
-			//	printf("%c", buffer[i]);
-			//	i++;
+					std::cout << filename << std::endl << std::endl;
+					std::ifstream file;
+					std::string line;
+					std::string all_lines;
+					file.open(filename);
+					while (getline(file, line))
+					{
+						std::cout << line << "\n";
+						all_lines = all_lines + line;
+					}
+					file.close();
+					//while (i < j)
+					//{
+					//	printf("%c", buffer[i]);
+					//	i++;
+					//}
+					//printf("\n\n");
+					//std::cout << "all lines: " +  all_lines << std::endl;
+					std::string return_req = generateHead(all_lines.length()) + all_lines;
+					
+					//std::cout << "return req: " << return_req << std::endl;
+				write(new_socket , return_req.c_str() , return_req.length());
+				}
+				else
+				{
+					return_req.assign(hello, strlen(hello));
+				//std::cout << "return req: " << hello << std::endl;
+				write(new_socket , hello , strlen(hello));
+				}
+				printf("------------------Hello message sent-------------------");
+				close(new_socket);
 			//}
-			//printf("\n\n");
-			std::string return_req = header + line;
-					std::cout << "return req: " << return_req << std::endl;
-		write(new_socket , return_req.c_str() , return_req.length());
-		}
-		else
-		{
-			return_req.assign(hello, strlen(hello));
-		std::cout << "return req: " << hello << std::endl;
-		write(new_socket , hello , strlen(hello));
-		}
-		printf("------------------Hello message sent-------------------");
-		close(new_socket);
+		 //}
 	}
 	return 0;
 }
