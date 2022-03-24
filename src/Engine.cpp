@@ -54,6 +54,15 @@ Engine::findByFd( t_fd fd, std::vector<s_kevent> vec )
 	return(&(*iter));
 }
 
+Server *
+Engine::findServ( t_fd fd )
+{
+	ServIter	iter = std::find(m_servers.begin(), m_servers.end(), fd);
+	if (iter == m_servers.end())
+		return (NULL);
+	return(&(*iter));
+}
+
 std::ostream &
 operator<< ( std::ostream & out, s_kevent const & in )
 {
@@ -73,8 +82,7 @@ void
 Engine::initServers( void )
 {
 	Server	newServ(INADDR_ANY, 8080);
-	
-	m_servers.push_back(newServ);	
+	m_servers.push_back(newServ);
 }
 
 void
@@ -121,9 +129,22 @@ Engine::launch( void )
 			&(*m_changes.begin()), m_changes.size(),
 			&(*m_events.begin()), m_events.size(),
 			NULL);
-		std::cout << "\nEvents: " << n_events << std::endl;
-		this->debug();
-		break ;
+		if (m_verbose)
+		{
+			std::cout << "\nEvents: " << n_events << std::endl;
+			this->debug();
+		}
+		if (n_events == -1)
+			break ;
+
+		for	(int i = 0; i < n_events; ++i)
+		{
+			Server	*serv = findServ(m_events[i].ident);
+			if (serv == NULL)
+				std::cout << "Connection Stuff" << std::endl;
+			else
+				serv->acceptConnect();
+		}
 	}
 
 	//closing of sockets is happening in the Engine destructor

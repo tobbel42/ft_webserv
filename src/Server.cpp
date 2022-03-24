@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/17 14:41:27 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/24 16:33:11 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/03/24 17:52:36 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,13 +21,23 @@
 /*
 //Careful son, ports 0-1024 are a big nono 
 */
-Server::Server(): m_ip(INADDR_ANY), m_port(80), m_address(), m_sockfd() {
+Server::Server():
+	m_ip(INADDR_ANY),
+	m_port(80),
+	m_address(),
+	m_sockfd(),
+	m_addLen(sizeof(m_address))//accept braucht den pointer 
+{
 	if (m_verbose)
 		std::cout << "Server: Default Constructor called" << std::endl;
 }
 
-Server::Server(unsigned int ip, unsigned int port): m_ip(ip), m_port(port),
-	m_address(), m_sockfd()
+Server::Server(unsigned int ip, unsigned int port):
+	m_ip(ip),
+	m_port(port),
+	m_address(),
+	m_sockfd(),
+	m_addLen(sizeof(m_address))
 {
 	if (m_verbose)
 		std::cout << "Server: Constructor called" << std::endl;
@@ -38,7 +48,8 @@ Server::Server(const Server& other):
 	m_ip(other.m_ip),
 	m_port(other.m_port),
 	m_address(),
-	m_sockfd()
+	m_sockfd(),
+	m_addLen(sizeof(m_address))
 {
 	if (m_verbose)
 		std::cout << "Server: Copy Constructor called" << std::endl;
@@ -50,6 +61,8 @@ Server::~Server()
 	if (m_verbose)
 		std::cout << "Server: Destructor called" << std::endl;
 	//server closing moved to Engine Destructor for convenience
+	for (CnctIter iter = m_connects.begin(); iter != m_connects.end(); ++iter)
+		close((*iter).getFd());
 }
 
 Server&
@@ -69,7 +82,6 @@ void
 Server::m_init()
 {
 	m_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	std::cout << m_sockfd << std::endl;
 	if (m_sockfd < 0)
 	{
 		// throw
@@ -85,8 +97,23 @@ Server::m_init()
 }
 
 t_fd
-Server::getSockFd( void )
+Server::getSockFd( void ) const
 {
-	std::cout << m_sockfd << std::endl;
 	return( m_sockfd );
+}
+
+bool
+Server::operator==( t_fd fd )
+{
+	return(m_sockfd == fd);
+}
+
+void
+Server::acceptConnect( void )
+{
+	t_fd		fd = accept(m_sockfd, reinterpret_cast<sockaddr*>(&m_address), &m_addLen );
+	Connect		newConnect(fd);
+
+	m_connects.push_back(newConnect);
+	std::cout << m_connects.size();
 }

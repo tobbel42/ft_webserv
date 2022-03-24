@@ -5,9 +5,10 @@
 # include <vector>
 # include <algorithm>
 # include <sys/event.h>
-# include <Server.hpp>
 # include <utils.hpp>
 # include <stdio.h>
+
+# include <Server.hpp>
 
 # define ENGINE_BACKLOG 10
 
@@ -32,8 +33,9 @@ class Engine
 		typedef	std::vector<Server>::iterator	ServIter;
 		typedef	std::vector<s_kevent>::iterator	KeventIter;
 
-		struct s_kevent
-		*findByFd( t_fd, std::vector<s_kevent> vec );
+		s_kevent	*findByFd( t_fd, std::vector<s_kevent> vec );
+		Server		*findServ( t_fd );
+
 
 	public:
 		Engine( void );
