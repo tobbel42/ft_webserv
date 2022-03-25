@@ -57,8 +57,8 @@ Engine::findByFd( t_fd fd, std::vector<s_kevent> vec )
 Socket *
 Engine::findSock( t_fd fd )
 {
-	SockIter	iter = std::find(m_Sockets.begin(), m_Sockets.end(), fd);
-	if (iter == m_Sockets.end())
+	SockIter	iter = std::find(m_sockets.begin(), m_sockets.end(), fd);
+	if (iter == m_sockets.end())
 		return (NULL);
 	return(&(*iter));
 }
@@ -82,14 +82,14 @@ void
 Engine::initSockets( void )
 {
 	Socket	newServ(INADDR_ANY, 8080);
-	m_Sockets.push_back(newServ);
+	m_sockets.push_back(newServ);
 }
 
 void
 Engine::listenSockets( void )
 {
 	int		errFlag;
-	for (SockIter iter = m_Sockets.begin(); iter != m_Sockets.end(); ++iter)
+	for (SockIter iter = m_sockets.begin(); iter != m_sockets.end(); ++iter)
 	{
 		errFlag = listen((*iter).getSockFd(), ENGINE_BACKLOG);
 		if (errFlag)
@@ -104,7 +104,7 @@ Engine::listenSockets( void )
 void
 Engine::closeSockets( void )
 {
-	for (SockIter iter = m_Sockets.begin(); iter != m_Sockets.end(); ++iter)
+	for (SockIter iter = m_sockets.begin(); iter != m_sockets.end(); ++iter)
 		close((*iter).getSockFd());
 }
 

@@ -27,7 +27,7 @@ class Engine
 		static bool						s_verbose;
 		std::vector<s_kevent>			m_changes;
 		std::vector<s_kevent>			m_events;
-		std::vector<Socket>				m_Sockets;
+		std::vector<Socket>				m_sockets;
 		int								m_kqueue;
 
 		typedef	std::vector<Socket>::iterator	SockIter;
