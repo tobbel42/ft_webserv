@@ -8,7 +8,7 @@
 # include <utils.hpp>
 # include <stdio.h>
 
-# include <Server.hpp>
+# include <Socket.hpp>
 
 # define ENGINE_BACKLOG 10
 
@@ -19,22 +19,22 @@ struct	s_kevent: public kevent
 
 std::ostream	&operator<< ( std::ofstream & out, s_kevent const & in );
 
-class Server;
+class Socket;
 
 class Engine
 {
 	private:
-		static bool						m_verbose;
+		static bool						s_verbose;
 		std::vector<s_kevent>			m_changes;
 		std::vector<s_kevent>			m_events;
-		std::vector<Server>				m_servers;
+		std::vector<Socket>				m_Sockets;
 		int								m_kqueue;
 
-		typedef	std::vector<Server>::iterator	ServIter;
+		typedef	std::vector<Socket>::iterator	SockIter;
 		typedef	std::vector<s_kevent>::iterator	KeventIter;
 
 		s_kevent	*findByFd( t_fd, std::vector<s_kevent> vec );
-		Server		*findServ( t_fd );
+		Socket		*findSock( t_fd );
 
 
 	public:
@@ -45,9 +45,9 @@ class Engine
 
 		//ToDo: ErrorHandling
 
-		void		initServers( void );
-		void		closeServers( void );
-		void		listenServers( void );
+		void		initSockets( void );
+		void		closeSockets( void );
+		void		listenSockets( void );
 		void		launch( void );
 
 

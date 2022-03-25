@@ -6,7 +6,7 @@
 class Connect
 {
 	private:
-		static bool	m_verbose;
+		static bool	s_verbose;
 		t_fd		m_fd;
 		Connect( void );
 		

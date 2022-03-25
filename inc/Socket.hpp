@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
+/*   Socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/13 10:22:56 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/24 18:14:08 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/03/25 11:57:16 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,14 +24,14 @@
 
 class Engine;
 
-class Server
+class Socket
 {
 public:
-	Server(const Server& other);
-	Server(unsigned int ip, unsigned int port);
-	~Server();
+	Socket(const Socket& other);
+	Socket(unsigned int ip, unsigned int port);
+	~Socket();
 	
-	Server& operator=(const Server& other);
+	Socket& operator=(const Socket& other);
 	
 	t_fd	getSockFd( void ) const;
 	void	acceptConnect( Engine & engine );
@@ -40,14 +40,14 @@ public:
 	
 	
 private:
-	Server();
+	Socket();
 
-	static bool				m_verbose;
+	static bool				s_verbose;
 	unsigned int			m_ip;
 	unsigned int			m_port;
 	sockaddr_in 			m_address;
-	socklen_t				m_addLen;
 	t_fd 					m_sockfd;
+	socklen_t				m_addLen;
 	std::vector<Connect>	m_connects;
 
 	typedef std::vector<Connect>::iterator	CnctIter;

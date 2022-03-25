@@ -1,27 +1,27 @@
 #include "../inc/Engine.hpp"
 
 #ifdef VERBOSE
-	bool Engine::m_verbose = true;
+	bool Engine::s_verbose = true;
 #else
-	bool Engine::m_verbose = false;
+	bool Engine::s_verbose = false;
 #endif
 
 Engine::Engine( void )
 {
-	if (m_verbose)
+	if (s_verbose)
 		std::cout << "Engine: Default Constructor called" << std::endl;
 }
 
 Engine::~Engine( void )
 {
-	if (m_verbose)
+	if (s_verbose)
 		std::cout << "Engine: Destructor called" << std::endl;
-	this->closeServers();
+	this->closeSockets();
 }
 
 Engine::Engine( const Engine &copy )
 {
-	if (m_verbose)
+	if (s_verbose)
 		std::cout << "Engine: Copy Constructor called" << std::endl;
 	*this = copy;
 }
@@ -29,7 +29,7 @@ Engine::Engine( const Engine &copy )
 Engine	
 &Engine::operator = ( const Engine &rhs )
 {
-	if (m_verbose)
+	if (s_verbose)
 		std::cout << "Engine: Assignation operator called" << std::endl;
 	(void)rhs;
 	return (*this);
@@ -54,11 +54,11 @@ Engine::findByFd( t_fd fd, std::vector<s_kevent> vec )
 	return(&(*iter));
 }
 
-Server *
-Engine::findServ( t_fd fd )
+Socket *
+Engine::findSock( t_fd fd )
 {
-	ServIter	iter = std::find(m_servers.begin(), m_servers.end(), fd);
-	if (iter == m_servers.end())
+	SockIter	iter = std::find(m_Sockets.begin(), m_Sockets.end(), fd);
+	if (iter == m_Sockets.end())
 		return (NULL);
 	return(&(*iter));
 }
@@ -68,7 +68,7 @@ operator<< ( std::ostream & out, s_kevent const & in )
 {
 	out << "\nident:\t" << in.ident;
 	out << "\nfilter:\t" << in.filter;
-	out << "\nflags:\t" << std::bitset<2>(in.flags);
+	out << "\nflags:\t" << std::bitset<16>(in.flags);
 	out << "\nfflags:\t" << in.fflags;
 	out << "\ndata:\t" << in.data;
 	out << "\nudata:\t" << in.udata;
@@ -79,17 +79,17 @@ operator<< ( std::ostream & out, s_kevent const & in )
 //in here all the socket binding magic should happen, for now just a dummy
 */
 void
-Engine::initServers( void )
+Engine::initSockets( void )
 {
-	Server	newServ(INADDR_ANY, 8080);
-	m_servers.push_back(newServ);
+	Socket	newServ(INADDR_ANY, 8080);
+	m_Sockets.push_back(newServ);
 }
 
 void
-Engine::listenServers( void )
+Engine::listenSockets( void )
 {
 	int		errFlag;
-	for (ServIter iter = m_servers.begin(); iter != m_servers.end(); ++iter)
+	for (SockIter iter = m_Sockets.begin(); iter != m_Sockets.end(); ++iter)
 	{
 		errFlag = listen((*iter).getSockFd(), ENGINE_BACKLOG);
 		if (errFlag)
@@ -102,9 +102,9 @@ Engine::listenServers( void )
 }
 
 void
-Engine::closeServers( void )
+Engine::closeSockets( void )
 {
-	for (ServIter iter = m_servers.begin(); iter != m_servers.end(); ++iter)
+	for (SockIter iter = m_Sockets.begin(); iter != m_Sockets.end(); ++iter)
 		close((*iter).getSockFd());
 }
 
@@ -131,7 +131,7 @@ Engine::debug( void )
 }
 
 /*
-//Main loop of the server.
+//Main loop of the Socket.
 */
 void
 Engine::launch( void )
@@ -139,19 +139,19 @@ Engine::launch( void )
 	//init kqueue
 	m_kqueue = kqueue();
 
-	//start to listen to server, add the Sockets to the kqueue
-	listenServers();
+	//start to listen to Socket, add the Sockets to the kqueue
+	listenSockets();
 	
 	int	n_events = 0;
 
-	//the main server loop
+	//the main Socket loop
 	while (true)
 	{
 		n_events = kevent(m_kqueue,
 			&(*m_changes.begin()), m_changes.size(),
 			&(*m_events.begin()), m_events.size(),
 			NULL);
-		if (m_verbose)
+		if (s_verbose)
 		{
 			std::cout << "\nEvents: " << n_events << std::endl;
 			this->debug();
@@ -161,7 +161,7 @@ Engine::launch( void )
 
 		for	(int i = 0; i < n_events; ++i)
 		{
-			Server	*serv = findServ(m_events[i].ident);
+			Socket	*serv = findSock(m_events[i].ident);
 			if (serv == NULL)
 			{
 				//Connection
@@ -169,7 +169,7 @@ Engine::launch( void )
 			}
 			else
 			{
-				//ServerFD
+				//SocketFD
 				if (!(m_events[i].flags & EV_EOF))
 					serv->acceptConnect(*this);
 				else

@@ -6,7 +6,7 @@ CFLAGS = -Wall -Wextra -std=c++98 # -Werror
 RM = rm -rf
 
 INC = Engine.hpp\
-	Server.hpp\
+	Socket.hpp\
 	utils.hpp\
 	Connect.hpp
 IDIR = inc
@@ -16,7 +16,7 @@ TPP =
 TPP_FULL = $(addprefix $(IDIR)/, $(TPP))
 
 SRC = main.cpp\
-	Server.cpp\
+	Socket.cpp\
 	Engine.cpp\
 	Connect.cpp
 SDIR = src

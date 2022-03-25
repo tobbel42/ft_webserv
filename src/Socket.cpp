@@ -1,75 +1,75 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Server.cpp                                         :+:      :+:    :+:   */
+/*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/17 14:41:27 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/24 18:12:16 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/03/25 11:56:59 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Server.hpp"
+#include "Socket.hpp"
 
 #ifdef VERBOSE
-	bool Server::m_verbose = true;
+	bool Socket::s_verbose = true;
 #else
-	bool Server::m_verbose = false;
+	bool Socket::s_verbose = false;
 #endif
 
 /*
 //Careful son, ports 0-1024 are a big nono 
 */
-Server::Server():
+Socket::Socket():
 	m_ip(INADDR_ANY),
 	m_port(80),
 	m_address(),
 	m_sockfd(),
 	m_addLen(sizeof(m_address))//accept braucht den pointer 
 {
-	if (m_verbose)
-		std::cout << "Server: Default Constructor called" << std::endl;
+	if (s_verbose)
+		std::cout << "Socket: Default Constructor called" << std::endl;
 }
 
-Server::Server(unsigned int ip, unsigned int port):
+Socket::Socket(unsigned int ip, unsigned int port):
 	m_ip(ip),
 	m_port(port),
 	m_address(),
 	m_sockfd(),
 	m_addLen(sizeof(m_address))
 {
-	if (m_verbose)
-		std::cout << "Server: Constructor called" << std::endl;
+	if (s_verbose)
+		std::cout << "Socket: Constructor called" << std::endl;
 	m_init();
 }
 
-Server::Server(const Server& other):
+Socket::Socket(const Socket& other):
 	m_ip(other.m_ip),
 	m_port(other.m_port),
 	m_address(),
 	m_sockfd(),
 	m_addLen(sizeof(m_address))
 {
-	if (m_verbose)
-		std::cout << "Server: Copy Constructor called" << std::endl;
+	if (s_verbose)
+		std::cout << "Socket: Copy Constructor called" << std::endl;
 	*this = other;
 }
 
-Server::~Server()
+Socket::~Socket()
 {
-	if (m_verbose)
-		std::cout << "Server: Destructor called" << std::endl;
-	//server closing moved to Engine Destructor for convenience
+	if (s_verbose)
+		std::cout << "Socket: Destructor called" << std::endl;
+	//Socket closing moved to Engine Destructor for convenience
 	for (CnctIter iter = m_connects.begin(); iter != m_connects.end(); ++iter)
 		close((*iter).getFd());
 }
 
-Server&
-Server::operator=(const Server& other)
+Socket&
+Socket::operator=(const Socket& other)
 {
-	if (m_verbose)
-		std::cout << "Server: Assignation operator called" << std::endl;
+	if (s_verbose)
+		std::cout << "Socket: Assignation operator called" << std::endl;
 	if (this != &other)
 	{
 		m_address = other.m_address;
@@ -79,7 +79,7 @@ Server::operator=(const Server& other)
 }
 
 void
-Server::m_init()
+Socket::m_init()
 {
 	m_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_sockfd < 0)
@@ -97,19 +97,19 @@ Server::m_init()
 }
 
 t_fd
-Server::getSockFd( void ) const
+Socket::getSockFd( void ) const
 {
-	return( m_sockfd );
+	return(m_sockfd);
 }
 
 bool
-Server::operator==( t_fd fd )
+Socket::operator==( t_fd fd )
 {
 	return(m_sockfd == fd);
 }
 
 void
-Server::acceptConnect( Engine & engine )
+Socket::acceptConnect( Engine & engine )
 {
 	t_fd		fd = accept(
 					m_sockfd,
