@@ -78,7 +78,7 @@ Engine::listenSockets( void )
 			std::cerr << "Listen error: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		setRead(iter->first);
+		this->setKevent(iter->first, EVFILT_READ, EV_ADD);
 	}
 }
 
@@ -98,11 +98,11 @@ Engine::closeConnects( void )
 
 
 void
-Engine::setRead( t_fd fd )
+Engine::setKevent( t_fd fd, int16_t filter, uint16_t flag)
 {
 	s_kevent	event;
 
-	EV_SET(&event, fd, EVFILT_READ, EV_ADD, 0, 0, 0);
+	EV_SET(&event, fd, filter, flag, 0, 0, 0);
 	m_changes.push_back(event);
 	m_events.resize(m_changes.size());
 }
@@ -126,7 +126,7 @@ Engine::acceptConnect( Socket sock )
 	Connect	newConnect(fd);
 
 	m_connects.insert(std::pair<t_fd, Connect>(fd, newConnect));
-	this->setRead(fd);
+	this->setKevent(fd, EVFILT_READ, EV_ADD);
 }
 
 void

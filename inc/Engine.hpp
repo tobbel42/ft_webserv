@@ -46,8 +46,15 @@ class Engine
 		typedef	std::map<t_fd, Connect>::iterator	CnctIter;	
 		typedef	std::vector<s_kevent>::iterator		KeventIter;
 
-		// s_kevent	*findByFd( t_fd, std::vector<s_kevent> vec );
-		// Socket		*findSock( t_fd );
+
+		void		socketEvent( t_fd fd );
+		void		connectEvent( t_fd fd );
+		void		acceptConnect( Socket sock );
+		void		closeConnects( void );
+		void		debug( void );
+		void		setKevent( t_fd fd, int16_t filter, uint16_t flag );
+		void		closeSockets( void );
+		void		listenSockets( void );
 
 	public:
 		Engine( void );
@@ -58,19 +65,8 @@ class Engine
 		//ToDo: ErrorHandling
 
 		void		initSockets( void );
-		void		closeSockets( void );
-		void		listenSockets( void );
 		void		launch( void );
 
-
-		void		socketEvent( t_fd fd );
-		void		connectEvent( t_fd fd );
-		void		acceptConnect( Socket sock );
-		void		closeConnects( void );
-
-		void		debug( void );
-
-		void		setRead( t_fd fd );
 
 
 };
