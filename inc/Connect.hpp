@@ -8,6 +8,7 @@ class Connect
 	private:
 		static bool	s_verbose;
 		t_fd		m_fd;
+		
 		Connect( void );
 		
 	public:

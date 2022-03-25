@@ -16,6 +16,7 @@ Engine::~Engine( void )
 {
 	if (s_verbose)
 		std::cout << "Engine: Destructor called" << std::endl;
+	this->closeConnects();
 	this->closeSockets();
 }
 
@@ -43,26 +44,6 @@ bool s_kevent::operator==( t_fd fd )
 	return (this->ident == fd);
 }
 
-s_kevent *
-Engine::findByFd( t_fd fd, std::vector<s_kevent> vec )
-{
-	std::vector<s_kevent>::iterator	iter;
-
-	iter = std::find(vec.begin(), vec.end(), fd);
-	if (iter == vec.end())
-		return (NULL);
-	return(&(*iter));
-}
-
-Socket *
-Engine::findSock( t_fd fd )
-{
-	SockIter	iter = std::find(m_sockets.begin(), m_sockets.end(), fd);
-	if (iter == m_sockets.end())
-		return (NULL);
-	return(&(*iter));
-}
-
 std::ostream &
 operator<< ( std::ostream & out, s_kevent const & in )
 {
@@ -81,8 +62,8 @@ operator<< ( std::ostream & out, s_kevent const & in )
 void
 Engine::initSockets( void )
 {
-	Socket	newServ(INADDR_ANY, 8080);
-	m_sockets.push_back(newServ);
+	Socket	newSock(INADDR_ANY, 8080);
+	m_sockets.insert(std::pair<t_fd, Socket>(newSock.getSockFd(), newSock));
 }
 
 void
@@ -91,13 +72,13 @@ Engine::listenSockets( void )
 	int		errFlag;
 	for (SockIter iter = m_sockets.begin(); iter != m_sockets.end(); ++iter)
 	{
-		errFlag = listen((*iter).getSockFd(), ENGINE_BACKLOG);
+		errFlag = listen(iter->first, ENGINE_BACKLOG);
 		if (errFlag)
 		{
 			std::cerr << "Listen error: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		setRead((*iter).getSockFd());
+		setRead(iter->first);
 	}
 }
 
@@ -105,7 +86,14 @@ void
 Engine::closeSockets( void )
 {
 	for (SockIter iter = m_sockets.begin(); iter != m_sockets.end(); ++iter)
-		close((*iter).getSockFd());
+		close(iter->first);
+}
+
+void
+Engine::closeConnects( void )
+{
+	for (CnctIter iter = m_connects.begin(); iter != m_connects.end(); ++iter)
+		close(iter->first);
 }
 
 
@@ -130,6 +118,39 @@ Engine::debug( void )
 		std::cout << *iter << std::endl;
 }
 
+void
+Engine::acceptConnect( Socket sock )
+{
+	t_fd	fd = sock.acceptConnect();
+
+	Connect	newConnect(fd);
+
+	m_connects.insert(std::pair<t_fd, Connect>(fd, newConnect));
+	this->setRead(fd);
+}
+
+void
+Engine::socketEvent( t_fd fd )
+{
+	SockIter	iter = m_sockets.find(fd);
+
+	if (iter == m_sockets.end())
+		return ;
+	std::cout << "Socket Event" << std::endl;
+	this->acceptConnect(iter->second);
+}
+
+void
+Engine::connectEvent( t_fd fd )
+{
+	CnctIter	iter = m_connects.find(fd);
+
+	if (iter == m_connects.end())
+		return ;
+	std::cout << "Connect Event" << std::endl;
+}
+
+
 /*
 //Main loop of the Socket.
 */
@@ -151,32 +172,20 @@ Engine::launch( void )
 			&(*m_changes.begin()), m_changes.size(),
 			&(*m_events.begin()), m_events.size(),
 			NULL);
+
 		if (s_verbose)
 		{
 			std::cout << "\nEvents: " << n_events << std::endl;
 			this->debug();
 		}
-		if (n_events == -1)
-			break ;
 
 		for	(int i = 0; i < n_events; ++i)
 		{
-			Socket	*serv = findSock(m_events[i].ident);
-			if (serv == NULL)
-			{
-				//Connection
-				std::cout << "Connection Stuff" << std::endl;
-			}
-			else
-			{
-				//SocketFD
-				if (!(m_events[i].flags & EV_EOF))
-					serv->acceptConnect(*this);
-				else
-					continue;
-			}
-				
+			socketEvent(m_events[i].ident);
+			connectEvent(m_events[i].ident);
 		}
+		sleep(2);
+				
 	}
 
 	//closing of sockets is happening in the Engine destructor

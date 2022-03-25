@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/17 14:41:27 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/25 11:56:59 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/03/25 15:32:27 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,8 +61,6 @@ Socket::~Socket()
 	if (s_verbose)
 		std::cout << "Socket: Destructor called" << std::endl;
 	//Socket closing moved to Engine Destructor for convenience
-	for (CnctIter iter = m_connects.begin(); iter != m_connects.end(); ++iter)
-		close((*iter).getFd());
 }
 
 Socket&
@@ -108,16 +106,12 @@ Socket::operator==( t_fd fd )
 	return(m_sockfd == fd);
 }
 
-void
-Socket::acceptConnect( Engine & engine )
+t_fd
+Socket::acceptConnect( void )
 {
-	t_fd		fd = accept(
-					m_sockfd,
-					reinterpret_cast<sockaddr*>(&m_address),
-					&m_addLen);
-
-	Connect		newConnect(fd);
-
-	m_connects.push_back(newConnect);
-	engine.setRead(fd);
+	t_fd	fd = accept(
+				m_sockfd,
+				reinterpret_cast<sockaddr*>(&m_address),
+				&m_addLen);
+	return (fd);
 }

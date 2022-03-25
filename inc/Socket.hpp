@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/13 10:22:56 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/25 11:57:16 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/03/25 15:30:23 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ public:
 	Socket& operator=(const Socket& other);
 	
 	t_fd	getSockFd( void ) const;
-	void	acceptConnect( Engine & engine );
+	t_fd	acceptConnect( void );
 
 	bool	operator==( t_fd fd );
 	
@@ -48,9 +48,6 @@ private:
 	sockaddr_in 			m_address;
 	t_fd 					m_sockfd;
 	socklen_t				m_addLen;
-	std::vector<Connect>	m_connects;
-
-	typedef std::vector<Connect>::iterator	CnctIter;
 
 	void m_init();
 	
