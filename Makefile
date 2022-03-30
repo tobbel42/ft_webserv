@@ -12,7 +12,7 @@ INC_FULL = $(addprefix $(IDIR)/, $(INC))
 TPP = 
 TPP_FULL = $(addprefix $(IDIR)/, $(TPP))
 
-SRC = main.cpp
+SRC = main.cpp Server.cpp
 SDIR = src
 SRC_FULL = $(addprefix $(SDIR)/, $(SRC))
 
