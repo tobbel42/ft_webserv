@@ -35,7 +35,6 @@ class Connect;
 class Engine
 {
 	private:
-		static bool						s_verbose;
 		std::vector<s_kevent>			m_changes;
 		std::vector<s_kevent>			m_events;
 		std::map<t_fd, Socket>			m_sockets;

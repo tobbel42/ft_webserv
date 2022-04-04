@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/13 10:22:56 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/25 15:30:23 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/04/04 17:27:49 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,6 @@ public:
 private:
 	Socket();
 
-	static bool				s_verbose;
 	unsigned int			m_ip;
 	unsigned int			m_port;
 	sockaddr_in 			m_address;

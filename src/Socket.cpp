@@ -6,17 +6,11 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/17 14:41:27 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/25 15:32:27 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/04/04 17:28:07 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Socket.hpp"
-
-#ifdef VERBOSE
-	bool Socket::s_verbose = true;
-#else
-	bool Socket::s_verbose = false;
-#endif
 
 /*
 //Careful son, ports 0-1024 are a big nono 
@@ -28,8 +22,9 @@ Socket::Socket():
 	m_sockfd(),
 	m_addLen(sizeof(m_address))//accept braucht den pointer 
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Socket: Default Constructor called" << std::endl;
+	#endif
 }
 
 Socket::Socket(unsigned int ip, unsigned int port):
@@ -39,8 +34,9 @@ Socket::Socket(unsigned int ip, unsigned int port):
 	m_sockfd(),
 	m_addLen(sizeof(m_address))
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Socket: Constructor called" << std::endl;
+	#endif
 	m_init();
 }
 
@@ -51,23 +47,26 @@ Socket::Socket(const Socket& other):
 	m_sockfd(),
 	m_addLen(sizeof(m_address))
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Socket: Copy Constructor called" << std::endl;
+	#endif
 	*this = other;
 }
 
 Socket::~Socket()
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Socket: Destructor called" << std::endl;
+	#endif
 	//Socket closing moved to Engine Destructor for convenience
 }
 
 Socket&
 Socket::operator=(const Socket& other)
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Socket: Assignation operator called" << std::endl;
+	#endif
 	if (this != &other)
 	{
 		m_address = other.m_address;

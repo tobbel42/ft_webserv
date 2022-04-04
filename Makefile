@@ -49,7 +49,7 @@ re: fclean all
 bonus: CFLAGS += -DBONUS=1
 bonus: all
 
-debug: CFLAGS += -g -DVERBOSE=1
+debug: CFLAGS += -g -DVERBOSE
 debug: re
 
 release: CFLAGS += -Ofast

@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/12 11:57:15 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/25 11:58:34 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/04/04 17:25:43 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@
 
 int main(int argc, char **argv)
 {
-	//Server(INADDR_ANY, 8080);
 	Engine	a;
 	a.initSockets();
 	a.launch();

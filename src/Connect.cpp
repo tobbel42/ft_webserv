@@ -1,34 +1,32 @@
 #include "../inc/Connect.hpp"
 
-#ifdef VERBOSE
-	bool Connect::s_verbose = true;
-#else
-	bool Connect::s_verbose = false;
-#endif
-
 Connect::Connect( void )
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Connect: Constructor called" << std::endl;
+	#endif
 }
 
 Connect::~Connect( void )
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Connect: Destructor called" << std::endl;
+	#endif
 }
 
 Connect::Connect( const Connect &copy )
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Connect: Copy Constructor called" << std::endl;
+	#endif
 	*this = copy;
 }
 
 Connect	&Connect::operator = ( const Connect &rhs )
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Connect: Assignation operator called" << std::endl;
+	#endif
 	m_fd = rhs.getFd();
 	return (*this);
 }
@@ -36,8 +34,9 @@ Connect	&Connect::operator = ( const Connect &rhs )
 Connect::Connect( t_fd fd ):
 	m_fd(fd)
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Connect: Constructor called" << std::endl;
+	#endif
 }
 
 t_fd

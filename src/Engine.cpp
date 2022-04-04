@@ -1,37 +1,35 @@
 #include "../inc/Engine.hpp"
 
-#ifdef VERBOSE
-	bool Engine::s_verbose = true;
-#else
-	bool Engine::s_verbose = false;
-#endif
-
 Engine::Engine( void )
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Engine: Default Constructor called" << std::endl;
+	#endif
 }
 
 Engine::~Engine( void )
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Engine: Destructor called" << std::endl;
+	#endif
 	this->closeConnects();
 	this->closeSockets();
 }
 
 Engine::Engine( const Engine &copy )
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Engine: Copy Constructor called" << std::endl;
+	#endif
 	*this = copy;
 }
 
 Engine	
 &Engine::operator = ( const Engine &rhs )
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Engine: Assignation operator called" << std::endl;
+	#endif
 	(void)rhs;
 	return (*this);
 }
@@ -173,11 +171,12 @@ Engine::launch( void )
 			&(*m_events.begin()), m_events.size(),
 			NULL);
 
-		if (s_verbose)
+		#ifdef VERBOSE
 		{
 			std::cout << "\nEvents: " << n_events << std::endl;
 			this->debug();
 		}
+		#endif
 
 		for	(int i = 0; i < n_events; ++i)
 		{
@@ -187,7 +186,6 @@ Engine::launch( void )
 		sleep(2);
 				
 	}
-
 	//closing of sockets is happening in the Engine destructor
 }
 
