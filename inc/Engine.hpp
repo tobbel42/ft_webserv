@@ -11,6 +11,7 @@
 
 # include <Socket.hpp>
 # include <Connect.hpp>
+# include <Server.hpp>
 
 # define ENGINE_BACKLOG 10
 
@@ -39,15 +40,15 @@ class Engine
 		std::vector<s_kevent>			m_events;
 		std::map<t_fd, Socket>			m_sockets;
 		std::map<t_fd, Connect>			m_connects;
+		std::vector<Server>				m_servers;
 		int								m_kqueue;
 
 		typedef	std::map<t_fd, Socket>::iterator	SockIter;
-		typedef	std::map<t_fd, Connect>::iterator	CnctIter;	
+		typedef	std::map<t_fd, Connect>::iterator	CnctIter;
 		typedef	std::vector<s_kevent>::iterator		KeventIter;
 
-
-		void		socketEvent( t_fd fd );
-		void		connectEvent( t_fd fd );
+		void		socketEvent( s_kevent kevent  );
+		void		connectEvent( s_kevent kevent );
 		void		acceptConnect( Socket sock );
 		void		closeConnects( void );
 		void		debug( void );
@@ -64,6 +65,7 @@ class Engine
 		//ToDo: ErrorHandling
 
 		void		initSockets( void );
+		void		initServers( void );
 		void		launch( void );
 
 

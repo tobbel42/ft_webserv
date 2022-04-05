@@ -8,7 +8,8 @@ RM = rm -rf
 INC = Engine.hpp\
 	Socket.hpp\
 	utils.hpp\
-	Connect.hpp
+	Connect.hpp\
+	Server.hpp
 IDIR = inc
 INC_FULL = $(addprefix $(IDIR)/, $(INC))
 
@@ -18,7 +19,8 @@ TPP_FULL = $(addprefix $(IDIR)/, $(TPP))
 SRC = main.cpp\
 	Socket.cpp\
 	Engine.cpp\
-	Connect.cpp
+	Connect.cpp\
+	Server.cpp
 SDIR = src
 SRC_FULL = $(addprefix $(SDIR)/, $(SRC))
 

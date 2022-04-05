@@ -24,8 +24,8 @@ Engine::Engine( const Engine &copy )
 	*this = copy;
 }
 
-Engine	
-&Engine::operator = ( const Engine &rhs )
+Engine &	
+Engine::operator = ( const Engine &rhs )
 {
 	#ifdef VERBOSE
 		std::cout << "Engine: Assignation operator called" << std::endl;
@@ -62,6 +62,20 @@ Engine::initSockets( void )
 {
 	Socket	newSock(INADDR_ANY, 8080);
 	m_sockets.insert(std::pair<t_fd, Socket>(newSock.getSockFd(), newSock));
+}
+
+/*
+//in here the servers should be initialized
+*/
+void
+Engine::initServers( void )
+{
+	Server	newServer(
+		(*m_sockets.begin()).second.getSockFd(), "localhost", "testServerDir" 
+	);
+
+	m_servers.push_back(newServer);
+	
 }
 
 void
@@ -128,9 +142,9 @@ Engine::acceptConnect( Socket sock )
 }
 
 void
-Engine::socketEvent( t_fd fd )
+Engine::socketEvent( s_kevent kevent )
 {
-	SockIter	iter = m_sockets.find(fd);
+	SockIter	iter = m_sockets.find(kevent.ident);
 
 	if (iter == m_sockets.end())
 		return ;
@@ -139,13 +153,43 @@ Engine::socketEvent( t_fd fd )
 }
 
 void
-Engine::connectEvent( t_fd fd )
+Engine::connectEvent( s_kevent kevent )
 {
-	CnctIter	iter = m_connects.find(fd);
+	//check if the FD is linked to a connection
+	CnctIter	iter = m_connects.find(kevent.ident);
 
 	if (iter == m_connects.end())
 		return ;
-	std::cout << "Connect Event" << std::endl;
+
+	//eyeCandy
+
+	Connect	& cnct = (*iter).second;
+
+	//A connection can have multible states
+	//on read we read as many bytes, as in the kevent specified
+	//ToDo:
+	// parse the read data( is it chunked, does is need multible read cycles)
+	// we need to assign a server to the connection
+	// depending on the request we 
+	if (cnct.getAction() == READ)
+	{
+		cnct.readRequest(kevent);
+
+		m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
+		setKevent(kevent.ident, EVFILT_WRITE, EV_ONESHOT);
+		if (cnct.getServer() == NULL)
+			cnct.setServer(&m_servers[0]);
+		cnct.composeResponse();
+	}
+	//On write 
+	else if (cnct.getAction() == WRITE)
+	{
+		cnct.writeResponse(kevent);
+		m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
+		close(cnct.getFd());
+		m_connects.erase(iter);
+	}
+
 }
 
 
@@ -155,6 +199,7 @@ Engine::connectEvent( t_fd fd )
 void
 Engine::launch( void )
 {
+	std::cout << m_servers[0].getDirectory() << std::endl;
 	//init kqueue
 	m_kqueue = kqueue();
 
@@ -180,10 +225,9 @@ Engine::launch( void )
 
 		for	(int i = 0; i < n_events; ++i)
 		{
-			socketEvent(m_events[i].ident);
-			connectEvent(m_events[i].ident);
+			socketEvent(m_events[i]);
+			connectEvent(m_events[i]);
 		}
-		sleep(2);
 				
 	}
 	//closing of sockets is happening in the Engine destructor

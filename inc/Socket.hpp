@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/13 10:22:56 by skienzle          #+#    #+#             */
-/*   Updated: 2022/04/04 17:27:49 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/04/05 20:21:39 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,12 @@
 
 class Engine;
 
+/*
+//a Socket listens to an ip and port and accepts incomming connection
+//ToDo: has to be created from the config file
+//maybe ToDo: assign a default Server to the port, to make the assignment of 
+//incomming connections easier 
+*/
 class Socket
 {
 public:
