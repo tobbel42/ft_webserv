@@ -18,6 +18,27 @@ std::string generateHead(int size)
 	return ("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length:" + std::to_string(size) + "\n\n");
 }
 
+std::string get_file_content(std::string filename, std::string path)
+{
+	// check for valid filename (without .. etc)
+	std::ifstream in;
+	std::string content;
+	std::string line;
+	std::cout << "filename: " << path +filename << std::endl;
+	in.open(path + filename);
+	if (in.is_open())
+	{
+		std::cout << "is opened" << std::endl;
+		while ( getline (in,line) )
+		{
+			//std::cout << "line: " << line << std::endl;
+			content = content + line + '\n';
+		}
+	in.close();
+	}
+	return (content);
+}
+
 int main(int argc, char const *argv[])
 {
 	int server_fd, new_socket; long valread;
@@ -110,7 +131,7 @@ int main(int argc, char const *argv[])
 				std::string filename = new_buffer.substr(i, j - i);
 
 				std::string return_req;
-				if (filename == "index.html")
+				if (filename.length() != 0)
 				{
 
 
@@ -118,20 +139,21 @@ int main(int argc, char const *argv[])
 					std::ifstream file;
 					std::string line;
 					std::string all_lines;
-					file.open(filename);
-					while (getline(file, line))
-					{
-						std::cout << line << "\n";
-						all_lines = all_lines + line;
-					}
-					file.close();
+					all_lines = get_file_content(filename, "www/root/");
+					//file.open(filename);
+					//while (getline(file, line))
+					//{
+					//	std::cout << line << "\n";
+					//	all_lines = all_lines + line;
+					//}
+					//file.close();
 					//while (i < j)
 					//{
 					//	printf("%c", buffer[i]);
 					//	i++;
 					//}
 					//printf("\n\n");
-					//std::cout << "all lines: " +  all_lines << std::endl;
+					std::cout << "all lines: " +  all_lines << std::endl;
 					std::string return_req = generateHead(all_lines.length()) + all_lines;
 					
 					//std::cout << "return req: " << return_req << std::endl;
