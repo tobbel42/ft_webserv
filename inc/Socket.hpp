@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/13 10:22:56 by skienzle          #+#    #+#             */
-/*   Updated: 2022/04/05 20:21:39 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/04/06 13:05:30 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <utils.hpp>
 #include <Engine.hpp>
 #include <Connect.hpp>
+#include <Server.hpp>
 
 class Engine;
 
@@ -41,8 +42,11 @@ public:
 	
 	t_fd	getSockFd( void ) const;
 	t_fd	acceptConnect( void );
+	Server	*getServer( std::string hostname );
 
 	bool	operator==( t_fd fd );
+
+	void	setDefaultServer( Server *server );
 	
 	
 private:
@@ -53,6 +57,9 @@ private:
 	sockaddr_in 			m_address;
 	t_fd 					m_sockfd;
 	socklen_t				m_addLen;
+
+	Server							*m_defaultServer;
+	std::map<std::string, Server *>	m_Servers;
 
 	void m_init();
 	
