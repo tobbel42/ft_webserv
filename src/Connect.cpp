@@ -106,8 +106,6 @@ Connect::composeResponse( void )
 	if (filename == "/")
 		filename = "/index.html";
 
-	std::cout << (*p_server).getDirectory() << filename << std::endl;
-
 	file.open((*p_server).getDirectory() + filename, std::ios::in);
 
 	if (file.is_open())
