@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/17 14:41:27 by skienzle          #+#    #+#             */
-/*   Updated: 2022/04/04 17:28:07 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/04/06 13:06:40 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,7 @@ Socket::operator=(const Socket& other)
 	{
 		m_address = other.m_address;
 		m_sockfd = other.m_sockfd;
+		m_defaultServer = other.m_defaultServer;
 	}
 	return (*this);
 }
@@ -91,6 +92,20 @@ Socket::m_init()
 		// throw
 	}
 	
+}
+
+void
+Socket::setDefaultServer( Server *server )
+{
+	m_defaultServer = server;
+}
+
+Server *
+Socket::getServer( std::string hostname )
+{
+	//todo search m_Server for hostname
+
+	return (m_defaultServer); 
 }
 
 t_fd

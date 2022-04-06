@@ -56,6 +56,8 @@ class Engine
 		void		closeSockets( void );
 		void		listenSockets( void );
 
+		void		assignServer( Connect &connect );
+
 	public:
 		Engine( void );
 		~Engine( void );

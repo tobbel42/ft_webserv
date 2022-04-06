@@ -21,6 +21,7 @@ class Connect
 	private:
 
 		t_fd		m_fd;
+		t_fd		m_sockFd;
 		Server		*p_server;
 		e_action	m_action;
 		std::string	m_request;
@@ -30,13 +31,14 @@ class Connect
 		
 	public:
 
-		Connect( t_fd fd );
+		Connect( t_fd fd, t_fd sockFd );
 		~Connect( void );
 		Connect( const Connect &copy );
 
 		Connect	&operator = ( const Connect &rhs );
 
 		t_fd		getFd( void ) const;
+		t_fd		getSockFd( void ) const;
 		Server *	getServer( void ) const;
 		e_action	getAction( void ) const;	
 		

@@ -61,6 +61,7 @@ void
 Engine::initSockets( void )
 {
 	Socket	newSock(INADDR_ANY, 8080);
+	newSock.setDefaultServer(&m_servers[0]);
 	m_sockets.insert(std::pair<t_fd, Socket>(newSock.getSockFd(), newSock));
 }
 
@@ -70,9 +71,7 @@ Engine::initSockets( void )
 void
 Engine::initServers( void )
 {
-	Server	newServer(
-		(*m_sockets.begin()).second.getSockFd(), "localhost", "testServerDir" 
-	);
+	Server	newServer("localhost", "testServerDir");
 
 	m_servers.push_back(newServer);
 	
@@ -135,10 +134,27 @@ Engine::acceptConnect( Socket sock )
 {
 	t_fd	fd = sock.acceptConnect();
 
-	Connect	newConnect(fd);
+	Connect	newConnect(fd, sock.getSockFd());
 
 	m_connects.insert(std::pair<t_fd, Connect>(fd, newConnect));
 	this->setKevent(fd, EVFILT_READ, EV_ADD);
+}
+
+void
+Engine::assignServer( Connect &connect )
+{
+	SockIter iter = m_sockets.find(connect.getSockFd());
+
+	//Socket not found
+	if (iter == m_sockets.end())
+	{
+		//internal error 500
+		return ;
+	}
+
+	//ToDo: parse he Hostname from the request
+
+	connect.setServer((*iter).second.getServer(""));
 }
 
 void
@@ -148,7 +164,9 @@ Engine::socketEvent( s_kevent kevent )
 
 	if (iter == m_sockets.end())
 		return ;
-	std::cout << "Socket Event" << std::endl;
+	#ifdef VERBOSE
+		std::cout << "Socket Event" << std::endl;
+	#endif
 	this->acceptConnect(iter->second);
 }
 
@@ -173,21 +191,38 @@ Engine::connectEvent( s_kevent kevent )
 	// depending on the request we 
 	if (cnct.getAction() == READ)
 	{
+		//read the Request: ToDo Handling of chuncked requests(multible reads and concatenate)
 		cnct.readRequest(kevent);
 
-		m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
-		setKevent(kevent.ident, EVFILT_WRITE, EV_ONESHOT);
-		if (cnct.getServer() == NULL)
-			cnct.setServer(&m_servers[0]);
-		cnct.composeResponse();
+		//if read done 
+			//removing the read event from the from the change vector
+			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
+
+			//assign a server, if not yet given (search for Hostname in Socket servers/ default server)
+			if (cnct.getServer() == NULL)
+				assignServer(cnct);
+
+			//formulate the request (result or error), chunking of big responses
+			cnct.composeResponse();
+
+			//adding the write event to the change vector
+			setKevent(kevent.ident, EVFILT_WRITE, EV_ADD);
 	}
 	//On write 
 	else if (cnct.getAction() == WRITE)
 	{
+		//write the response
 		cnct.writeResponse(kevent);
-		m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
-		close(cnct.getFd());
-		m_connects.erase(iter);
+
+		//if write done
+			//remove the event form the change vector
+			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
+
+			//close the connection
+			close(cnct.getFd());
+
+			//remove connection from FD pool
+			m_connects.erase(iter);
 	}
 
 }

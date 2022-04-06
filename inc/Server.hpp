@@ -2,7 +2,7 @@
 # define SERVER_HPP
 
 #include <iostream>
-#include "utils.hpp"
+#include <utils.hpp>
 
 
 /*
@@ -14,13 +14,12 @@
 class Server
 {
 	private:
-		t_fd		m_socket;
 		std::string	m_hostname;
 		std::string	m_directory;
 
 	public:
 		Server( void );
-		Server( t_fd socket, std::string hostname, std::string directory);
+		Server( std::string hostname, std::string directory);
 		~Server();
 		Server( const Server &cpy );
 
@@ -29,6 +28,7 @@ class Server
 		std::string	getDirectory( void ) const;
 		t_fd		getSocket( void ) const;
 		std::string getHostname( void ) const;
+		
 };
 
 #endif

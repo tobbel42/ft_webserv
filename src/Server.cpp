@@ -7,8 +7,7 @@ Server::Server( void )
 	#endif
 }
 
-Server::Server( t_fd socket, std::string hostname, std::string directory):
-m_socket(socket),
+Server::Server( std::string hostname, std::string directory):
 m_hostname(hostname),
 m_directory(directory)
 {
@@ -38,7 +37,6 @@ Server::operator=( const Server &rhs )
 	#ifdef VERBOSE
 		std::cout << "Server: Assignation operator called" << std::endl;
 	#endif
-	m_socket = rhs.getSocket();
 	m_hostname = rhs.getHostname();
 	m_directory = rhs.getDirectory();
 	return (*this);
@@ -50,11 +48,11 @@ Server::getDirectory( void ) const
 	return m_directory;
 }
 
-t_fd
-Server::getSocket( void ) const
-{
-	return m_socket;
-}
+// t_fd
+// Server::getSocket( void ) const
+// {
+// 	return m_socket;
+// }
 
 std::string
 Server::getHostname( void ) const
