@@ -234,7 +234,6 @@ Engine::connectEvent( s_kevent kevent )
 void
 Engine::launch( void )
 {
-	std::cout << m_servers[0].getDirectory() << std::endl;
 	//init kqueue
 	m_kqueue = kqueue();
 
