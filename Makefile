@@ -18,7 +18,8 @@ TPP_FULL = $(addprefix $(IDIR)/, $(TPP))
 SRC = main.cpp\
 	Server.cpp\
 	Engine.cpp\
-	Connect.cpp
+	Connect.cpp \
+	Config_parser.cpp
 SDIR = src
 SRC_FULL = $(addprefix $(SDIR)/, $(SRC))
 
