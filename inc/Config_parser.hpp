@@ -26,8 +26,11 @@ typedef std::vector<std::string> StringVector;
 
 struct Location_setup
 {
-	std::string path;
-
+	std::string location;
+	std::string root;
+	std::string index;
+	StringVector allowed_methods;
+	StringVector allowed_scripts;
 };
 
 struct Server_setup
@@ -35,9 +38,9 @@ struct Server_setup
 	std::string server_name;
 	std::string root;
 	std::string index;
+	std::string error_pages;
 	int ip_address;
-	std::vector<int> ports;
-	StringVector allowed_methods;
+	int port;
 	unsigned int max_client_body_size;
 	std::vector<Location_setup> locations;
 };
@@ -58,7 +61,10 @@ private: // methods
 	Config_parser& operator=(const Config_parser& other);
 
 	Server_setup m_read_server();
-	std::string m_get_next_word(char delim = ';');
+	std::string m_get_next_word();
+	std::string m_get_next_word(int line, const char *error_msg = "", const char *strerr = "");
+	bool m_read_next_line(char delim = '\n');
+	char m_peek_next_char();
 
 private: // subclass
 	class Invalid_config: std::exception

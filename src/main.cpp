@@ -6,7 +6,7 @@
 /*   By: skienzle <skienzle@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/12 11:57:15 by skienzle          #+#    #+#             */
-/*   Updated: 2022/04/16 09:50:10 by skienzle         ###   ########.fr       */
+/*   Updated: 2022/04/26 15:57:05 by skienzle         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,15 +18,12 @@
 
 bool	strriseq(const char *s1, const char *s2)
 {
-	int	i_s1;
-	int	i_s2;
-
 	if (s1 == NULL && s2 == NULL)
 		return (false);
 	if ((s1 == NULL && s2 != NULL) || (s1 != NULL && s2 == NULL))
 		return (false);
-	i_s1 = strlen(s1);
-	i_s2 = strlen(s2);
+	int i_s1 = strlen(s1);
+	int i_s2 = strlen(s2);
 	for (; i_s1 >= 0 && i_s2 >= 0 && s1[i_s1] == s2[i_s2]; --i_s1, --i_s2);
 	return i_s2 == -1;
 }
@@ -56,7 +53,6 @@ int main(int argc, char **argv)
 		std::cerr << e.what() << '\n';
 		return 1;
 	}
-	catch (int& i) {}
 	// Engine	a;
 	// a.initServers();
 	// a.launch();
