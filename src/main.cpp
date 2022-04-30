@@ -3,15 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: skienzle <skienzle@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/12 11:57:15 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/18 10:29:25 by skienzle         ###   ########.fr       */
+/*   Updated: 2022/04/06 14:49:17 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Server.hpp"
-
+#include "Socket.hpp"
+#include "Engine.hpp"
 
 
 
@@ -20,6 +20,10 @@
 
 int main(int argc, char **argv)
 {
-	Server(INADDR_ANY, 8080);
+	Engine	a;
+	//atm müssen die server vor den Sockets initialisiert werden, sonst segfault
+	a.initServers();
+	a.initSockets();
+	a.launch();
 	return 0;
 }
