@@ -9,13 +9,22 @@
 #include <iostream>
 #include <iostream>
 #include <fstream>
+#include "get_next_line.h"
 
+// open
+       #include <sys/types.h>
+       #include <sys/stat.h>
+       #include <fcntl.h>
+
+// wait
+    #include <sys/types.h>
+       #include <sys/wait.h>
 #define PORT 8080
 #define PHP 1
 #define PYTHON 2
 
 
-#include <sys/event.h>
+//#include <sys/event.h>
 std::string generateHead(int size)
 {
 	return ("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length:" + std::to_string(size) + "\n\n");
@@ -62,12 +71,73 @@ int	check_file_extension(std::string filename)
 		return 0; // ist es angreifbar wenn wir sonst einfach die File ausgeben??
 }
 
+int	create_temp_file(char *filename)
+{
+	  // template for our file.        
+  int fd = mkstemp(filename);    // Creates and opens a new temp file r/w.
+      
+	                           // Xs are replaced with a unique number.
+  printf("filename: %s\n", filename);
+  if (fd == -1)
+  {
+	  std::cout << "creation of file went wrong" << std::endl;
+  }       // Check we managed to open the file.
+//   write(fd, "abc", 4);           // note 4 bytes total: abc terminating '\0'
+//   /* ...
+//      do whatever else you want.
+//      ... */
+//   close(fd);
+//   unlink(filename);     
+	return fd;
+}
+
+std::string read_from_file(int fd)
+{
+	printf("fd: %i\n", fd);
+	std::string content;
+	char* line = get_next_line(fd);
+	printf("line: %s\n", line);
+	while(line != NULL)
+	{
+		content += line;
+		line = get_next_line(fd);
+	}
+	std::cout << "content: " << content << std::endl;
+	close(fd);
+//   unlink(filename);  
+	return content;
+}
+
 std::string execute_cgi(std::string filename, int file_extension, char **envp)
 {
 	char *argv[] = {"/usr/bin/php",(char *) filename.c_str(), NULL};
 	std::cout << "vor execve"<< std::endl;
-	if (execve(argv[0], argv, envp) == -1)
-		std::cout << "Problem bei execve" << std::endl;
+	char filename_char[] = "/tmp/mytemp.XXXXXX";
+	int fd = create_temp_file(filename_char);
+	int pid = fork();
+	if (pid == -1)
+		std::cout << "Problem bei fork" << std::endl;
+	if (pid == 0)
+	{
+		dup2(fd, STDOUT_FILENO);
+		if (execve(argv[0], argv, envp) == -1)
+			std::cout << "Problem bei execve" << std::endl; // exiten hier??
+	}
+	wait(NULL);
+	close(fd);
+	fsync(fd);
+	//sleep(100);
+	//unlink(filename_char);
+	int fd2 = open(filename_char, 0);
+	printf("fd2: %i\n", fd2);
+	char buff[20];
+	printf("filenamex: %s\n", filename_char);
+	// FILE *file = fdopen(fd, "r");
+	
+	// int ret =read(fd2, buff, 20);
+	// buff[20] = '\0';
+	// printf("buf file: %s, ret: %i\n", buff, ret);
+	return (read_from_file(fd));
 }
 
 std::string check_file(std::string filename, std::string folder_path, char **envp)
