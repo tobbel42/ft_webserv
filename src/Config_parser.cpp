@@ -6,7 +6,7 @@
 /*   By: skienzle <skienzle@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/25 10:08:53 by skienzle          #+#    #+#             */
-/*   Updated: 2022/04/26 16:23:47 by skienzle         ###   ########.fr       */
+/*   Updated: 2022/06/04 16:29:29 by skienzle         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,71 +102,121 @@ Config_parser::operator=(const Config_parser& other)
 // 	}
 // }
 
-Server_setup
+void
+Config_parser::run()
+{
+	std::string word;
+	std::pair<std::string, Server_setup> server_ret;
+
+	while (!(word = m_get_next_word('{')).empty())
+	{
+		if (word != "server")
+			throw Config_parser::Invalid_config(__LINE__, "invalid server identifier", word.c_str());
+		if (m_get_next_word_protected(__LINE__, '}') != "{")
+			throw Config_parser::Invalid_config(__LINE__, "server blocks must be followed by {");
+		server_ret = m_read_server();
+		if (server_ret.first != "}")
+			throw Config_parser::Invalid_config(__LINE__, "invalid server identifier", server_ret.first.c_str());
+		m_servers.push_back(server_ret.second);
+	}
+}
+
+std::pair<std::string, Server_setup>
 Config_parser::m_read_server()
 {
 	Server_setup setup;
-	while (m_read_next_line())
+	std::string word;
+
+	while (!(word = m_get_next_word_protected(__LINE__, '}')).empty())
 	{
-		std::string word = m_get_next_word();
-		if (word == "}")
-			break;
-		else if (word == "root")
-			setup.root = m_get_next_word();
+		
+		if (word == "root")
+			setup.root = m_get_next_word_protected(__LINE__);
 		else if (word == "server_name")
-			setup.server_name = m_get_next_word();
+			setup.server_name = m_get_next_word_protected(__LINE__);
 		else if (word == "index")
-			setup.index = m_get_next_word();
+			setup.index = m_get_next_word_protected(__LINE__);
+		else if (word == "location")
+		{
+			Location_setup location;
+			location.location = m_get_next_word_protected(__LINE__);
+			if (m_get_next_word_protected(__LINE__, '}') != "{")
+				throw Config_parser::Invalid_config(__LINE__, "location blocks must start with a {");
+			std::string location_ret = m_read_location(location);
+			if (location_ret != "}")
+				throw Config_parser::Invalid_config(__LINE__, "invalid location identifier", location_ret.c_str());
+			setup.locations.push_back(location);
+		}
+		else
+			return make_pair(word, setup);
+	}
+	return make_pair(std::string(), setup);
+}
+
+std::string
+Config_parser::m_read_location(Location_setup& location)
+{
+	std::string word;
+	
+	while (!(word = m_get_next_word_protected(__LINE__, '}')).empty())
+	{
+		if (word == "root")
+			location.root = m_get_next_word_protected(__LINE__);
 		else if (word == "allowed_methods")
 		{
 			while (m_lineStream >> word)
 			{
 				if (word == "GET" || word == "POST" || word == "DELETE")
-					setup.allowed_methods.push_back(word);
+					location.allowed_methods.push_back(word);
 				else
 					throw Config_parser::Invalid_config(__LINE__,
 						"invalid http-method identifier", word.c_str());
 			}
 		}
-		else
-			throw Config_parser::Invalid_config(__LINE__, "invalid identifier", word.c_str());
+		else if (word == "allowed_scripts")
+		{
+			while (m_lineStream >> word)
+			{
+				if (word == "php" || word == "python") // add any other allowed scrips here
+					location.allowed_scripts.push_back(word);
+				else
+					throw Config_parser::Invalid_config(__LINE__,
+						"invalid script type", word.c_str());
+			}
+		}
+
+		
 	}
-	return setup;
+	return word;
 }
 
-void
-Config_parser::run()
+std::string
+Config_parser::m_get_next_word(char delim)
 {
-	while (m_read_next_line())
+	std::string line;
+	std::string word;
+
+	if (m_lineStream >> word)
+		return word;
+	if (std::getline(m_infile, line, delim))
 	{
-		if (m_get_next_word() != "server")
-			throw Config_parser::Invalid_config(__LINE__, "invalid server identifier");
-		if (m_get_next_word(__LINE__, "server blocks must be followed by { on the same line") != "{")
-			throw Config_parser::Invalid_config(__LINE__, "server blocks must be followed by {");
-		m_read_server();
+		m_lineStream.clear();
+		m_lineStream.str(line);
+		return m_get_next_word(delim);
 	}
+	return word;
 }
 
+std::string
+Config_parser::m_get_next_word_protected(int line, char delim)
+{
+	std::string word(m_get_next_word(delim));
+	if (word.empty())
+		throw Config_parser::Invalid_config(line, "unexpected EOF encountered");
+	return word;
+}
 
-
-// std::string
-// Config_parser::m_get_next_word(char delim)
-// {
-// 	std::string line;
-// 	std::string word;
-
-// 	if (m_lineStream >> word)
-// 		return word;
-// 	if (std::getline(m_infile, line, delim))
-// 	{
-// 		m_lineStream.clear();
-// 		m_lineStream.str(line);
-// 		return m_get_next_word(delim);
-// 	}
-// 	throw 0;
-// 	return word;
-// }
-
+#if 0
 
 std::string
 Config_parser::m_get_next_word(int line, const char *error_msg, const char *strerr)
@@ -213,6 +263,7 @@ Config_parser::m_peek_next_char()
 	return ret;
 }
 
+#endif // 0
 
 Config_parser::Invalid_config::Invalid_config(int line, const char *msg,
 											const char *strerr):

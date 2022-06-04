@@ -18,6 +18,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <utility>
 
 #include "Server.hpp"
 #include "Engine.hpp"
@@ -60,11 +61,17 @@ private: // methods
 
 	Config_parser& operator=(const Config_parser& other);
 
-	Server_setup m_read_server();
-	std::string m_get_next_word();
-	std::string m_get_next_word(int line, const char *error_msg = "", const char *strerr = "");
-	bool m_read_next_line(char delim = '\n');
-	char m_peek_next_char();
+
+	std::string m_get_next_word(char delim = '\n');
+	std::string m_get_next_word_protected(int line, char delim = '\n');
+
+
+	std::pair<std::string, Server_setup> m_read_server();
+	std::string m_read_location(Location_setup& location);
+	// std::string m_get_next_word();
+	// std::string m_get_next_word(int line, const char *error_msg = "", const char *strerr = "");
+	// bool m_read_next_line(char delim = '\n');
+	// char m_peek_next_char();
 
 private: // subclass
 	class Invalid_config: std::exception
