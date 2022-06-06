@@ -12,6 +12,9 @@
 
 #pragma once
 
+#include <cctype>
+#include <cstdlib>
+#include <cstdint>
 #include <string>
 #include <exception>
 #include <vector>
@@ -40,9 +43,9 @@ struct Server_setup
 	std::string root;
 	std::string index;
 	std::string error_pages;
-	int ip_address;
+	uint32_t ip_address;
 	int port;
-	unsigned int max_client_body_size;
+	uint32_t max_client_body_size;
 	std::vector<Location_setup> locations;
 };
 
@@ -62,8 +65,8 @@ private: // methods
 	Config_parser& operator=(const Config_parser& other);
 
 
-	std::string m_get_next_word(char delim = '\n');
-	std::string m_get_next_word_protected(int line, char delim = '\n');
+	std::string m_get_next_word();
+	std::string m_get_next_word_protected(int line, bool is_on_same_line = true);
 
 
 	std::pair<std::string, Server_setup> m_read_server();
@@ -72,6 +75,9 @@ private: // methods
 	// std::string m_get_next_word(int line, const char *error_msg = "", const char *strerr = "");
 	// bool m_read_next_line(char delim = '\n');
 	// char m_peek_next_char();
+
+	int m_check_int(const std::string& word);
+	uint32_t m_check_ip_address();
 
 private: // subclass
 	class Invalid_config: std::exception
@@ -88,6 +94,7 @@ private: // attributes
 	std::ifstream			m_infile;
 	std::string				m_word;
 	std::stringstream		m_lineStream;
+	size_t					m_line_num;
 
 	static bool				s_verbose;
 };

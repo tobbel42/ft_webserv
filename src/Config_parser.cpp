@@ -6,7 +6,7 @@
 /*   By: skienzle <skienzle@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/25 10:08:53 by skienzle          #+#    #+#             */
-/*   Updated: 2022/06/04 16:29:29 by skienzle         ###   ########.fr       */
+/*   Updated: 2022/06/06 15:51:06 by skienzle         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,8 @@ Config_parser::Config_parser():
 	m_servers(),
 	m_infile(),
 	m_word(),
-	m_lineStream()
+	m_lineStream(),
+	m_line_num()
 {
 	if (s_verbose)
 		std::cout << "Config_parser default constructor called" << std::endl;
@@ -32,7 +33,8 @@ Config_parser::Config_parser(const Config_parser& other):
 	m_servers(other.m_servers),
 	m_infile(), // the ofstream can't be copy constructed
 	m_word(other.m_word),
-	m_lineStream()
+	m_lineStream(),
+	
 {
 	if (s_verbose)
 		std::cout << "Config_parser copy constructor called" << std::endl;
@@ -42,7 +44,8 @@ Config_parser::Config_parser(const char *filename):
 	m_servers(),
 	m_infile(filename),
 	m_word(),
-	m_lineStream()
+	m_lineStream(),
+	m_line_num()
 {
 	if (s_verbose)
 		std::cout << "Config_parser filename constructor called" << std::endl;
@@ -108,11 +111,11 @@ Config_parser::run()
 	std::string word;
 	std::pair<std::string, Server_setup> server_ret;
 
-	while (!(word = m_get_next_word('{')).empty())
+	while (!(word = m_get_next_word()).empty())
 	{
 		if (word != "server")
 			throw Config_parser::Invalid_config(__LINE__, "invalid server identifier", word.c_str());
-		if (m_get_next_word_protected(__LINE__, '}') != "{")
+		if (m_get_next_word_protected(__LINE__, false) != "{")
 			throw Config_parser::Invalid_config(__LINE__, "server blocks must be followed by {");
 		server_ret = m_read_server();
 		if (server_ret.first != "}")
@@ -127,20 +130,25 @@ Config_parser::m_read_server()
 	Server_setup setup;
 	std::string word;
 
-	while (!(word = m_get_next_word_protected(__LINE__, '}')).empty())
+	while (!(word = m_get_next_word_protected(__LINE__, false)).empty())
 	{
-		
 		if (word == "root")
 			setup.root = m_get_next_word_protected(__LINE__);
 		else if (word == "server_name")
 			setup.server_name = m_get_next_word_protected(__LINE__);
 		else if (word == "index")
 			setup.index = m_get_next_word_protected(__LINE__);
+		else if (word == "max-client-body-size")
+			setup.max_client_body_size = m_check_int(m_get_next_word_protected(__LINE__));
+		else if (word == "port")
+			setup.port = m_check_int(m_get_next_word_protected(__LINE__));
+		else if (word == "ip-address")
+			setup.ip_address = m_check_ip_address();
 		else if (word == "location")
 		{
 			Location_setup location;
 			location.location = m_get_next_word_protected(__LINE__);
-			if (m_get_next_word_protected(__LINE__, '}') != "{")
+			if (m_get_next_word_protected(__LINE__, false) != "{")
 				throw Config_parser::Invalid_config(__LINE__, "location blocks must start with a {");
 			std::string location_ret = m_read_location(location);
 			if (location_ret != "}")
@@ -158,7 +166,7 @@ Config_parser::m_read_location(Location_setup& location)
 {
 	std::string word;
 	
-	while (!(word = m_get_next_word_protected(__LINE__, '}')).empty())
+	while (!(word = m_get_next_word_protected(__LINE__)).empty())
 	{
 		if (word == "root")
 			location.root = m_get_next_word_protected(__LINE__);
@@ -191,30 +199,74 @@ Config_parser::m_read_location(Location_setup& location)
 }
 
 std::string
-Config_parser::m_get_next_word(char delim)
+Config_parser::m_get_next_word()
 {
 	std::string line;
 	std::string word;
 
 	if (m_lineStream >> word)
-		return word;
-	if (std::getline(m_infile, line, delim))
 	{
+		if (!word.empty() && word[0] != '#')
+			return word;
+	}
+	if (std::getline(m_infile, line))
+	{
+		++m_line_num;
 		m_lineStream.clear();
 		m_lineStream.str(line);
-		return m_get_next_word(delim);
+		return m_get_next_word();
 	}
 	return word;
 }
 
 std::string
-Config_parser::m_get_next_word_protected(int line, char delim)
+Config_parser::m_get_next_word_protected(int line, bool is_on_same_line)
 {
-	std::string word(m_get_next_word(delim));
-	if (word.empty())
-		throw Config_parser::Invalid_config(line, "unexpected EOF encountered");
+	size_t current_line = m_line_num;
+	std::string word(m_get_next_word());
+	
+	if (is_on_same_line && current_line != m_line_num)
+		throw Config_parser::Invalid_config(current_line, "values must be on the same line as their keyword");
+	else if (word.empty())
+		throw Config_parser::Invalid_config(m_line_num, "unexpected EOF encountered");
 	return word;
 }
+
+int
+Config_parser::m_check_int(const std::string& word)
+{
+	for (std::string::const_iterator it = word.begin(); it != word.end(); ++it)
+	{
+		if (!isdigit(*it))
+			throw Config_parser::Invalid_config(m_line_num, "invalid unsigned integer format", word.c_str());
+	}
+	return atoi(word.c_str());
+}
+
+unit32_t
+Config_parser::m_check_ip_address()
+{
+	std::string word(m_get_next_word_protected(__LINE__));
+	size_t start = 0;
+	size_t end = 0;
+	int num = 1;
+	uint32_t ip_addr = 0;
+
+	while (end != std::string::npos)
+	{
+		end = word.find('.', start);
+		int ip_number = m_check_int(word.substr(start, end));
+		if (ip_number > 255 || ip_number < 0)
+			break;
+		ip_addr += ip_number << (4 % num) * 8; // shift the ip-byte to the appropriate byte in the address
+		start = end + 1;
+		++num;
+	}
+	if (num != 4)
+		throw Config_parser::Invalid_config(__LINE__, "invalid ip address format", word.c_str());
+	return ip_addr;
+}
+
 
 #if 0
 
