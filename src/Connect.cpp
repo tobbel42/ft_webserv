@@ -36,7 +36,7 @@ Connect	&Connect::operator = ( const Connect &rhs )
 	return (*this);
 }
 
-Connect::Connect( t_fd fd, t_fd sockFd ):
+Connect::Connect( fd_type fd, fd_type sockFd ):
 	m_fd(fd),
 	m_sockFd(sockFd),
 	p_server(NULL),
@@ -48,44 +48,32 @@ Connect::Connect( t_fd fd, t_fd sockFd ):
 }
 
 Server *
-Connect::getServer( void ) const
-{
-	return p_server;
-}
+Connect::getServer( void ) const { return p_server; }
 
-t_fd
-Connect::getSockFd( void ) const
-{
-	return m_sockFd;
-}
+fd_type
+Connect::getSockFd( void ) const { return m_sockFd; }
 
-t_fd
-Connect::getFd( void ) const
-{
-	return m_fd;
-}
+fd_type
+Connect::getFd( void ) const { return m_fd; }
 
 e_action
-Connect::getAction( void ) const
-{
-	return m_action;
-}
+Connect::getAction( void ) const { return m_action; }
 
 void
-Connect::setServer( Server * server )
-{
-	p_server = server;
-}
+Connect::setServer( Server * server ) { p_server = server; }
 
-void
+bool
 Connect::readRequest( s_kevent kevent )
 {
-	char	*buf = new char[kevent.data + 1];
-	buf[kevent.data] = '\0';
-	//ToDo Errorhandling
-	int i = read(kevent.ident, buf, kevent.data);
-	m_request.append(buf);
-	delete[] buf;
+	char	buf[READSIZE + 1];
+	int		len = ((READSIZE < kevent.data)?READSIZE : kevent.data);
+	long	i = read(kevent.ident, buf, len);
+	std::cout << i << std::endl;
+	buf[i] = '\0';
+	std::cout << READSIZE << " " << kevent.data <<" " << len << std::endl;
+	m_req.appendRead(buf);
+	m_req.printRequest();
+	return true;
 }
 
 void
@@ -98,46 +86,53 @@ Connect::writeResponse( s_kevent kevent )
 void
 Connect::composeResponse( void )
 {
-	std::fstream	file;
+	std::ifstream	fs;
 
-	size_t	begin = m_request.find(' ') + 1;
-	size_t	end = m_request.find(' ', begin + 1);
-	std::string filename =  m_request.substr(begin, end - begin);
+	// size_t	begin = m_request.find(' ') + 1;
+	// size_t	end = m_request.find(' ', begin + 1);
+	// std::string filename =  m_request.substr(begin, end - begin);
+	std::cout << "hello" << std::endl;
+	std::string filename = m_req.m_target;
 	if (filename == "/")
 		filename = "/index.html";
 
-	file.open((*p_server).getDirectory() + filename, std::ios::in);
+	std::cout <<  ( "/" + p_server->getDirectory() + filename) << std::endl;
 
-	if (file.is_open())
+	fs.open("/" + p_server->getDirectory() + filename);
+
+	std::cout << fs.is_open() << std::endl;
+
+	if (fs.is_open())
 	{
 
-		std::string			d;
-		std::string			f;
-		std::stringstream	s;
+		std::string			line;
+		std::string			file;
+		std::stringstream	ss;
+
 		while (1)
 		{
-			std::getline(file, d);
-			f.append(d);
-			f.append("\n");
-			if (file.eof())
+			std::getline(fs, line);
+			file.append(line);
+			file.append("\n");
+			if (fs.eof())
 				break;
 		}
 		m_response.clear();
 		m_response.append("HTTP/1.1 200 OK\r\n");
 		if (filename.find(".ico") == std::string::npos)
 		{
-			s << f.size();
+			ss << file.size();
 			m_response.append("Content-Type: text/html\r\n");
-			m_response.append("Content-Lenght:" + s.str() + "\r\n");
+			m_response.append("Content-Lenght:" + ss.str() + "\r\n");
 		}
 		else
 		{
 			m_response.append("Content-Type: image/x-icon\r\n");
-			s << (f.size() - 1);
-			m_response.append("Content-Lenght:" + s.str() + "\r\n");
+			ss << (file.size() - 1);
+			m_response.append("Content-Lenght:" + ss.str() + "\r\n");
 		}
 		m_response.append("\r\n");
-		m_response.append(f);
+		m_response.append(file);
 		m_response.append("\r\n");
 	}
 	else

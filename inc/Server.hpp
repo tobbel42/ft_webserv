@@ -26,7 +26,7 @@ class Server
 		Server	&operator=( const Server &rhs );
 
 		std::string	getDirectory( void ) const;
-		t_fd		getSocket( void ) const;
+		fd_type		getSocket( void ) const;
 		std::string getHostname( void ) const;
 		
 };

@@ -17,7 +17,7 @@
 
 struct	s_kevent: public kevent
 {
-	bool	operator==( t_fd fd );
+	bool	operator==( fd_type fd );
 };
 
 std::ostream	&operator<< ( std::ofstream & out, s_kevent const & in );
@@ -38,13 +38,13 @@ class Engine
 	private:
 		std::vector<s_kevent>			m_changes;
 		std::vector<s_kevent>			m_events;
-		std::map<t_fd, Socket>			m_sockets;
-		std::map<t_fd, Connect>			m_connects;
+		std::map<fd_type, Socket>			m_sockets;
+		std::map<fd_type, Connect>			m_connects;
 		std::vector<Server>				m_servers;
 		int								m_kqueue;
 
-		typedef	std::map<t_fd, Socket>::iterator	SockIter;
-		typedef	std::map<t_fd, Connect>::iterator	CnctIter;
+		typedef	std::map<fd_type, Socket>::iterator	SockIter;
+		typedef	std::map<fd_type, Connect>::iterator	CnctIter;
 		typedef	std::vector<s_kevent>::iterator		KeventIter;
 
 		void		socketEvent( s_kevent kevent  );
@@ -52,7 +52,7 @@ class Engine
 		void		acceptConnect( Socket sock );
 		void		closeConnects( void );
 		void		debug( void );
-		void		setKevent( t_fd fd, int16_t filter, uint16_t flag );
+		void		setKevent( fd_type fd, int16_t filter, uint16_t flag );
 		void		closeSockets( void );
 		void		listenSockets( void );
 

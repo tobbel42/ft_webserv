@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/17 14:41:27 by skienzle          #+#    #+#             */
-/*   Updated: 2022/04/06 13:06:40 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/05/30 17:51:41 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,22 +108,22 @@ Socket::getServer( std::string hostname )
 	return (m_defaultServer); 
 }
 
-t_fd
+fd_type
 Socket::getSockFd( void ) const
 {
 	return(m_sockfd);
 }
 
 bool
-Socket::operator==( t_fd fd )
+Socket::operator==( fd_type fd )
 {
 	return(m_sockfd == fd);
 }
 
-t_fd
+fd_type
 Socket::acceptConnect( void )
 {
-	t_fd	fd = accept(
+	fd_type	fd = accept(
 				m_sockfd,
 				reinterpret_cast<sockaddr*>(&m_address),
 				&m_addLen);

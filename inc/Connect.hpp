@@ -3,10 +3,14 @@
 
 # include <iostream>
 # include <utils.hpp>
-# include "Server.hpp"
-# include "Engine.hpp"
 # include <fstream>
 # include <sstream>
+# include <algorithm>
+
+# include "Server.hpp"
+# include "Engine.hpp"
+# include "Request.hpp"
+# include "Response.hpp"
 
 enum	e_action { READ, WRITE };
 
@@ -20,30 +24,50 @@ class Connect
 {
 	private:
 
-		t_fd		m_fd;
-		t_fd		m_sockFd;
+		// struct s_request {
+		// 	std::string	methode;
+		// 	std::string target;
+		// 	std::string version;
+		// 	std::map<std::string, std::string> header;
+		// 	std::string body;
+		// };
+		// struct s_response {
+		// 	std::string statusCode;
+		// 	std::map<std::string, std::string> header;
+		// 	std::string body;
+		// };
+
+		typedef	Request	request_type;
+		typedef Response response_type;
+
+		fd_type		m_fd;
+		fd_type		m_sockFd;
 		Server		*p_server;
 		e_action	m_action;
-		std::string	m_request;
+		std::string	m_rawReq;
 		std::string	m_response;
+
+		request_type		m_req;
+		response_type		m_res;
 		
-		Connect( void );
+		Connect( void ); //we do not allow default construction
+		
 		
 	public:
 
-		Connect( t_fd fd, t_fd sockFd );
+		Connect( fd_type fd, fd_type sockFd );
 		~Connect( void );
 		Connect( const Connect &copy );
 
 		Connect	&operator = ( const Connect &rhs );
 
-		t_fd		getFd( void ) const;
-		t_fd		getSockFd( void ) const;
+		fd_type		getFd( void ) const;
+		fd_type		getSockFd( void ) const;
 		Server *	getServer( void ) const;
 		e_action	getAction( void ) const;	
-		
+	
 		void		setServer( Server * server );
-		void		readRequest( s_kevent kevent );
+		bool		readRequest( s_kevent kevent );
 		void		writeResponse( s_kevent kevent );
 		void		composeResponse( void );
 		
