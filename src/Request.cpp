@@ -43,9 +43,7 @@ bool Request::isDone() {
 
 std::string Request::getNextReqLine() {
 	std::string line;
-	try{
-	size_t pos =  m_buffer.find("\n", m_offset);
-	std::cout << pos << m_buffer.substr(m_offset) << std::endl;
+	size_t pos =  m_buffer.find("\r\n", m_offset);
 	if (pos == std::string::npos)
 	{
 		line = m_buffer.substr(m_offset);
@@ -56,9 +54,7 @@ std::string Request::getNextReqLine() {
 		line = m_buffer.substr(m_offset, pos - m_offset);
 		m_offset = pos + 2;
 	}
-	}
-	catch (...) { std::cout << "###########line###########" 
-	<< " " << m_offset<< " " << std::string::npos << std::endl;}
+
 
 	return line;
 }
@@ -67,10 +63,12 @@ bool Request::parseRequestLine(const std::string & line){
 	size_t pos = 0;
 
 	pos = line.find(' ');
+	std::cout << line << pos << "$$" << std::endl;
 	m_methode = line.substr(0, pos);
-	m_target = line.substr(pos + 1, line.find(' ', pos + 1) - pos);
-	pos = pos + 1 + m_target.size();
+	m_target = line.substr(pos + 1, line.find(' ', pos + 1) - pos - 1);
+	pos = pos + 2 + m_target.size();
 	m_httpVer = line.substr(pos);
+	std::cout << m_methode << "$$" << m_target << "$$" << m_httpVer << "$$" << std::endl;
 
 	return true;
 }
@@ -78,25 +76,29 @@ bool Request::parseRequestLine(const std::string & line){
 bool Request::appendRead(const char *buf) {
 	m_buffer.append(buf);
 
-	std::string key, value;
-
+	// std::string key, value;
+	try {
 	std::string line = getNextReqLine();
 	
 	parseRequestLine(line);
-
-	while (m_offset < m_buffer.size() && line.size() > 0)
-	{
-		try {
-		line = getNextReqLine();
-		key = line.substr(0, line.find(":"));
-		if (key == line)
-			break;
-		value = line.substr(key.size() + 2);
-		m_header.insert(std::make_pair(key, value));
-		}
-	catch (const std::exception & e) { std::cout << "WHile" << e.what() << std::endl;};
 	}
-	std::cout << m_buffer << m_buffer.size() << std::endl;
+	catch (std::exception & e) { std::cout << "ERR\n" << buf << std::endl; printRequest();
+		std::cout << e.what() << std::endl; } 
+	// while (m_offset < m_buffer.size() && line.size() > 0)
+	// {
+	// 	try {
+	// 	line = getNextReqLine();
+	// 	key = line.substr(0, line.find(":"));
+	// 	if (key == line)
+	// 		break;
+	// 	value = line.substr(key.size() + 2);
+	// 	m_header.insert(std::make_pair(key, value));
+	// 	}
+	// catch (const std::exception & e) { std::cout << "WHile" << e.what() << std::endl;};
+	// }
+	// std::cout << m_buffer << m_buffer.size() << std::endl;
+
+	m_buffer.clear();
 
 	return isDone();
 	

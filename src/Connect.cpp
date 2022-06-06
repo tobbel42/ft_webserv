@@ -68,11 +68,8 @@ Connect::readRequest( s_kevent kevent )
 	char	buf[READSIZE + 1];
 	int		len = ((READSIZE < kevent.data)?READSIZE : kevent.data);
 	long	i = read(kevent.ident, buf, len);
-	std::cout << i << std::endl;
 	buf[i] = '\0';
-	std::cout << READSIZE << " " << kevent.data <<" " << len << std::endl;
 	m_req.appendRead(buf);
-	m_req.printRequest();
 	return true;
 }
 
@@ -80,6 +77,8 @@ void
 Connect::writeResponse( s_kevent kevent )
 {
 	//ToDo Errorhandling
+	std::cout << "RESPONSE" << std::endl;
+	std::cout << m_response << std::endl;
 	write(kevent.ident, m_response.c_str(), m_response.size());
 }
 
@@ -88,19 +87,20 @@ Connect::composeResponse( void )
 {
 	std::ifstream	fs;
 
-	// size_t	begin = m_request.find(' ') + 1;
-	// size_t	end = m_request.find(' ', begin + 1);
-	// std::string filename =  m_request.substr(begin, end - begin);
-	std::cout << "hello" << std::endl;
+	// std::cout << "###\n" << m_req.m_buffer << "###\n" << std::endl;
+
+	// size_t	begin = m_req.m_buffer.find(' ') + 1;
+	// size_t	end = m_req.m_buffer.find(' ', begin + 1);
+	// std::cout << begin << " " << end << std::endl;
+	// std::string filename =  m_req.m_buffer.substr(begin, end - begin);
+	// std::cout << "hello" << "$" << m_req.m_target << "$" << std::endl;
 	std::string filename = m_req.m_target;
 	if (filename == "/")
 		filename = "/index.html";
 
-	std::cout <<  ( "/" + p_server->getDirectory() + filename) << std::endl;
+	fs.open(p_server->getDirectory() + filename);
 
-	fs.open("/" + p_server->getDirectory() + filename);
-
-	std::cout << fs.is_open() << std::endl;
+	std::cout << filename << std::endl;
 
 	if (fs.is_open())
 	{
