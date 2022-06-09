@@ -1,57 +1,64 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/03/13 10:22:56 by skienzle          #+#    #+#             */
-/*   Updated: 2022/03/24 18:14:08 by tgrossma         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+#ifndef SERVER_HPP
+# define SERVER_HPP
 
-#pragma once
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <cstdlib>
-#include <cstdio>
-#include <csignal>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
 #include <utils.hpp>
-#include <Engine.hpp>
-#include <Connect.hpp>
 
-class Engine;
 
+/*
+//The server class is best understood as an ruleset how a given connection
+//handels incomming requests, the rules are specified in the config files
+//ToDo: pipeline data from the configfile
+//		even more rules are needed
+*/
 class Server
 {
-public:
-	Server(const Server& other);
-	Server(unsigned int ip, unsigned int port);
-	~Server();
-	
-	Server& operator=(const Server& other);
-	
-	t_fd	getSockFd( void ) const;
-	void	acceptConnect( Engine & engine );
+	private:
+		std::string	m_hostname;
 
-	bool	operator==( t_fd fd );
-	
-	
-private:
-	Server();
+		std::string	m_directory;
 
-	static bool				m_verbose;
-	unsigned int			m_ip;
-	unsigned int			m_port;
-	sockaddr_in 			m_address;
-	socklen_t				m_addLen;
-	t_fd 					m_sockfd;
-	std::vector<Connect>	m_connects;
+		uint32_t m_ip;
+		uint32_t m_port;
 
-	typedef std::vector<Connect>::iterator	CnctIter;
+		bool	m_defaultServer;
 
-	void m_init();
-	
+		//ERRCODE + FIlEPATH
+		std::map<uint32_t, std::string> m_defaultErrorPages;
+
+		size_t	m_clientBodySize;
+
+		//GET POST etc.
+		std::vector<std::string> m_allowedMethodes;
+
+		std::map<std::string, std::string> m_redirections;
+
+		bool m_directoryListing;
+
+		//path to file
+		std::string m_defaultDirectoryFile;
+
+		//list all file extensions like .py .php
+		std::vector<std::string> m_cgiFileExtensions;
+		
+		//maybe todo ->fileupload enable + path 
+
+
+	public:
+		Server( void );
+		Server( std::string hostname, std::string directory);
+		~Server();
+		Server( const Server &cpy );
+
+		Server	&operator=( const Server &rhs );
+
+		std::string	getDirectory( void ) const;
+		t_fd		getSocket( void ) const;
+		std::string getHostname( void ) const;
+		
 };
+
+#endif

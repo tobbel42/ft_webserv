@@ -6,7 +6,7 @@
 /*   By: skienzle <skienzle@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/25 10:08:53 by skienzle          #+#    #+#             */
-/*   Updated: 2022/06/09 18:35:05 by skienzle         ###   ########.fr       */
+/*   Updated: 2022/06/09 18:54:24 by skienzle         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,38 +66,6 @@ Config_parser::operator=(const Config_parser& other)
 	#endif
 	return *this;
 }
-
-// void
-// Config_parser::run()
-// {
-// 	// std::string line;
-
-// 	// while (std::getline(m_infile, line))
-// 	// {
-// 	// 	// std::cout << m_word << '\n';
-// 	// 	m_lineStream.clear();
-// 	// 	m_lineStream.str(line);
-// 	// 	while (m_lineStream >> m_word)
-// 	// 	{
-// 	// 		if (m_word == "server")
-// 	// 		{
-				
-// 	// 		}
-// 	// 		else if ()
-// 	// 	}
-// 	// }
-// 	std::string word;
-// 	while (true)
-// 	{
-// 		word = m_get_next_word();
-// 		if (word != "server")
-// 			throw Config_parser::Invalid_config(__LINE__, "invalid identifier", word.c_str());
-// 		if (m_get_next_word() != "{")
-// 			throw Config_parser::Invalid_config(__LINE__, "server blocks must start with", "{");
-// 		m_read_server();
-		
-// 	}
-// }
 
 void
 Config_parser::run()

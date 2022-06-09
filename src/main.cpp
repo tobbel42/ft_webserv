@@ -1,16 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: skienzle <skienzle@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/03/12 11:57:15 by skienzle          #+#    #+#             */
-/*   Updated: 2022/06/09 16:59:08 by skienzle         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "Server.hpp"
+#include "Socket.hpp"
 #include "Engine.hpp"
 #include "Config_parser.hpp"
 
@@ -31,6 +19,8 @@ bool	strriseq(const char *s1, const char *s2)
 
 int main(int argc, char **argv)
 {
+	Engine	a;
+	//atm müssen die server vor den Sockets initialisiert werden, sonst segfault
 	if (argc != 2)
 	{
 		std::cerr << "Error:\nwrong number of arguments\nusage: "
@@ -54,8 +44,8 @@ int main(int argc, char **argv)
 		std::cerr << e.what() << '\n';
 		return 1;
 	}
-	// Engine	a;
-	// a.initServers();
-	// a.launch();
+	a.initServers();
+	a.initSockets();
+	a.launch();
 	return 0;
 }

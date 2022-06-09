@@ -6,9 +6,10 @@ CFLAGS = -Wall -Wextra -std=c++98 # -Werror
 RM = rm -rf
 
 INC = Engine.hpp\
-	Server.hpp\
+	Socket.hpp\
 	utils.hpp\
-	Connect.hpp
+	Connect.hpp\
+	Server.hpp
 IDIR = inc
 INC_FULL = $(addprefix $(IDIR)/, $(INC))
 
@@ -16,9 +17,10 @@ TPP =
 TPP_FULL = $(addprefix $(IDIR)/, $(TPP))
 
 SRC = main.cpp\
-	Server.cpp\
+	Socket.cpp\
 	Engine.cpp\
-	Connect.cpp \
+	Connect.cpp\
+	Server.cpp\
 	Config_parser.cpp
 SDIR = src
 SRC_FULL = $(addprefix $(SDIR)/, $(SRC))
@@ -50,7 +52,7 @@ re: fclean all
 bonus: CFLAGS += -DBONUS=1
 bonus: all
 
-debug: CFLAGS += -g -DVERBOSE=1
+debug: CFLAGS += -g -DVERBOSE
 debug: re
 
 release: CFLAGS += -Ofast

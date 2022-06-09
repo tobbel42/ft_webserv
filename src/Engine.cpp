@@ -1,36 +1,35 @@
 #include "../inc/Engine.hpp"
 
-#ifdef VERBOSE
-	bool Engine::m_verbose = true;
-#else
-	bool Engine::m_verbose = false;
-#endif
-
 Engine::Engine( void )
 {
-	if (m_verbose)
+	#ifdef VERBOSE
 		std::cout << "Engine: Default Constructor called" << std::endl;
+	#endif
 }
 
 Engine::~Engine( void )
 {
-	if (m_verbose)
+	#ifdef VERBOSE
 		std::cout << "Engine: Destructor called" << std::endl;
-	this->closeServers();
+	#endif
+	this->closeConnects();
+	this->closeSockets();
 }
 
 Engine::Engine( const Engine &copy )
 {
-	if (m_verbose)
+	#ifdef VERBOSE
 		std::cout << "Engine: Copy Constructor called" << std::endl;
+	#endif
 	*this = copy;
 }
 
-Engine	
-&Engine::operator = ( const Engine &rhs )
+Engine &	
+Engine::operator = ( const Engine &rhs )
 {
-	if (m_verbose)
+	#ifdef VERBOSE
 		std::cout << "Engine: Assignation operator called" << std::endl;
+	#endif
 	(void)rhs;
 	return (*this);
 }
@@ -43,32 +42,12 @@ bool s_kevent::operator==( t_fd fd )
 	return (this->ident == fd);
 }
 
-s_kevent *
-Engine::findByFd( t_fd fd, std::vector<s_kevent> vec )
-{
-	std::vector<s_kevent>::iterator	iter;
-
-	iter = std::find(vec.begin(), vec.end(), fd);
-	if (iter == vec.end())
-		return (NULL);
-	return(&(*iter));
-}
-
-Server *
-Engine::findServ( t_fd fd )
-{
-	ServIter	iter = std::find(m_servers.begin(), m_servers.end(), fd);
-	if (iter == m_servers.end())
-		return (NULL);
-	return(&(*iter));
-}
-
 std::ostream &
 operator<< ( std::ostream & out, s_kevent const & in )
 {
 	out << "\nident:\t" << in.ident;
 	out << "\nfilter:\t" << in.filter;
-	out << "\nflags:\t" << std::bitset<2>(in.flags);
+	out << "\nflags:\t" << std::bitset<16>(in.flags);
 	out << "\nfflags:\t" << in.fflags;
 	out << "\ndata:\t" << in.data;
 	out << "\nudata:\t" << in.udata;
@@ -79,42 +58,62 @@ operator<< ( std::ostream & out, s_kevent const & in )
 //in here all the socket binding magic should happen, for now just a dummy
 */
 void
+Engine::initSockets( void )
+{
+	Socket	newSock(INADDR_ANY, 8080);
+	newSock.setDefaultServer(&m_servers[0]);
+	m_sockets.insert(std::pair<t_fd, Socket>(newSock.getSockFd(), newSock));
+}
+
+/*
+//in here the servers should be initialized
+*/
+void
 Engine::initServers( void )
 {
-	Server	newServ(INADDR_ANY, 8080);
-	m_servers.push_back(newServ);
+	Server	newServer("localhost", "testServerDir");
+
+	m_servers.push_back(newServer);
+	
 }
 
 void
-Engine::listenServers( void )
+Engine::listenSockets( void )
 {
 	int		errFlag;
-	for (ServIter iter = m_servers.begin(); iter != m_servers.end(); ++iter)
+	for (SockIter iter = m_sockets.begin(); iter != m_sockets.end(); ++iter)
 	{
-		errFlag = listen((*iter).getSockFd(), ENGINE_BACKLOG);
+		errFlag = listen(iter->first, ENGINE_BACKLOG);
 		if (errFlag)
 		{
 			std::cerr << "Listen error: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		setRead((*iter).getSockFd());
+		this->setKevent(iter->first, EVFILT_READ, EV_ADD);
 	}
 }
 
 void
-Engine::closeServers( void )
+Engine::closeSockets( void )
 {
-	for (ServIter iter = m_servers.begin(); iter != m_servers.end(); ++iter)
-		close((*iter).getSockFd());
+	for (SockIter iter = m_sockets.begin(); iter != m_sockets.end(); ++iter)
+		close(iter->first);
+}
+
+void
+Engine::closeConnects( void )
+{
+	for (CnctIter iter = m_connects.begin(); iter != m_connects.end(); ++iter)
+		close(iter->first);
 }
 
 
 void
-Engine::setRead( t_fd fd )
+Engine::setKevent( t_fd fd, int16_t filter, uint16_t flag)
 {
 	s_kevent	event;
 
-	EV_SET(&event, fd, EVFILT_READ, EV_ADD, 0, 0, 0);
+	EV_SET(&event, fd, filter, flag, 0, 0, 0);
 	m_changes.push_back(event);
 	m_events.resize(m_changes.size());
 }
@@ -130,8 +129,113 @@ Engine::debug( void )
 		std::cout << *iter << std::endl;
 }
 
+void
+Engine::acceptConnect( Socket & sock )
+{
+	t_fd	fd = sock.acceptConnect();
+
+	Connect	newConnect(fd, sock.getIp(), sock.getPort());
+
+	m_connects.insert(std::pair<t_fd, Connect>(fd, newConnect));
+	this->setKevent(fd, EVFILT_READ, EV_ADD);
+}
+
+void
+Engine::assignServer( Connect &connect )
+{
+	// SockIter iter = m_sockets.find(connect.getSockFd());
+
+	
+
+	// //Socket not found
+	// if (iter == m_sockets.end())
+	// {
+	// 	//internal error 500
+	// 	return ;
+	// }
+
+	// //ToDo: parse he Hostname from the request
+
+	// connect.setServer((*iter).second.getServer(""));
+
+	//smart server find fknt 
+
+	connect.setServer(&m_servers[0]);
+}
+
+void
+Engine::socketEvent( s_kevent & kevent )
+{
+	SockIter	iter = m_sockets.find(kevent.ident);
+
+	if (iter == m_sockets.end())
+		return ;
+	#ifdef VERBOSE
+		std::cout << "Socket Event" << std::endl;
+	#endif
+	this->acceptConnect(iter->second);
+}
+
+void
+Engine::connectEvent( s_kevent & kevent )
+{
+	//check if the FD is linked to a connection
+	CnctIter	iter = m_connects.find(kevent.ident);
+
+	if (iter == m_connects.end())
+		return ;
+
+	//eyeCandy
+
+	Connect	& cnct = (*iter).second;
+
+	//A connection can have multible states
+	//on read we read as many bytes, as in the kevent specified
+	//ToDo:
+	// parse the read data( is it chunked, does is need multible read cycles)
+	// we need to assign a server to the connection
+	// depending on the request we 
+	if (cnct.getAction() == READ)
+	{
+		//read the Request: ToDo Handling of chuncked requests(multible reads and concatenate)
+		cnct.readRequest(kevent);
+
+		//if read done 
+			//removing the read event from the from the change vector
+			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
+
+			//assign a server, if not yet given (search for Hostname in Socket servers/ default server)
+			if (cnct.getServer() == NULL)
+				assignServer(cnct);
+
+			//formulate the request (result or error), chunking of big responses
+			cnct.composeResponse();
+
+			//adding the write event to the change vector
+			setKevent(kevent.ident, EVFILT_WRITE, EV_ADD);
+	}
+	//On write 
+	else if (cnct.getAction() == WRITE)
+	{
+		//write the response
+		cnct.writeResponse(kevent);
+
+		//if write done
+			//remove the event form the change vector
+			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
+
+			//close the connection
+			close(cnct.getFd());
+
+			//remove connection from FD pool
+			m_connects.erase(iter);
+	}
+
+}
+
+
 /*
-//Main loop of the server.
+//Main loop of the Socket.
 */
 void
 Engine::launch( void )
@@ -139,46 +243,33 @@ Engine::launch( void )
 	//init kqueue
 	m_kqueue = kqueue();
 
-	//start to listen to server, add the Sockets to the kqueue
-	listenServers();
+	//start to listen to Socket, add the Sockets to the kqueue
+	listenSockets();
 	
 	int	n_events = 0;
 
-	//the main server loop
-	while (true)
+	//the main Socket loop
+	while (0b00101010)
 	{
 		n_events = kevent(m_kqueue,
 			&(*m_changes.begin()), m_changes.size(),
 			&(*m_events.begin()), m_events.size(),
 			NULL);
-		if (m_verbose)
+
+		#ifdef VERBOSE
 		{
 			std::cout << "\nEvents: " << n_events << std::endl;
 			this->debug();
 		}
-		if (n_events == -1)
-			break ;
+		#endif
 
 		for	(int i = 0; i < n_events; ++i)
 		{
-			Server	*serv = findServ(m_events[i].ident);
-			if (serv == NULL)
-			{
-				//Connection
-				std::cout << "Connection Stuff" << std::endl;
-			}
-			else
-			{
-				//ServerFD
-				if (!(m_events[i].flags & EV_EOF))
-					serv->acceptConnect(*this);
-				else
-					continue;
-			}
-				
+			socketEvent(m_events[i]);
+			connectEvent(m_events[i]);
 		}
+				
 	}
-
 	//closing of sockets is happening in the Engine destructor
 }
 

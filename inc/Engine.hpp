@@ -1,13 +1,17 @@
 #ifndef ENGINE_HPP
 # define ENGINE_HPP
 
+# include <string>
 # include <iostream>
 # include <vector>
+# include <map>
 # include <algorithm>
 # include <sys/event.h>
 # include <utils.hpp>
 # include <stdio.h>
 
+# include <Socket.hpp>
+# include <Connect.hpp>
 # include <Server.hpp>
 
 # define ENGINE_BACKLOG 10
@@ -19,23 +23,41 @@ struct	s_kevent: public kevent
 
 std::ostream	&operator<< ( std::ofstream & out, s_kevent const & in );
 
-class Server;
+enum	Type { SOCKET, CONNECTION };
+
+struct ObjPtr
+{
+	Type	type;
+	void	*ptr;
+};
+
+class Socket;
+class Connect;
 
 class Engine
 {
 	private:
-		static bool						m_verbose;
 		std::vector<s_kevent>			m_changes;
 		std::vector<s_kevent>			m_events;
+		std::map<t_fd, Socket>			m_sockets;
+		std::map<t_fd, Connect>			m_connects;
 		std::vector<Server>				m_servers;
 		int								m_kqueue;
 
-		typedef	std::vector<Server>::iterator	ServIter;
-		typedef	std::vector<s_kevent>::iterator	KeventIter;
+		typedef	std::map<t_fd, Socket>::iterator	SockIter;
+		typedef	std::map<t_fd, Connect>::iterator	CnctIter;
+		typedef	std::vector<s_kevent>::iterator		KeventIter;
 
-		s_kevent	*findByFd( t_fd, std::vector<s_kevent> vec );
-		Server		*findServ( t_fd );
+		void		socketEvent( s_kevent & kevent  );
+		void		connectEvent( s_kevent & kevent );
+		void		acceptConnect( Socket & sock );
+		void		closeConnects( void );
+		void		debug( void );
+		void		setKevent( t_fd fd, int16_t filter, uint16_t flag );
+		void		closeSockets( void );
+		void		listenSockets( void );
 
+		void		assignServer( Connect &connect );
 
 	public:
 		Engine( void );
@@ -45,15 +67,10 @@ class Engine
 
 		//ToDo: ErrorHandling
 
+		void		initSockets( void );
 		void		initServers( void );
-		void		closeServers( void );
-		void		listenServers( void );
 		void		launch( void );
 
-
-		void		debug( void );
-
-		void		setRead( t_fd fd );
 
 
 };

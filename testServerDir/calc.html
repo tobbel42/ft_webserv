@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang ="en">
+	<head>
+		<meta charset="utf-8"/>
+		<title>Tobis super duper calculator</title>
+		<style>
+			.button {
+				height: 4em;
+				width: 4em;
+				background-color: #12ddeb;
+				border: none;
+				color: rgb(218, 24, 208);
+				padding: .2em .4em;
+				text-align: center;
+				text-decoration: none;
+				display: inline-block;
+				font-size: 1em;
+				line-height: 1.5;
+				margin: .4em .2em;
+				cursor: pointer;
+				vertical-align: bottom;
+				display: inline-block;
+			}
+			.button:hover {
+				color: #000000;
+				background-color: #9198e5;
+			}
+			.p1 {
+				font-family: "Roboto", sans-serif;
+				font-size: 1em;
+				color: #12ddeb;
+				text-align: right;
+			}
+			.boarder {
+				height: 3em;
+				width: 21.5em;
+				border: .2em;
+				border-style: solid;
+				border-color: #12ddeb;
+				padding: .5em;
+			}
+			.background {
+				height: 100%;
+				margin: 0;
+				background: linear-gradient(#e66465, #9198e5);
+				background-repeat: no-repeat;
+				background-attachment: fixed;
+			}
+			.html {
+				height: 100%;
+			}
+			.header {
+				font-size: 3em;
+				font-family: "Roboto", sans-serif;
+				color: #12ddeb;
+				padding-left: .1em;
+			}
+		</style>
+	</head>
+	<body class="background">
+		<h1 class="header">Calculator</h1>
+		<div class="boarder">
+			<p id="display" class="p1">0</p>
+		</div>
+		<br>
+		<div>
+			<div>
+				<button id="1" class="button">1</button>
+				<button id="2" class="button">2</button>
+				<button id="3" class="button">3</button>
+				<button id="clear" class="button">clear</button>
+				<button class="button"></button>
+				<br>
+			</div>
+			<div>
+				<button id="4" class="button">4</button>
+				<button id="5" class="button">5</button>
+				<button id="6" class="button">6</button>
+				<button id="cc" class="button">cc</button>
+				<button class="button"> </button>
+				<br>
+			</div>
+			<div>
+				<button id="7" class="button">7</button>
+				<button id="8" class="button">8</button>
+				<button id="9" class="button">9</button>
+				<button id="*" class="button">*</button>
+				<button class="button"></button>
+				<br>
+			</div>
+			<div>
+				<button id="+" class="button">+</button>
+				<button id="0" class="button">0</button>
+				<button id="-" class="button">-</button>
+				<button id="/" class="button">/</button>
+				<button id="=" class="button">=</button>
+			</div>
+		</div>
+		<script>
+			var nbr = 0;
+			var stack = [];
+			function calculat(st)
+			{
+				var ret = 0;
+				var elem;
+				var op = 0;
+				while (st.length){
+					elem = st.shift();
+					if (typeof(elem) == "number")
+					{
+						switch(op)
+						{
+							case "+":
+								ret += elem;
+								break;
+							case "-":
+								ret -= elem;
+								break;
+							case "/":
+								ret /= elem;
+								break;
+							case "*":
+								ret *= elem;
+								break;
+							case 0:
+								ret = elem;
+								break;
+						}
+						op = 0;
+					}
+					else
+						op = elem;
+				}
+				return ret;
+			}
+
+			document.getElementById('1').onclick = function() {
+				nbr = nbr * 10 + 1;
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('2').onclick = function() {
+				nbr = nbr * 10 + 2;
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('3').onclick = function() {
+				nbr = nbr * 10 + 3;
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('4').onclick = function() {
+				nbr = nbr * 10 + 4;
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('5').onclick = function() {
+				nbr = nbr * 10 + 5;
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('6').onclick = function() {
+				nbr = nbr * 10 + 6;
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('7').onclick = function() {
+				nbr = nbr * 10 + 7;
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('8').onclick = function() {
+				nbr = nbr * 10 + 8;
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('9').onclick = function() {
+				nbr = nbr * 10 + 9;
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('+').onclick = function() {
+				stack.push(nbr);
+				stack.push("+");
+				nbr = 0;
+			}
+			document.getElementById('0').onclick = function() {
+				nbr = nbr * 10;
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('-').onclick = function() {
+				stack.push(nbr);
+				stack.push("-");
+				nbr = 0;
+			}
+			document.getElementById('=').onclick = function() {
+				stack.push(nbr);
+				nbr = calculat(stack);
+				stack = [];
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('clear').onclick = function() {
+				nbr = 0;
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('cc').onclick = function() {
+				nbr = 0;
+				stack = [];
+				document.getElementById('display').innerHTML = nbr;
+			}
+			document.getElementById('/').onclick = function() {
+				stack.push(nbr);
+				stack.push("/");
+				nbr = 0;
+			}
+			document.getElementById('*').onclick = function() {
+				stack.push(nbr);
+				stack.push("*");
+				nbr = 0;
+			}
+			document.addEventListener('keydown', function(event){
+				var keyValue = Number(event.key);
+				if (keyValue)
+				{
+					nbr = (nbr * 10) + keyValue;
+					document.getElementById('display').innerHTML = nbr;
+				}
+				else
+				{
+					if (
+						event.key == "+" ||
+						event.key == "-" ||
+						event.key == "/" ||
+						event.key == "*"
+					) {
+						stack.push(nbr);
+						stack.push(event.key);
+						nbr = 0;
+					}
+					else if (event.key == "=" || event.key == "Enter"){
+						stack.push(nbr);
+						nbr = calculat(stack);
+						stack = [];
+						document.getElementById('display').innerHTML = nbr;
+					}
+					else if (event.key == "c"){
+						nbr = 0;
+						document.getElementById('display').innerHTML = nbr;
+					}
+				}
+			})
+		</script>
+	</body>
+</html>

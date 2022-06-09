@@ -11,6 +11,9 @@
 #include <fstream>
 
 #define PORT 8080
+#define PHP 1
+#define PYTHON 2
+
 
 #include <sys/event.h>
 std::string generateHead(int size)
@@ -18,7 +21,69 @@ std::string generateHead(int size)
 	return ("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length:" + std::to_string(size) + "\n\n");
 }
 
-int main(int argc, char const *argv[])
+bool check_valid_filename(std::string filename) // Achtung, was wollen wir machen, wenn das passiert?
+{
+	if (filename.find("../") != std::string::npos || filename.find("/../") != std::string::npos)
+	{
+		std::cout << "This filename is invalid" << std::endl;
+		return (false);
+	}
+	return (true);
+}
+
+std::string get_file_content(std::string filename, std::string path)
+{
+	// check for valid filename (without .. etc)
+	std::ifstream in;
+	std::string content;
+	std::string line;
+
+	//check_valid_filename(filename); scheint automatisch von Browser schon gemacht zu werden
+	
+	//in.open(path + filename); // ist das hier wirklich nicht key sensitive?
+	in.open(path);
+	if (in.is_open())
+	{
+		std::cout << "is opened" << std::endl;
+		while (getline (in,line))
+			content = content + line + '\n';
+	in.close();
+	}
+	return (content);
+}
+
+int	check_file_extension(std::string filename)
+{
+	if(filename.substr(filename.find_last_of(".") + 1) == "php")
+		return PHP;
+	else if(filename.substr(filename.find_last_of(".") + 1) == "py")
+		return PYTHON;
+	else
+		return 0; // ist es angreifbar wenn wir sonst einfach die File ausgeben??
+}
+
+std::string execute_cgi(std::string filename, int file_extension, char **envp)
+{
+	char *argv[] = {"/usr/bin/php",(char *) filename.c_str(), NULL};
+	std::cout << "vor execve"<< std::endl;
+	if (execve(argv[0], argv, envp) == -1)
+		std::cout << "Problem bei execve" << std::endl;
+}
+
+std::string check_file(std::string filename, std::string folder_path, char **envp)
+{
+	//check_valid_filename(folder_path + filename);
+	std::cout << "filename: " << folder_path +filename << std::endl;
+	filename = folder_path + filename;
+	int file_extension = check_file_extension(filename);
+	std::cout << "file extension: " << file_extension << std::endl;
+	if (file_extension == PHP || file_extension == PYTHON)
+		return execute_cgi(filename, file_extension, envp);
+	else
+	return get_file_content(filename, folder_path);
+}
+
+int main(int argc, char const *argv[], char **envp)
 {
 	int server_fd, new_socket; long valread;
 	struct sockaddr_in address;
@@ -110,7 +175,7 @@ int main(int argc, char const *argv[])
 				std::string filename = new_buffer.substr(i, j - i);
 
 				std::string return_req;
-				if (filename == "index.html")
+				if (filename.length() != 0)
 				{
 
 
@@ -118,20 +183,21 @@ int main(int argc, char const *argv[])
 					std::ifstream file;
 					std::string line;
 					std::string all_lines;
-					file.open(filename);
-					while (getline(file, line))
-					{
-						std::cout << line << "\n";
-						all_lines = all_lines + line;
-					}
-					file.close();
+					all_lines = check_file(filename, "www/root/", envp);
+					//file.open(filename);
+					//while (getline(file, line))
+					//{
+					//	std::cout << line << "\n";
+					//	all_lines = all_lines + line;
+					//}
+					//file.close();
 					//while (i < j)
 					//{
 					//	printf("%c", buffer[i]);
 					//	i++;
 					//}
 					//printf("\n\n");
-					//std::cout << "all lines: " +  all_lines << std::endl;
+					std::cout << "all lines: " +  all_lines << std::endl;
 					std::string return_req = generateHead(all_lines.length()) + all_lines;
 					
 					//std::cout << "return req: " << return_req << std::endl;
