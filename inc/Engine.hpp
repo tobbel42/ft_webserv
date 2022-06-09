@@ -1,6 +1,7 @@
 #ifndef ENGINE_HPP
 # define ENGINE_HPP
 
+# include <string>
 # include <iostream>
 # include <vector>
 # include <map>
