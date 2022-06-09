@@ -130,11 +130,11 @@ Engine::debug( void )
 }
 
 void
-Engine::acceptConnect( Socket sock )
+Engine::acceptConnect( Socket & sock )
 {
 	t_fd	fd = sock.acceptConnect();
 
-	Connect	newConnect(fd, sock.getSockFd());
+	Connect	newConnect(fd, sock.getIp(), sock.getPort());
 
 	m_connects.insert(std::pair<t_fd, Connect>(fd, newConnect));
 	this->setKevent(fd, EVFILT_READ, EV_ADD);
@@ -143,22 +143,28 @@ Engine::acceptConnect( Socket sock )
 void
 Engine::assignServer( Connect &connect )
 {
-	SockIter iter = m_sockets.find(connect.getSockFd());
+	// SockIter iter = m_sockets.find(connect.getSockFd());
 
-	//Socket not found
-	if (iter == m_sockets.end())
-	{
-		//internal error 500
-		return ;
-	}
+	
 
-	//ToDo: parse he Hostname from the request
+	// //Socket not found
+	// if (iter == m_sockets.end())
+	// {
+	// 	//internal error 500
+	// 	return ;
+	// }
 
-	connect.setServer((*iter).second.getServer(""));
+	// //ToDo: parse he Hostname from the request
+
+	// connect.setServer((*iter).second.getServer(""));
+
+	//smart server find fknt 
+
+	connect.setServer(&m_servers[0]);
 }
 
 void
-Engine::socketEvent( s_kevent kevent )
+Engine::socketEvent( s_kevent & kevent )
 {
 	SockIter	iter = m_sockets.find(kevent.ident);
 
@@ -171,7 +177,7 @@ Engine::socketEvent( s_kevent kevent )
 }
 
 void
-Engine::connectEvent( s_kevent kevent )
+Engine::connectEvent( s_kevent & kevent )
 {
 	//check if the FD is linked to a connection
 	CnctIter	iter = m_connects.find(kevent.ident);
@@ -243,7 +249,7 @@ Engine::launch( void )
 	int	n_events = 0;
 
 	//the main Socket loop
-	while (true)
+	while (0b00101010)
 	{
 		n_events = kevent(m_kqueue,
 			&(*m_changes.begin()), m_changes.size(),

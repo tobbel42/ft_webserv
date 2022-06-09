@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/17 14:41:27 by skienzle          #+#    #+#             */
-/*   Updated: 2022/04/06 13:06:40 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/06/09 17:38:26 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,8 +41,8 @@ Socket::Socket(unsigned int ip, unsigned int port):
 }
 
 Socket::Socket(const Socket& other):
-	m_ip(other.m_ip),
-	m_port(other.m_port),
+	m_ip(),
+	m_port(),
 	m_address(),
 	m_sockfd(),
 	m_addLen(sizeof(m_address))
@@ -69,6 +69,8 @@ Socket::operator=(const Socket& other)
 	#endif
 	if (this != &other)
 	{
+		m_ip = other.m_ip;
+		m_port = other.m_port;
 		m_address = other.m_address;
 		m_sockfd = other.m_sockfd;
 		m_defaultServer = other.m_defaultServer;
@@ -109,10 +111,13 @@ Socket::getServer( std::string hostname )
 }
 
 t_fd
-Socket::getSockFd( void ) const
-{
-	return(m_sockfd);
-}
+Socket::getSockFd( void ) const { return(m_sockfd); }
+
+unsigned int
+Socket::getIp () const { return m_ip; }
+
+unsigned int
+Socket::getPort () const { return m_port; }
 
 bool
 Socket::operator==( t_fd fd )
