@@ -6,7 +6,7 @@
 /*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/13 10:22:56 by skienzle          #+#    #+#             */
-/*   Updated: 2022/04/06 13:05:30 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/06/09 17:39:15 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,9 @@ public:
 	bool	operator==( t_fd fd );
 
 	void	setDefaultServer( Server *server );
+
+	unsigned int getIp(void) const;
+	unsigned int getPort(void) const;
 	
 	
 private:
@@ -58,6 +61,7 @@ private:
 	t_fd 					m_sockfd;
 	socklen_t				m_addLen;
 
+	// this needs to be removed, new approch check servers till right one found
 	Server							*m_defaultServer;
 	std::map<std::string, Server *>	m_Servers;
 

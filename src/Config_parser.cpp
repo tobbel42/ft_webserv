@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config_parser.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: skienzle <skienzle@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/25 10:08:53 by skienzle          #+#    #+#             */
-/*   Updated: 2022/06/06 15:51:06 by skienzle         ###   ########.fr       */
+/*   Updated: 2022/06/09 17:43:54 by tgrossma         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ Config_parser::Config_parser(const Config_parser& other):
 	m_infile(), // the ofstream can't be copy constructed
 	m_word(other.m_word),
 	m_lineStream(),
-	
+	m_line_num()
 {
 	if (s_verbose)
 		std::cout << "Config_parser copy constructor called" << std::endl;
@@ -243,7 +243,7 @@ Config_parser::m_check_int(const std::string& word)
 	return atoi(word.c_str());
 }
 
-unit32_t
+uint32_t
 Config_parser::m_check_ip_address()
 {
 	std::string word(m_get_next_word_protected(__LINE__));

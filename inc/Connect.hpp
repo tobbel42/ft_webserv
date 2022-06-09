@@ -20,24 +20,30 @@ class Connect
 {
 	private:
 
-		t_fd		m_fd;
-		t_fd		m_sockFd;
-		Server		*p_server;
-		e_action	m_action;
-		std::string	m_request;
-		std::string	m_response;
+		t_fd			m_fd;
+		unsigned int 	m_ip;
+		unsigned int 	m_port;
+		//t_fd			m_sockFd;
+		Server			*p_server;
+		e_action		m_action;
+		std::string		m_request;
+		std::string		m_response;
 		
 		Connect( void );
 		
 	public:
 
-		Connect( t_fd fd, t_fd sockFd );
-		~Connect( void );
+		Connect( t_fd fd, unsigned int ip, unsigned int port);
+		~Connect();
 		Connect( const Connect &copy );
 
 		Connect	&operator = ( const Connect &rhs );
 
 		t_fd		getFd( void ) const;
+
+		unsigned int getIp() const;
+		unsigned int getPort() const;
+
 		t_fd		getSockFd( void ) const;
 		Server *	getServer( void ) const;
 		e_action	getAction( void ) const;	

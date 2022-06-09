@@ -30,15 +30,19 @@ Connect	&Connect::operator = ( const Connect &rhs )
 		std::cout << "Connect: Assignation operator called" << std::endl;
 	#endif
 	m_fd = rhs.getFd();
-	m_sockFd = rhs.getSockFd();
+	m_ip = rhs.getIp();
+	m_port = rhs.getPort();
+	//m_sockFd = rhs.getSockFd();
 	p_server = rhs.getServer();
 	m_action = rhs.getAction();
 	return (*this);
 }
 
-Connect::Connect( t_fd fd, t_fd sockFd ):
+Connect::Connect( t_fd fd, unsigned int ip, unsigned int port):
 	m_fd(fd),
-	m_sockFd(sockFd),
+	m_ip(ip),
+	m_port(port),
+	//m_sockFd(sockFd),
 	p_server(NULL),
 	m_action(READ)
 {
@@ -53,11 +57,17 @@ Connect::getServer( void ) const
 	return p_server;
 }
 
-t_fd
-Connect::getSockFd( void ) const
-{
-	return m_sockFd;
-}
+// t_fd
+// Connect::getSockFd( void ) const
+// {
+// 	return m_sockFd;
+// }
+
+unsigned int
+Connect::getIp() const { return m_ip; }
+
+unsigned int
+Connect::getPort() const { return m_port; }
 
 t_fd
 Connect::getFd( void ) const
