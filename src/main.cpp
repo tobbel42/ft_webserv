@@ -6,7 +6,7 @@
 /*   By: skienzle <skienzle@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/12 11:57:15 by skienzle          #+#    #+#             */
-/*   Updated: 2022/04/26 15:57:05 by skienzle         ###   ########.fr       */
+/*   Updated: 2022/06/09 16:59:08 by skienzle         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,7 @@ int main(int argc, char **argv)
 		parser.run();
 	}
 	catch (const std::exception& e)
+	// catch (const Config_parser::Invalid_config& e)
 	{
 		std::cerr << e.what() << '\n';
 		return 1;

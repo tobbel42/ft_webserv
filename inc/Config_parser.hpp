@@ -28,6 +28,28 @@
 
 typedef std::vector<std::string> StringVector;
 
+/*
+
+enum e_server_options {
+	server_name = 0,
+	root,
+	index,
+	error_pages,
+	ip_address,
+	port,
+	max_client_body_size
+};
+
+enum e_location_options {
+	root,
+	index,
+	allowed_methods,
+	allowed_scripts,
+	directory_listing
+};
+
+*/
+
 struct Location_setup
 {
 	std::string location;
@@ -35,6 +57,7 @@ struct Location_setup
 	std::string index;
 	StringVector allowed_methods;
 	StringVector allowed_scripts;
+	bool directory_listing_enabled;
 };
 
 struct Server_setup
@@ -44,10 +67,14 @@ struct Server_setup
 	std::string index;
 	std::string error_pages;
 	uint32_t ip_address;
-	int port;
+	std::vector<uint32_t> port;
 	uint32_t max_client_body_size;
 	std::vector<Location_setup> locations;
 };
+
+std::ostream& operator<<(std::ostream& out, const Location_setup& rhs);
+
+std::ostream& operator<<(std::ostream& out, const Server_setup& rhs);
 
 class Config_parser
 {
@@ -76,14 +103,14 @@ private: // methods
 	// bool m_read_next_line(char delim = '\n');
 	// char m_peek_next_char();
 
-	int m_check_int(const std::string& word);
+	uint32_t m_check_int(const std::string& word);
 	uint32_t m_check_ip_address();
 
 private: // subclass
-	class Invalid_config: std::exception
+	class Invalid_config: public std::exception
 	{
 	public:
-		Invalid_config(int line, const char *msg, const char *strerr = "");
+		Invalid_config(size_t line, const char *msg, const char *strerr = nullptr);
 		~Invalid_config() throw();
 		const char *what() const throw();
 	private:
@@ -92,9 +119,6 @@ private: // subclass
 private: // attributes
 	std::vector<Server_setup>		m_servers;
 	std::ifstream			m_infile;
-	std::string				m_word;
 	std::stringstream		m_lineStream;
 	size_t					m_line_num;
-
-	static bool				s_verbose;
 };

@@ -6,49 +6,43 @@
 /*   By: skienzle <skienzle@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/25 10:08:53 by skienzle          #+#    #+#             */
-/*   Updated: 2022/06/06 15:51:06 by skienzle         ###   ########.fr       */
+/*   Updated: 2022/06/09 18:35:05 by skienzle         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/Config_parser.hpp"
 
-#ifdef VERBOSE
-bool Config_parser::s_verbose = true;
-#else
-bool Config_parser::s_verbose = false;
-#endif
-
 Config_parser::Config_parser():
 	m_servers(),
 	m_infile(),
-	m_word(),
 	m_lineStream(),
 	m_line_num()
 {
-	if (s_verbose)
+	#ifdef VERBOSE
 		std::cout << "Config_parser default constructor called" << std::endl;
+	#endif
 }
 
 Config_parser::Config_parser(const Config_parser& other):
 	m_servers(other.m_servers),
 	m_infile(), // the ofstream can't be copy constructed
-	m_word(other.m_word),
 	m_lineStream(),
-	
+	m_line_num()
 {
-	if (s_verbose)
-		std::cout << "Config_parser copy constructor called" << std::endl;
+	#ifdef VERBOSE
+	std::cout << "Config_parser copy constructor called" << std::endl;
+	#endif
 }
 
 Config_parser::Config_parser(const char *filename):
 	m_servers(),
 	m_infile(filename),
-	m_word(),
 	m_lineStream(),
 	m_line_num()
 {
-	if (s_verbose)
-		std::cout << "Config_parser filename constructor called" << std::endl;
+	#ifdef VERBOSE
+	std::cout << "Config_parser filename constructor called" << std::endl;
+	#endif
 	if (!m_infile.is_open())
 		throw Config_parser::Invalid_config(__LINE__, "couldnt open the config file ", strerror(errno));
 }
@@ -65,11 +59,11 @@ Config_parser::operator=(const Config_parser& other)
 	{
 		m_servers = other.m_servers;
 		// m_infile = other.m_infile; // the ofstream doesn't have an assignment operator
-		m_word = other.m_word;
 		m_lineStream.str(other.m_lineStream.str());
 	}
-	if (s_verbose)
-		std::cout << "Config_parser assignment operator called" << std::endl;
+	#ifdef VERBOSE
+	std::cout << "Config_parser assignment operator called" << std::endl;
+	#endif
 	return *this;
 }
 
@@ -122,6 +116,8 @@ Config_parser::run()
 			throw Config_parser::Invalid_config(__LINE__, "invalid server identifier", server_ret.first.c_str());
 		m_servers.push_back(server_ret.second);
 	}
+	for (size_t i = 0; i < m_servers.size(); ++i)
+		std::cout << m_servers[i] << '\n';
 }
 
 std::pair<std::string, Server_setup>
@@ -141,7 +137,7 @@ Config_parser::m_read_server()
 		else if (word == "max-client-body-size")
 			setup.max_client_body_size = m_check_int(m_get_next_word_protected(__LINE__));
 		else if (word == "port")
-			setup.port = m_check_int(m_get_next_word_protected(__LINE__));
+			setup.port.push_back(m_check_int(m_get_next_word_protected(__LINE__)));
 		else if (word == "ip-address")
 			setup.ip_address = m_check_ip_address();
 		else if (word == "location")
@@ -166,7 +162,7 @@ Config_parser::m_read_location(Location_setup& location)
 {
 	std::string word;
 	
-	while (!(word = m_get_next_word_protected(__LINE__)).empty())
+	while (!(word = m_get_next_word_protected(__LINE__, false)).empty())
 	{
 		if (word == "root")
 			location.root = m_get_next_word_protected(__LINE__);
@@ -192,7 +188,19 @@ Config_parser::m_read_location(Location_setup& location)
 						"invalid script type", word.c_str());
 			}
 		}
-
+		else if (word == "directory_listing")
+		{
+			word = m_get_next_word_protected(__LINE__);
+			if (word == "true")
+				location.directory_listing_enabled = true;
+			else if (word == "false")
+				location.directory_listing_enabled = false;
+			else
+				throw Config_parser::Invalid_config(m_line_num,
+					"directory listing can only be true or false and not", word.c_str());
+		}
+		else
+			return word;
 		
 	}
 	return word;
@@ -228,11 +236,11 @@ Config_parser::m_get_next_word_protected(int line, bool is_on_same_line)
 	if (is_on_same_line && current_line != m_line_num)
 		throw Config_parser::Invalid_config(current_line, "values must be on the same line as their keyword");
 	else if (word.empty())
-		throw Config_parser::Invalid_config(m_line_num, "unexpected EOF encountered");
+		throw Config_parser::Invalid_config(line, "unexpected EOF encountered");
 	return word;
 }
 
-int
+uint32_t
 Config_parser::m_check_int(const std::string& word)
 {
 	for (std::string::const_iterator it = word.begin(); it != word.end(); ++it)
@@ -243,86 +251,41 @@ Config_parser::m_check_int(const std::string& word)
 	return atoi(word.c_str());
 }
 
-unit32_t
+uint32_t
 Config_parser::m_check_ip_address()
 {
 	std::string word(m_get_next_word_protected(__LINE__));
 	size_t start = 0;
 	size_t end = 0;
-	int num = 1;
+	int byte = 3;
 	uint32_t ip_addr = 0;
 
 	while (end != std::string::npos)
 	{
 		end = word.find('.', start);
-		int ip_number = m_check_int(word.substr(start, end));
-		if (ip_number > 255 || ip_number < 0)
+		int ip_number = m_check_int(word.substr(start, end - start));
+		if (ip_number > 255)
 			break;
-		ip_addr += ip_number << (4 % num) * 8; // shift the ip-byte to the appropriate byte in the address
+		ip_addr += ip_number << (byte * 8); // shift the ip-byte to the appropriate byte in the address
 		start = end + 1;
-		++num;
+		--byte;
 	}
-	if (num != 4)
+	if (byte != -1)
 		throw Config_parser::Invalid_config(__LINE__, "invalid ip address format", word.c_str());
 	return ip_addr;
 }
 
-
-#if 0
-
-std::string
-Config_parser::m_get_next_word(int line, const char *error_msg, const char *strerr)
-{
-	std::string word;
-	if (m_lineStream >> word)
-		return word;
-	throw Config_parser::Invalid_config(line, error_msg, strerr);
-	return word;
-}
-
-// special overload for get_next_word if we don't expect the function to throw
-std::string
-Config_parser::m_get_next_word()
-{
-	std::string word;
-	m_lineStream >> word;
-	return word;
-}
-
-bool
-Config_parser::m_read_next_line(char delim)
-{
-	std::string line;
-	if (std::getline(m_infile, line, delim))
-	{
-		if (line.empty())
-			return m_read_next_line(delim);
-		m_lineStream.clear();
-		m_lineStream.str(line);
-		return true;
-	}
-	return false;
-}
-
-char
-Config_parser::m_peek_next_char()
-{
-	char ret = EOF;
-	if (m_lineStream >> ret)
-		throw Config_parser::Invalid_config(__LINE__, "unexpected \\n encountered");
-	if (m_lineStream.putback(ret))
-		throw Config_parser::Invalid_config(__LINE__, "stringstream.putback() failed");
-	return ret;
-}
-
-#endif // 0
-
-Config_parser::Invalid_config::Invalid_config(int line, const char *msg,
+Config_parser::Invalid_config::Invalid_config(size_t line, const char *msg,
 											const char *strerr):
 	exception(),
 	m_errorMsg("error in line ")
 {
-	m_errorMsg += line;
+	{
+		std::stringstream ss;
+		ss << line;
+		m_errorMsg += ss.str();
+	}
+
 	(m_errorMsg += ":\n") += msg;
 	if (strerr != nullptr)
 		(m_errorMsg += ": ") += strerr;
@@ -334,4 +297,31 @@ const char *
 Config_parser::Invalid_config::what() const throw()
 {
 	return m_errorMsg.c_str();
+}
+
+
+
+
+std::ostream& operator<<(std::ostream& out, const Location_setup& rhs)
+{
+	out << "location: " << rhs.location << "\nroot: " << rhs.root
+		<< "\nindex: " << rhs.index << "\nallowed methods:" << std::endl;
+	for (size_t i = 0; i < rhs.allowed_methods.size(); ++i)
+		out << rhs.allowed_methods[i] << ", ";
+	out << "\nallowed scripts:" << std::endl;
+	for (size_t i = 0; i < rhs.allowed_scripts.size(); ++i)
+		out << rhs.allowed_scripts[i] << ", ";
+	return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const Server_setup& rhs)
+{
+	out << "server name: " << rhs.server_name << "\nroot: " << rhs.root
+		<< "\nerror pages: " << rhs.error_pages << "\nip address: " << rhs.ip_address
+		<< "\nmax client body size: " << rhs.max_client_body_size << "\nports:" << std::endl;
+	for (size_t i = 0; i < rhs.port.size(); ++i)
+		out << rhs.port[i] << ", ";
+	for (size_t i = 0; i < rhs.locations.size(); ++i)
+		out << rhs.locations[i] << std::endl;
+	return out;
 }
