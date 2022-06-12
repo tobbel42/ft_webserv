@@ -1,6 +1,7 @@
 
 
 #include <cstdint>
+
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -22,7 +23,7 @@ public: // methods
 
 	ServerSetup& operator=(const ServerSetup& other);
 
-	bool set_server_name(const std::string& word);
+	bool set_server_name(const std::string& name);
 	bool set_root(const std::string& word);
 	bool set_index(const std::string& word);
 	bool set_error_pages(const std::string& word);

@@ -50,7 +50,7 @@ private: // methods
 
 
 	std::string m_get_next_word();
-	std::string m_get_next_word_protected(int line, bool is_on_same_line = true);
+	std::string m_get_next_word_protected(bool is_on_same_line = true);
 
 
 	std::pair<std::string, ServerSetup> m_read_server();
@@ -71,7 +71,7 @@ private: // subclass
 	};
 private: // attributes
 	std::vector<ServerSetup>		m_servers;
-	std::ifstream			m_infile;
-	std::stringstream		m_line_stream;
-	size_t					m_line_number;
+	std::ifstream					m_infile;
+	std::stringstream				m_line_stream;
+	size_t							m_line_number;
 };

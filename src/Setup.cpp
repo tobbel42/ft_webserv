@@ -47,9 +47,11 @@ ServerSetup::operator=(const ServerSetup& other)
 }
 
 bool
-ServerSetup::set_server_name(const std::string& word)
+ServerSetup::set_server_name(const std::string& name)
 {
-	server_names.push_back(word);
+	if (std::find(server_names.begin(), server_names.end(), name)
+		== server_names.end())
+		server_names.push_back(name);
 	return true;
 }
 

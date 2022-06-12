@@ -44,7 +44,7 @@ ConfigParser::ConfigParser(const char *filename):
 	std::cout << "ConfigParser filename constructor called" << std::endl;
 	#endif
 	if (!m_infile.is_open())
-		throw ConfigParser::InvalidConfig(__LINE__, "couldnt open the config file", strerror(errno));
+		throw ConfigParser::InvalidConfig(m_line_number, "couldnt open the config file", strerror(errno));
 }
 
 ConfigParser::~ConfigParser()
@@ -74,7 +74,7 @@ ConfigParser::assign_file(const char *filename)
 		m_infile.close();
 	m_infile.open(filename);
 	if (!m_infile.is_open())
-		throw ConfigParser::InvalidConfig(__LINE__, "couldnt open the config file", strerror(errno));
+		throw ConfigParser::InvalidConfig(m_line_number, "couldnt open the config file", strerror(errno));
 }
 
 void
@@ -86,19 +86,19 @@ ConfigParser::run()
 	while (!(word = m_get_next_word()).empty())
 	{
 		if (word != "server")
-			throw ConfigParser::InvalidConfig(__LINE__, "invalid server starting identifier", word.c_str());
-		if (m_get_next_word_protected(__LINE__, false) != "{")
-			throw ConfigParser::InvalidConfig(__LINE__, "server blocks must be followed by {");
+			throw ConfigParser::InvalidConfig(m_line_number, "invalid server starting identifier", word.c_str());
+		if (m_get_next_word_protected(false) != "{")
+			throw ConfigParser::InvalidConfig(m_line_number, "server blocks must be followed by {");
 		server_ret = m_read_server();
 		if (server_ret.first != "}")
-			throw ConfigParser::InvalidConfig(__LINE__, "invalid server identifier", server_ret.first.c_str());
+			throw ConfigParser::InvalidConfig(m_line_number, "invalid server identifier", server_ret.first.c_str());
 		const char *error_msg = server_ret.second.check_attributes();
 		if (error_msg != nullptr)
 			throw ConfigParser::InvalidConfig(m_line_number, error_msg);
 		m_servers.push_back(server_ret.second);
 	}
 	if (m_servers.empty())
-		throw ConfigParser::InvalidConfig(__LINE__, "at least one server block must be specified");
+		throw ConfigParser::InvalidConfig(m_line_number, "at least one server block must be specified");
 	for (size_t i = 0; i < m_servers.size(); ++i)
 		std::cout << m_servers[i] << '\n';
 }
@@ -109,25 +109,25 @@ ConfigParser::m_read_server()
 	ServerSetup setup;
 	std::string word;
 
-	while (!(word = m_get_next_word_protected(__LINE__, false)).empty())
+	while (!(word = m_get_next_word_protected(false)).empty())
 	{
 		if (word == "server_name")
-			setup.set_server_name(m_get_next_word_protected(__LINE__));
+			setup.set_server_name(m_get_next_word_protected());
 		else if (word == "root")
 		{
-			if (!setup.set_root(m_get_next_word_protected(__LINE__)))
+			if (!setup.set_root(m_get_next_word_protected()))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"only one root shall be specified for each server");
 		}
 		else if (word == "index")
 		{
-			if (!setup.set_index(m_get_next_word_protected(__LINE__)))
+			if (!setup.set_index(m_get_next_word_protected()))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"only one index page shall be specified for each server");
 		}
 		else if (word == "max-client-body-size")
 		{
-			if (!setup.set_max_client_body_size(m_check_int(m_get_next_word_protected(__LINE__))))
+			if (!setup.set_max_client_body_size(m_check_int(m_get_next_word_protected())))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"only one client body size shall be specified for each server");
 		}
@@ -138,19 +138,19 @@ ConfigParser::m_read_server()
 					"every server must have only one ip address");
 		}
 		else if (word == "port")
-			setup.set_port(m_check_int(m_get_next_word_protected(__LINE__)));
+			setup.set_port(m_check_int(m_get_next_word_protected()));
 		else if (word == "location")
 		{
 			LocationSetup location;
-			location.location = m_get_next_word_protected(__LINE__);
-			if (m_get_next_word_protected(__LINE__, false) != "{")
-				throw ConfigParser::InvalidConfig(__LINE__, "location blocks must start with a {");
+			location.location = m_get_next_word_protected();
+			if (m_get_next_word_protected(false) != "{")
+				throw ConfigParser::InvalidConfig(m_line_number, "location blocks must start with a {");
 			std::string location_ret = m_read_location(location);
 			if (location_ret != "}")
-				throw ConfigParser::InvalidConfig(__LINE__, "invalid location identifier", location_ret.c_str());
+				throw ConfigParser::InvalidConfig(m_line_number, "invalid location identifier", location_ret.c_str());
 			const char* error_msg = location.check_attributes();
 			if (error_msg != nullptr)
-				throw ConfigParser::InvalidConfig(__LINE__, error_msg);
+				throw ConfigParser::InvalidConfig(m_line_number, error_msg);
 			setup.locations.push_back(location);
 		}
 		else
@@ -164,17 +164,17 @@ ConfigParser::m_read_location(LocationSetup& location)
 {
 	std::string word;
 	
-	while (!(word = m_get_next_word_protected(__LINE__, false)).empty())
+	while (!(word = m_get_next_word_protected(false)).empty())
 	{
 		if (word == "root")
 		{
-			if (!location.set_root(m_get_next_word_protected(__LINE__)))
+			if (!location.set_root(m_get_next_word_protected()))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"only one root shall be specified for each location");
 		}
 		else if (word == "index")
 		{
-			if (!location.set_index(m_get_next_word_protected(__LINE__)))
+			if (!location.set_index(m_get_next_word_protected()))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"only one index page shall be specified for each location");
 		}
@@ -182,8 +182,13 @@ ConfigParser::m_read_location(LocationSetup& location)
 		{
 			while (m_line_stream >> word)
 			{
+				if (word.empty() || word[0] == '#')
+				{
+					m_line_stream.str(std::string());
+					break;
+				}
 				if (!location.set_method(word))
-					throw ConfigParser::InvalidConfig(__LINE__,
+					throw ConfigParser::InvalidConfig(m_line_number,
 						"invalid http-method identifier", word.c_str());
 			}
 		}
@@ -191,15 +196,20 @@ ConfigParser::m_read_location(LocationSetup& location)
 		{
 			while (m_line_stream >> word)
 			{
+				if (word.empty() || word[0] == '#')
+				{
+					m_line_stream.str(std::string());
+					break;
+				}
 				if (!location.set_script(word))
-					throw ConfigParser::InvalidConfig(__LINE__,
+					throw ConfigParser::InvalidConfig(m_line_number,
 						"invalid script type", word.c_str());
 			}
 		}
 		else if (word == "directory_listing")
 		{
 			const char* error_msg = location.set_directory_listing(
-										m_get_next_word_protected(__LINE__));
+										m_get_next_word_protected());
 			if (error_msg != nullptr)
 				throw ConfigParser::InvalidConfig(m_line_number, error_msg);
 		}
@@ -231,7 +241,7 @@ ConfigParser::m_get_next_word()
 }
 
 std::string
-ConfigParser::m_get_next_word_protected(int line, bool is_on_same_line)
+ConfigParser::m_get_next_word_protected(bool is_on_same_line)
 {
 	size_t current_line = m_line_number;
 	std::string word = m_get_next_word();
@@ -260,7 +270,7 @@ ConfigParser::m_check_int(const std::string& word)
 uint32_t
 ConfigParser::m_check_ip_address()
 {
-	std::string word = m_get_next_word_protected(__LINE__);
+	std::string word = m_get_next_word_protected();
 	size_t start = 0;
 	size_t end = 0;
 	int byte = 3;
@@ -277,7 +287,7 @@ ConfigParser::m_check_ip_address()
 		--byte;
 	}
 	if (byte != -1)
-		throw ConfigParser::InvalidConfig(__LINE__, "invalid ip address format", word.c_str());
+		throw ConfigParser::InvalidConfig(m_line_number, "invalid ip address format", word.c_str());
 	return ip_addr;
 }
 
