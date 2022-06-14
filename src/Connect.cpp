@@ -69,8 +69,8 @@ Connect::readRequest( s_kevent kevent )
 	int		len = ((READSIZE < kevent.data)?READSIZE : kevent.data);
 	memset(buf, '\0', READSIZE + 1);
 	long	i = read(kevent.ident, buf, len);
-	m_req.appendRead(buf);
-	return true;
+	return m_req.appendRead(buf);
+	//return true;
 }
 
 void
@@ -123,7 +123,7 @@ Connect::composeResponse( void )
 		{
 			ss << file.size();
 			m_response.append("Content-Type: text/html\r\n");
-			m_response.append("Content-Lenght:" + ss.str() + "\r\n");
+			m_response.append("Content-Lenght: " + ss.str() + "\r\n");
 		}
 		else
 		{

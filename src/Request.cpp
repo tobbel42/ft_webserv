@@ -88,7 +88,9 @@ bool Request::appendRead(const char *buf) {
 			return true;
 		}
 
+		#ifdef VERBOSE
 		printRequest();
+		#endif
 
 		//reading request header
 		std::string key;
@@ -128,7 +130,9 @@ bool Request::appendRead(const char *buf) {
 		else if (m_header.find("content-lenght") != m_header.end())
 			m_state = CHUNKED_BODY;
 
+		//#ifdef VERBOSE
 		printRequest();
+		//#endif
 
 	}
 
@@ -137,10 +141,12 @@ bool Request::appendRead(const char *buf) {
 		//TODO smartify
 		std::cout << "BODY" << std::endl;
 		m_body.append(m_buffer.substr(m_offset));
-		std::string len = m_header.find("content-lenght")->second;
+		std::string len = m_header.find("content-length")->second;
 		size_t i = std::strtoll(len.data(), NULL, 10);
 		if (m_body.size() < i)
 			return false;
+		std::cout << m_body << std::endl;
+		return true;
 	}
 	else if (m_state == CHUNKED_BODY)
 	{
