@@ -24,7 +24,8 @@ SRC = main.cpp\
 	Connect.cpp\
 	Server.cpp\
 	Request.cpp\
-	Response.cpp
+	Response.cpp\
+	utils.cpp
 SDIR = src
 SRC_FULL = $(addprefix $(SDIR)/, $(SRC))
 

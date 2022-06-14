@@ -56,7 +56,7 @@ class Connect
 	public:
 
 		Connect( fd_type fd, fd_type sockFd );
-		~Connect( void );
+		~Connect();
 		Connect( const Connect &copy );
 
 		Connect	&operator = ( const Connect &rhs );

@@ -3,13 +3,18 @@
 
 #include <map>
 #include <iostream>
+#include "utils.hpp"
 
 enum e_reqState{
-	REQLINE,
 	HEADER,
-	BODY
+	BODY,
+	CHUNKED_BODY
 };
 
+//TODo WHat about empty header
+
+//Data class which takes the request as a string and parses it.
+//Detects Malformed requests
 class Request {
 
 	public:
@@ -21,7 +26,7 @@ class Request {
 
 	private:
 
-	std::string getNextReqLine();
+	void getNextReqLine(std::string & line);
 	bool parseRequestLine(const std::string & line);
 
 	public:
@@ -29,6 +34,7 @@ class Request {
 	std::string	m_buffer;
 	size_t		m_offset;
 	e_reqState	m_state;
+	uint32_t	m_errCode;
 
 	std::string m_methode;
 	std::string m_target;

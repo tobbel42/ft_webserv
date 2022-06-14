@@ -1,7 +1,9 @@
 #include "Request.hpp"
 
 Request::Request( void ):
-	m_state(REQLINE) {
+	m_state(HEADER) {
+	m_offset = 0;
+	m_errCode = 0;
 	#ifdef VERBOSE
 		std::cout << "Request: Constructor called" << std::endl;
 	#endif
@@ -41,8 +43,7 @@ bool Request::isDone() {
 };
 
 
-std::string Request::getNextReqLine() {
-	std::string line;
+void Request::getNextReqLine(std::string & line) {
 	size_t pos =  m_buffer.find("\r\n", m_offset);
 	if (pos == std::string::npos)
 	{
@@ -54,21 +55,21 @@ std::string Request::getNextReqLine() {
 		line = m_buffer.substr(m_offset, pos - m_offset);
 		m_offset = pos + 2;
 	}
-
-
-	return line;
 }
 
 bool Request::parseRequestLine(const std::string & line){
-	size_t pos = 0;
+	size_t pos, pos1; 
 
 	pos = line.find(' ');
-	std::cout << line << pos << "$$" << std::endl;
+	if (pos == std::string::npos)
+		return false;
 	m_methode = line.substr(0, pos);
-	m_target = line.substr(pos + 1, line.find(' ', pos + 1) - pos - 1);
-	pos = pos + 2 + m_target.size();
-	m_httpVer = line.substr(pos);
-	std::cout << m_methode << "$$" << m_target << "$$" << m_httpVer << "$$" << std::endl;
+	pos1 = pos + 1;
+	pos = line.find(' ', pos1);
+	if (pos == std::string::npos)
+		return false;
+	m_target = line.substr(pos1, pos - pos1);
+	m_httpVer = line.substr(pos + 1);
 
 	return true;
 }
@@ -76,29 +77,76 @@ bool Request::parseRequestLine(const std::string & line){
 bool Request::appendRead(const char *buf) {
 	m_buffer.append(buf);
 
-	// std::string key, value;
-	try {
-	std::string line = getNextReqLine();
-	
-	parseRequestLine(line);
-	}
-	catch (std::exception & e) { std::cout << "ERR\n" << buf << std::endl; printRequest();
-		std::cout << e.what() << std::endl; } 
-	// while (m_offset < m_buffer.size() && line.size() > 0)
-	// {
-	// 	try {
-	// 	line = getNextReqLine();
-	// 	key = line.substr(0, line.find(":"));
-	// 	if (key == line)
-	// 		break;
-	// 	value = line.substr(key.size() + 2);
-	// 	m_header.insert(std::make_pair(key, value));
-	// 	}
-	// catch (const std::exception & e) { std::cout << "WHile" << e.what() << std::endl;};
-	// }
-	// std::cout << m_buffer << m_buffer.size() << std::endl;
+	if (m_state == HEADER)
+	{
 
-	m_buffer.clear();
+		//reading request line
+		std::string line;
+		getNextReqLine(line);
+		if (parseRequestLine(line) == false) {
+			m_errCode = 400;
+			return true;
+		}
+
+		printRequest();
+
+		//reading request header
+		std::string key;
+		std::string value;
+		size_t pos;
+		while (m_offset < m_buffer.size() && line.size() > 0)
+		{
+			getNextReqLine(line);
+			pos = line.find(":");
+			if (pos == std::string::npos)
+			{
+				if (line.size() > 0)
+				{
+					m_errCode = 400;
+					return true;
+				}
+				else
+					break;
+			}
+			key = line.substr(0, pos);
+			if (pos + 2 > line.size())
+			{
+				m_errCode = 400;
+				return true;
+			}
+			value = line.substr(pos + 2);
+
+			//httpRequest are case insenitive, standardizing the input
+			str_tolower(key);
+			str_tolower(value);
+
+			m_header.insert(std::make_pair(key, value));
+		}
+
+		if (m_header.find("content-length") != m_header.end())
+			m_state = BODY;
+		else if (m_header.find("content-lenght") != m_header.end())
+			m_state = CHUNKED_BODY;
+
+		printRequest();
+
+	}
+
+	if (m_state == BODY)
+	{
+		//TODO smartify
+		std::cout << "BODY" << std::endl;
+		m_body.append(m_buffer.substr(m_offset));
+		std::string len = m_header.find("content-lenght")->second;
+		size_t i = std::strtoll(len.data(), NULL, 10);
+		if (m_body.size() < i)
+			return false;
+	}
+	else if (m_state == CHUNKED_BODY)
+	{
+		std::cerr << "NOT JET IMPLEMENTED" << std::endl;
+	}
+
 
 	return isDone();
 	

@@ -67,8 +67,8 @@ Connect::readRequest( s_kevent kevent )
 {
 	char	buf[READSIZE + 1];
 	int		len = ((READSIZE < kevent.data)?READSIZE : kevent.data);
+	memset(buf, '\0', READSIZE + 1);
 	long	i = read(kevent.ident, buf, len);
-	buf[i] = '\0';
 	m_req.appendRead(buf);
 	return true;
 }
@@ -129,7 +129,7 @@ Connect::composeResponse( void )
 		{
 			m_response.append("Content-Type: image/x-icon\r\n");
 			ss << (file.size() - 1);
-			m_response.append("Content-Lenght:" + ss.str() + "\r\n");
+			m_response.append("Content-Lenght: " + ss.str() + "\r\n");
 		}
 		m_response.append("\r\n");
 		m_response.append(file);
