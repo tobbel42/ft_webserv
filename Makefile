@@ -22,7 +22,8 @@ SRC = main.cpp\
 	Connect.cpp\
 	Server.cpp\
 	ConfigParser.cpp \
-	Setup.cpp
+	Setup.cpp \
+	Response.cpp
 SDIR = src
 SRC_FULL = $(addprefix $(SDIR)/, $(SRC))
 

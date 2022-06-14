@@ -46,6 +46,7 @@ ServerSetup::operator=(const ServerSetup& other)
 	return *this;
 }
 
+
 bool
 ServerSetup::set_server_name(const std::string& name)
 {

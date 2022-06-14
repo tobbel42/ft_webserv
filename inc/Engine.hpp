@@ -16,9 +16,20 @@
 
 # define ENGINE_BACKLOG 10
 
+
 struct	s_kevent: public kevent
 {
 	bool	operator==( t_fd fd );
+/*
+inherited from struct kevent:
+    uintptr_t ident;	     identifier for this event
+    short     filter;	     filter for event
+    u_short   flags;	     action flags for kqueue
+    u_int     fflags;	     filter flag value
+    int64_t   data;		     filter data value 
+    void      *udata;	     opaque user data identifier
+    uint64_t  ext[4];	     extensions
+*/
 };
 
 std::ostream	&operator<< ( std::ofstream & out, s_kevent const & in );

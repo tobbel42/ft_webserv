@@ -99,8 +99,11 @@ ConfigParser::run()
 	}
 	if (m_servers.empty())
 		throw ConfigParser::InvalidConfig(m_line_number, "at least one server block must be specified");
+
+	#ifdef VERBOSE
 	for (size_t i = 0; i < m_servers.size(); ++i)
 		std::cout << m_servers[i] << '\n';
+	#endif
 }
 
 std::pair<std::string, ServerSetup>
@@ -296,11 +299,7 @@ ConfigParser::InvalidConfig::InvalidConfig(size_t line, const char *msg,
 	exception(),
 	m_errorMsg("error in line ")
 {
-	{
-		std::stringstream ss;
-		ss << line;
-		m_errorMsg += ss.str();
-	}
+	m_errorMsg += utils::to_string(line);
 
 	(m_errorMsg += ":\n") += msg;
 	if (details != nullptr)

@@ -23,6 +23,16 @@ public: // methods
 
 	ServerSetup& operator=(const ServerSetup& other);
 
+	// std::string get_server_name(size_t i) const;
+	// std::string get_root() const;
+	// std::string get_index() const;
+	// std::string get_error_page(int error_code) const;
+	// uint32_t get_ip_address() const;
+	// uint32_t get_port(size_t i) const;
+	// uint32_t get_max_client_body_size() const;
+	// const LocationSetup& get_location(size_t i) const;
+
+
 	bool set_server_name(const std::string& name);
 	bool set_root(const std::string& word);
 	bool set_index(const std::string& word);
@@ -30,7 +40,6 @@ public: // methods
 	bool set_ip_address(uint32_t ip);
 	bool set_port(uint32_t port);
 	bool set_max_client_body_size(uint32_t n);
-
 
 	const char* check_attributes() const;
 

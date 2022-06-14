@@ -26,6 +26,7 @@
 #include <utility>
 
 #include "Setup.hpp"
+#include "utils.hpp"
 
 typedef std::vector<std::string> StringVector;
 
