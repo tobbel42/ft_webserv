@@ -27,8 +27,13 @@ class Request {
 	private:
 
 	void getNextReqLine(std::string & line);
+	void getNextHeaderLine(std::string & line);
+	bool isValidRequestLine(const std::string & line);
 	bool parseRequestLine(const std::string & line);
 
+	bool parseFirstLine();
+	bool parseHeader();
+	bool parseBody();
 
 	std::string	m_buffer;
 	size_t		m_offset;
