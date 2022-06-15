@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Socket.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/03/13 10:22:56 by skienzle          #+#    #+#             */
-/*   Updated: 2022/06/09 17:39:15 by tgrossma         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #pragma once
 
 #include <sys/socket.h>
@@ -40,11 +28,11 @@ public:
 	
 	Socket& operator=(const Socket& other);
 	
-	t_fd	getSockFd( void ) const;
-	t_fd	acceptConnect( void );
+	fd_type	getSockFd( void ) const;
+	fd_type	acceptConnect( void );
 	Server	*getServer( std::string hostname );
 
-	bool	operator==( t_fd fd );
+	bool	operator==( fd_type fd );
 
 	void	setDefaultServer( Server *server );
 
@@ -58,7 +46,7 @@ private:
 	unsigned int			m_ip;
 	unsigned int			m_port;
 	sockaddr_in 			m_address;
-	t_fd 					m_sockfd;
+	fd_type 				m_sockfd;
 	socklen_t				m_addLen;
 
 	// this needs to be removed, new approch check servers till right one found

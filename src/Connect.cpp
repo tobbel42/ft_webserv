@@ -38,7 +38,7 @@ Connect	&Connect::operator = ( const Connect &rhs )
 	return (*this);
 }
 
-Connect::Connect( t_fd fd, unsigned int ip, unsigned int port):
+Connect::Connect( fd_type fd, unsigned int ip, unsigned int port):
 	m_fd(fd),
 	m_ip(ip),
 	m_port(port),
@@ -52,12 +52,9 @@ Connect::Connect( t_fd fd, unsigned int ip, unsigned int port):
 }
 
 Server *
-Connect::getServer( void ) const
-{
-	return p_server;
-}
+Connect::getServer( void ) const { return p_server; }
 
-// t_fd
+// fd_type
 // Connect::getSockFd( void ) const
 // {
 // 	return m_sockFd;
@@ -69,85 +66,86 @@ Connect::getIp() const { return m_ip; }
 unsigned int
 Connect::getPort() const { return m_port; }
 
-t_fd
-Connect::getFd( void ) const
-{
-	return m_fd;
-}
+fd_type
+Connect::getFd( void ) const { return m_fd; }
 
 e_action
-Connect::getAction( void ) const
-{
-	return m_action;
-}
+Connect::getAction( void ) const { return m_action; }
 
 void
-Connect::setServer( Server * server )
-{
-	p_server = server;
-}
+Connect::setServer( Server * server ) { p_server = server; }
 
-void
+bool
 Connect::readRequest( s_kevent kevent )
 {
-	char	*buf = new char[kevent.data + 1];
-	buf[kevent.data] = '\0';
-	//ToDo Errorhandling
-	int i = read(kevent.ident, buf, kevent.data);
-	m_request.append(buf);
-	delete[] buf;
+	char	buf[READSIZE + 1];
+	int		len = ((READSIZE < kevent.data)?READSIZE : kevent.data);
+	memset(buf, '\0', READSIZE + 1);
+	long	i = read(kevent.ident, buf, len);
+	return m_req.appendRead(buf);
+	//return true;
 }
 
 void
 Connect::writeResponse( s_kevent kevent )
 {
 	//ToDo Errorhandling
+	std::cout << "RESPONSE" << std::endl;
+	std::cout << m_response << std::endl;
 	write(kevent.ident, m_response.c_str(), m_response.size());
 }
 
 void
 Connect::composeResponse( void )
 {
-	std::fstream	file;
+	std::ifstream	fs;
 
-	size_t	begin = m_request.find(' ') + 1;
-	size_t	end = m_request.find(' ', begin + 1);
-	std::string filename =  m_request.substr(begin, end - begin);
+	// std::cout << "###\n" << m_req.m_buffer << "###\n" << std::endl;
+
+	// size_t	begin = m_req.m_buffer.find(' ') + 1;
+	// size_t	end = m_req.m_buffer.find(' ', begin + 1);
+	// std::cout << begin << " " << end << std::endl;
+	// std::string filename =  m_req.m_buffer.substr(begin, end - begin);
+	// std::cout << "hello" << "$" << m_req.m_target << "$" << std::endl;
+	std::string filename = m_req.m_target;
 	if (filename == "/")
 		filename = "/index.html";
 
-	file.open((*p_server).getDirectory() + filename, std::ios::in);
+	fs.open(p_server->getDirectory() + filename);
 
-	if (file.is_open())
+	std::cout << filename << std::endl;
+
+	if (fs.is_open())
 	{
 
-		std::string			d;
-		std::string			f;
-		std::stringstream	s;
+		std::string			line;
+		std::string			file;
+		std::stringstream	ss;
+
 		while (1)
 		{
-			std::getline(file, d);
-			f.append(d);
-			f.append("\n");
-			if (file.eof())
+			std::getline(fs, line);
+			file.append(line);
+			file.append("\n");
+			if (fs.eof())
 				break;
 		}
 		m_response.clear();
 		m_response.append("HTTP/1.1 200 OK\r\n");
 		if (filename.find(".ico") == std::string::npos)
 		{
-			s << f.size();
+			ss << file.size();
 			m_response.append("Content-Type: text/html\r\n");
-			m_response.append("Content-Lenght:" + s.str() + "\r\n");
+			m_response.append("Content-Lenght: " + ss.str() + "\r\n");
 		}
 		else
 		{
 			m_response.append("Content-Type: image/x-icon\r\n");
-			s << (f.size() - 1);
-			m_response.append("Content-Lenght:" + s.str() + "\r\n");
+			ss << (file.size() - 1);
+			m_response.append("Content-Lenght: " + ss.str() + "\r\n");
 		}
 		m_response.append("\r\n");
-		m_response.append(f);
+		m_response.append(file);
 		m_response.append("\r\n");
 	}
 	else

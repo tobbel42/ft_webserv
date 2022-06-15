@@ -3,10 +3,14 @@
 
 # include <iostream>
 # include <utils.hpp>
-# include "Server.hpp"
-# include "Engine.hpp"
 # include <fstream>
 # include <sstream>
+# include <algorithm>
+
+# include "Server.hpp"
+# include "Engine.hpp"
+# include "Request.hpp"
+# include "Response.hpp"
 
 enum	e_action { READ, WRITE };
 
@@ -20,36 +24,45 @@ class Connect
 {
 	private:
 
-		t_fd			m_fd;
+		typedef	Request	request_type;
+		typedef Response response_type;
+
+		fd_type		m_fd;
 		unsigned int 	m_ip;
 		unsigned int 	m_port;
-		//t_fd			m_sockFd;
-		Server			*p_server;
-		e_action		m_action;
-		std::string		m_request;
-		std::string		m_response;
+		//fd_type		m_sockFd;
+		Server		*p_server;
+		e_action	m_action;
+
+		//To be phased out 
+		std::string	m_rawReq;
+		std::string	m_response;
+
+		request_type		m_req;
+		response_type		m_res;
 		
-		Connect( void );
+		Connect( void ); //we do not allow default construction
+		
 		
 	public:
 
-		Connect( t_fd fd, unsigned int ip, unsigned int port);
+		Connect( fd_type fd, unsigned int ip, unsigned int port);
 		~Connect();
 		Connect( const Connect &copy );
 
 		Connect	&operator = ( const Connect &rhs );
 
-		t_fd		getFd( void ) const;
+		fd_type		getFd( void ) const;
 
 		unsigned int getIp() const;
 		unsigned int getPort() const;
 
-		t_fd		getSockFd( void ) const;
+		fd_type		getSockFd( void ) const;
 		Server *	getServer( void ) const;
 		e_action	getAction( void ) const;	
-		
+	
 		void		setServer( Server * server );
-		void		readRequest( s_kevent kevent );
+		bool		readRequest( s_kevent kevent );
 		void		writeResponse( s_kevent kevent );
 		void		composeResponse( void );
 		
