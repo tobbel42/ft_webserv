@@ -79,7 +79,7 @@ Socket::m_init()
 	m_address.sin_port = htons(m_port);
 	if (bind(m_sockfd, reinterpret_cast<sockaddr*>(&m_address), sizeof m_address) == -1)
 	{
-		// throw
+		exit(EXIT_FAILURE);
 	}
 	
 }

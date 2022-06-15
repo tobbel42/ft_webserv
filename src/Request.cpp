@@ -1,5 +1,8 @@
 #include "Request.hpp"
 
+
+/*Constructors----------------------------------------------------------------*/
+
 Request::Request( void ):
 	m_state(HEADER) {
 	m_offset = 0;
@@ -38,6 +41,8 @@ Request & Request::operator=( const Request & rhs ) {
 	return (*this);
 }
 
+/*Getter----------------------------------------------------------------------*/
+
 const std::string & Request::get_methode() const { return m_methode; }
 const std::string & Request::get_target() const { return m_target; }
 const std::string & Request::getHttpVer() const { return m_httpVer; }
@@ -54,13 +59,26 @@ std::string Request::getHeaderEntry(const std::string & fieldName) const {
 const std::string & Request::getBody() const { return m_body; }
 uint32_t Request::get_errCode() const { return m_errCode; }
 
+/*Utils-----------------------------------------------------------------------*/
+
 bool Request::isDone() {
 	printRequest();
-	if (m_errCode != 0)
+	if (m_errCode != 0) {
+		std::cout << "ERR: " << m_errCode << std::endl;
 		return true;
+	}
 	return true;
-};
+}
 
+bool Request::checkInvalidChar(const std::string & s, char *c, size_t size) {
+	for (size_t i = 0; i < size; ++i) {
+		if (s.find(c[i]))
+			return true;
+	}
+	return false;
+}
+
+/*RequestLineParsing----------------------------------------------------------*/
 
 void Request::getNextReqLine(std::string & line) {
 	size_t pos =  m_buffer.find("\r\n", m_offset);
@@ -93,18 +111,36 @@ bool Request::parseRequestLine(const std::string & line){
 	return true;
 }
 
+bool Request::isValidRequestLine() {
+
+	char c[4] = {'\t', '\r', '\n', ' '};
+
+	if (checkInvalidChar(m_methode, c, 4))
+		return false; 
+	if (checkInvalidChar(m_target, c, 4))
+		return false; 
+	if (checkInvalidChar(m_httpVer, c, 4))
+		return false; 
+	return true;
+}
+
+
 //reading request line
 bool Request::parseFirstLine() {
 		std::string line;
 		getNextReqLine(line);
 		while (line == "")
 			getNextReqLine(line);
-		if (parseRequestLine(line) == false) {
+		if (parseRequestLine(line) == false ||
+			isValidRequestLine() == false) {
 			m_errCode = 400;
 			return false;
 		}
+
 		return true;
 }
+
+/*RequestHeaderParsing--------------------------------------------------------*/
 
 void Request::getNextHeaderLine(std::string & line) {
 	size_t pos =  m_buffer.find("\r\n", m_offset);
@@ -193,6 +229,8 @@ bool Request::parseHeader() {
 	return true;
 }
 
+/*RequestBodyParsing----------------------------------------------------------*/
+
 bool Request::parseBody() {
 		//TODO smartify
 		std::cout << "BODY" << std::endl;
@@ -231,16 +269,18 @@ bool Request::appendRead(const char *buf) {
 	}
 
 	return isDone();
-	
 }
 
+/*Debug-----------------------------------------------------------------------*/
+
 void Request::printRequest() {
-	std::cout << m_methode << std::endl;
-	std::cout << m_target << std::endl;
-	std::cout << m_httpVer << std::endl;
-	std::cout << "HEADER" << std::endl;
+	std::cout << m_methode << "##" << std::endl;
+	std::cout << m_target << "##" << std::endl;
+	std::cout << m_httpVer << "##" << std::endl;
+	std::cout << "HEADER" << "##" << std::endl;
 	for (std::map<std::string, std::string>::iterator iter = m_header.begin();
 		iter != m_header.end(); ++iter) {
-		std::cout << (*iter).first << ": " << (*iter).second << "###" << std::endl;
+		std::cout << (*iter).first << ": " 
+			<< (*iter).second << "##" << std::endl;
 	}
 }
