@@ -1,6 +1,7 @@
 #ifndef ENGINE_HPP
 # define ENGINE_HPP
 
+# include <string>
 # include <iostream>
 # include <vector>
 # include <map>
@@ -47,9 +48,9 @@ class Engine
 		typedef	std::map<fd_type, Connect>::iterator	CnctIter;
 		typedef	std::vector<s_kevent>::iterator		KeventIter;
 
-		void		socketEvent( s_kevent kevent  );
-		void		connectEvent( s_kevent kevent );
-		void		acceptConnect( Socket sock );
+		void		socketEvent( s_kevent & kevent  );
+		void		connectEvent( s_kevent & kevent );
+		void		acceptConnect( Socket & sock );
 		void		closeConnects( void );
 		void		debug( void );
 		void		setKevent( fd_type fd, int16_t filter, uint16_t flag );

@@ -11,7 +11,8 @@ INC = Engine.hpp\
 	Connect.hpp\
 	Server.hpp\
 	Request.hpp\
-	Response.hpp
+	Response.hpp\
+	Config_parser.hpp
 IDIR = inc
 INC_FULL = $(addprefix $(IDIR)/, $(INC))
 
@@ -25,7 +26,8 @@ SRC = main.cpp\
 	Server.cpp\
 	Request.cpp\
 	Response.cpp\
-	utils.cpp
+	utils.cpp\
+	Config_parser.cpp
 SDIR = src
 SRC_FULL = $(addprefix $(SDIR)/, $(SRC))
 

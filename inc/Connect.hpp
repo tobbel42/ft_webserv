@@ -24,26 +24,17 @@ class Connect
 {
 	private:
 
-		// struct s_request {
-		// 	std::string	methode;
-		// 	std::string target;
-		// 	std::string version;
-		// 	std::map<std::string, std::string> header;
-		// 	std::string body;
-		// };
-		// struct s_response {
-		// 	std::string statusCode;
-		// 	std::map<std::string, std::string> header;
-		// 	std::string body;
-		// };
-
 		typedef	Request	request_type;
 		typedef Response response_type;
 
 		fd_type		m_fd;
-		fd_type		m_sockFd;
+		unsigned int 	m_ip;
+		unsigned int 	m_port;
+		//fd_type		m_sockFd;
 		Server		*p_server;
 		e_action	m_action;
+
+		//To be phased out 
 		std::string	m_rawReq;
 		std::string	m_response;
 
@@ -55,13 +46,17 @@ class Connect
 		
 	public:
 
-		Connect( fd_type fd, fd_type sockFd );
+		Connect( fd_type fd, unsigned int ip, unsigned int port);
 		~Connect();
 		Connect( const Connect &copy );
 
 		Connect	&operator = ( const Connect &rhs );
 
 		fd_type		getFd( void ) const;
+
+		unsigned int getIp() const;
+		unsigned int getPort() const;
+
 		fd_type		getSockFd( void ) const;
 		Server *	getServer( void ) const;
 		e_action	getAction( void ) const;	
