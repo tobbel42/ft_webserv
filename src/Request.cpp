@@ -38,6 +38,21 @@ Request & Request::operator=( const Request & rhs ) {
 	return (*this);
 }
 
+const std::string & Request::get_methode() const { return m_methode; }
+const std::string & Request::get_target() const { return m_target; }
+const std::string & Request::getHttpVer() const { return m_httpVer; }
+std::string Request::getHeaderEntry(const std::string & fieldName) const {
+	std::map<std::string,std::string>::iterator iter = m_header.find(fieldName);
+
+	std::string fieldValue;
+
+	if (iter != m_header.end())
+		fieldValue = iter->second;
+	return fieldValue;
+}
+const std::string & Request::getBody() const { return m_body; }
+uint32_t Request::get_errCode() const { return m_errCode; }
+
 bool Request::isDone() {
 	return true;
 };
@@ -162,6 +177,7 @@ void Request::printRequest() {
 	std::cout << m_methode << std::endl;
 	std::cout << m_target << std::endl;
 	std::cout << m_httpVer << std::endl;
+	std::cout << "HEADER" << std::endl;
 	for (std::map<std::string, std::string>::iterator iter = m_header.begin();
 		iter != m_header.end(); ++iter) {
 		std::cout << (*iter).first << ": " << (*iter).second << std::endl;

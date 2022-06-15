@@ -29,13 +29,12 @@ class Request {
 	void getNextReqLine(std::string & line);
 	bool parseRequestLine(const std::string & line);
 
-	public:
 
 	std::string	m_buffer;
 	size_t		m_offset;
 	e_reqState	m_state;
-	uint32_t	m_errCode;
 
+	uint32_t	m_errCode;
 	std::string m_methode;
 	std::string m_target;
 	std::string m_httpVer;
@@ -45,8 +44,16 @@ class Request {
 	public:
 
 	bool	appendRead(const char *buf);
-	bool	isDone();
 	void	printRequest();
+	bool	isDone();
+
+	const std::string & get_methode() const;
+	const std::string & get_target() const;
+	const std::string & getHttpVer() const;
+	std::string getHeaderEntry(const std::string & fieldName) const;
+	const std::string & getBody() const;
+	uint32_t	get_errCode() const;
+
 };
 
 #endif
