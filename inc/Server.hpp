@@ -1,63 +1,122 @@
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#pragma once
 
-#include <iostream>
-#include "utils.hpp"
-#include <map>
+#include <cstdint>
+
+#include <string>
 #include <vector>
+#include <algorithm>
+#include <limits>
+#include <utility>
+#include <iostream>
 
+#include "typedefs.hpp"
 
-/*
-//The server class is best understood as an ruleset how a given connection
-//handels incomming requests, the rules are specified in the config files
-//ToDo: pipeline data from the configfile
-//		even more rules are needed
-*/
+#ifndef nullptr
+#define nullptr NULL
+#endif
+
 class Server
 {
-	private:
-		std::string	m_hostname;
+public: // methods
 
-		std::string	m_directory;
+	Server();
+	Server(const Server& other);
+	~Server() {}
 
-		uint32_t m_ip;
-		uint32_t m_port;
-
-		bool	m_defaultServer;
-
-		//ERRCODE + FIlEPATH
-		std::map<uint32_t, std::string> m_defaultErrorPages;
-
-		size_t	m_clientBodySize;
-
-		//GET POST etc.
-		std::vector<std::string> m_allowedMethodes;
-
-		std::map<std::string, std::string> m_redirections;
-
-		bool m_directoryListing;
-
-		//path to file
-		std::string m_defaultDirectoryFile;
-
-		//list all file extensions like .py .php
-		std::vector<std::string> m_cgiFileExtensions;
-		
-		//maybe todo ->fileupload enable + path 
+	Server& operator=(const Server& other);
 
 
-	public:
-		Server( void );
-		Server( std::string hostname, std::string directory);
-		~Server();
-		Server( const Server &cpy );
+	bool set_server_name(const std::string& name);
+	bool set_root(const std::string& word);
+	bool set_index(const std::string& word);
+	bool set_error_pages(const std::string& word);
+	bool set_ip_address(uint32_t ip);
+	bool set_port(uint32_t port);
+	bool set_method(const std::string& method);
+	bool set_max_client_body_size(uint32_t n);
 
-		Server	&operator=( const Server &rhs );
+	const char* check_attributes() const;
 
-		std::string	getDirectory( void ) const;
-		fd_type		getSocket( void ) const;
-		std::string getHostname( void ) const;
-		
+	std::string	getDirectory( void ) const;
+	fd_type		getSocket( void ) const;
+	std::string getHostname( void ) const;
+
+
+public: // attributes
+
+	StringArr				server_names;
+	std::string				root;
+	std::string				index;
+	std::string				error_pages;
+	uint32_t				ip_address;
+	std::vector<uint32_t>	ports;
+	uint32_t				max_client_body_size;
+	StringArr				allowed_methods;
+
+	class Location;
+	std::vector<Location>	locations;
+
+
+public: // subclass
+
+	class Location
+	{
+	public: // methods
+		Location();
+		Location(const Location& other);
+		~Location() {}
+
+		Location& operator=(const Location& other);
+
+
+		bool set_root(const std::string& word);
+		bool set_index(const std::string& word);
+		bool set_script(const std::string& script);
+		const char* set_directory_listing(const std::string& state);
+
+		const char* check_attributes() const;
+
+
+	public: // attributes
+		std::string		location;
+		std::string		root;
+		std::string		index;
+		StringArr		allowed_scripts;
+		bool			directory_listing_enabled;
+
+
+	private: // attributes
+		std::vector<bool> m_checks;
+
+	private: // enum
+		enum e_location_options
+		{
+			ROOT = 0,
+			INDEX,
+			ALLOWED_METHODS,
+			ALLOWED_SCRIPTS,
+			DIRECTORY_LISTING
+		};
+	};
+
+
+private: // attributes
+	std::vector<bool> m_checks;
+
+private: // enum
+	enum e_server_options
+	{
+		SERVER_NAME = 0,
+		ROOT,
+		INDEX,
+		ERROR_PAGES,
+		IP_ADDRESS,
+		PORT,
+		MAX_CLIENT_BODY_SIZE
+	};
 };
 
-#endif
+
+std::ostream& operator<<(std::ostream& out, const Server::Location& rhs);
+
+std::ostream& operator<<(std::ostream& out, const Server& rhs);

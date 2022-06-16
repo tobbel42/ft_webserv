@@ -53,7 +53,7 @@ class Request {
 	std::string getHeaderEntry(const std::string & fieldName) const;
 	const std::string & getBody() const;
 	uint32_t	get_errCode() const;
-
+	std::string getTarget() const { return m_target; } // added to be able to compile
 };
 
 #endif

@@ -1,16 +1,17 @@
 #ifndef CONNECT_HPP
 # define CONNECT_HPP
 
-# include <iostream>
-# include <utils.hpp>
-# include <fstream>
-# include <sstream>
-# include <algorithm>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <algorithm>
 
-# include "Server.hpp"
-# include "Engine.hpp"
-# include "Request.hpp"
-# include "Response.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
+#include "Engine.hpp"
+#include "Server.hpp"
+#include "utils.hpp"
+#include "typedefs.hpp"
 
 enum	e_action { READ, WRITE };
 

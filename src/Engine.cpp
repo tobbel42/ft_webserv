@@ -1,5 +1,7 @@
 #include "../inc/Engine.hpp"
 
+// ToDo: initialisation of all the member attributes
+
 Engine::Engine( void )
 {
 	#ifdef VERBOSE
@@ -54,6 +56,13 @@ operator<< ( std::ostream & out, s_kevent const & in )
 	return( out );
 }
 
+
+std::vector<Server>&
+Engine::getServers()
+{
+	return m_servers;
+}
+
 /*
 //in here all the socket binding magic should happen, for now just a dummy
 */
@@ -71,9 +80,9 @@ Engine::initSockets( void )
 void
 Engine::initServers( void )
 {
-	Server	newServer("localhost", "testServerDir");
+	// Server	newServer("localhost", "testServerDir");
 
-	m_servers.push_back(newServer);
+	// m_servers.push_back(newServer);
 	
 }
 

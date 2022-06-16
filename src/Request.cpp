@@ -40,9 +40,9 @@ Request & Request::operator=( const Request & rhs ) {
 
 const std::string & Request::get_methode() const { return m_methode; }
 const std::string & Request::get_target() const { return m_target; }
-const std::string & Request::getHttpVer() const { return m_httpVer; }
+const std::string & Request::getHttpVer() const { return m_httpVer; }
 std::string Request::getHeaderEntry(const std::string & fieldName) const {
-	std::map<std::string,std::string>::iterator iter = m_header.find(fieldName);
+	std::map<std::string,std::string>::const_iterator iter = m_header.find(fieldName);
 
 	std::string fieldValue;
 
@@ -134,8 +134,8 @@ bool Request::appendRead(const char *buf) {
 			value = line.substr(pos + 2);
 
 			//httpRequest are case insenitive, standardizing the input
-			str_tolower(key);
-			str_tolower(value);
+			utils::str_tolower(key);
+			utils::str_tolower(value);
 
 			m_header.insert(std::make_pair(key, value));
 		}

@@ -1,8 +1,8 @@
+#include "ConfigParser.hpp"
 #include "Socket.hpp"
 #include "Engine.hpp"
-#include "Config_parser.hpp"
 
-// #include <cstring>
+#include <cstring>
 
 bool	strriseq(const char *s1, const char *s2)
 {
@@ -19,21 +19,26 @@ bool	strriseq(const char *s1, const char *s2)
 
 int main(int argc, char **argv)
 {
-	Engine	a;
-	//atm müssen die server vor den Sockets initialisiert werden, sonst segfault
-	if (argc != 2)
+	if (argc > 2)
 	{
 		std::cerr << "Error:\nwrong number of arguments\nusage: "
 					<< argv[0] << " <config file>" << std::endl;
 		return 1;
 	}
-	else if (!strriseq(argv[1], ".conf"))
+	else if (argc == 2 && !strriseq(argv[1], ".conf"))
 	{
 		std::cerr << "Error:\nwrong file extension\n"
 				<< "the config file has to end in .conf" << std::endl;
 		return 1;
 	}
-	Config_parser parser(argv[1]);
+
+	Engine	e;
+	ConfigParser parser(e.getServers());
+	
+	if (argc == 1)
+		parser.assign_file("config/default.conf");
+	else
+		parser.assign_file(argv[1]);
 	try
 	{
 		parser.run();
@@ -43,8 +48,9 @@ int main(int argc, char **argv)
 		std::cerr << e.what() << '\n';
 		return 1;
 	}
-	a.initServers();
-	a.initSockets();
-	a.launch();
+	//atm müssen die server vor den Sockets initialisiert werden, sonst segfault
+	e.initServers();
+	e.initSockets();
+	e.launch();
 	return 0;
 }
