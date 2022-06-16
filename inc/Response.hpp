@@ -8,8 +8,7 @@
 
 #include "Server.hpp"
 #include "utils.hpp"
-
-#define HTTP_VERSION 1.1
+#include "typedefs.hpp"
 
 
 class Response
@@ -17,6 +16,7 @@ class Response
 public: // methods
 	Response();
 	Response(const Response& other);
+	Response(Server* server);
 	~Response();
 
 	Response& operator=(const Response& other);
@@ -33,6 +33,8 @@ private: // methods
 	void DELETE_method();
 
 	void m_generate_error_response(int error_code);
+
+	void m_add_header_line(const std::string& key, const std::string& value);
 
 
 	static std::map<int, std::string> s_init_status_codes();

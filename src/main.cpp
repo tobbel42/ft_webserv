@@ -2,7 +2,7 @@
 #include "Socket.hpp"
 #include "Engine.hpp"
 
-// #include <cstring>
+#include <cstring>
 
 bool	strriseq(const char *s1, const char *s2)
 {
@@ -32,7 +32,8 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	ConfigParser parser;
+	Engine	e;
+	ConfigParser parser(e.getServers());
 	
 	if (argc == 1)
 		parser.assign_file("config/default.conf");
@@ -47,7 +48,6 @@ int main(int argc, char **argv)
 		std::cerr << e.what() << '\n';
 		return 1;
 	}
-	Engine	e;
 	//atm müssen die server vor den Sockets initialisiert werden, sonst segfault
 	e.initServers();
 	e.initSockets();

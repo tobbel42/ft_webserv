@@ -12,8 +12,8 @@
 
 #include "../inc/ConfigParser.hpp"
 
-ConfigParser::ConfigParser():
-	m_servers(),
+ConfigParser::ConfigParser(ServerArr& servers):
+	m_servers(servers),
 	m_infile(),
 	m_line_stream(),
 	m_line_number()
@@ -23,19 +23,8 @@ ConfigParser::ConfigParser():
 	#endif
 }
 
-ConfigParser::ConfigParser(const ConfigParser& other):
-	m_servers(other.m_servers),
-	m_infile(), // the ofstream can't be copy constructed
-	m_line_stream(),
-	m_line_number()
-{
-	#ifdef VERBOSE
-	std::cout << "ConfigParser copy constructor called" << std::endl;
-	#endif
-}
-
-ConfigParser::ConfigParser(const char *filename):
-	m_servers(),
+ConfigParser::ConfigParser(ServerArr& servers, const char *filename):
+	m_servers(servers),
 	m_infile(filename),
 	m_line_stream(),
 	m_line_number()
@@ -43,8 +32,10 @@ ConfigParser::ConfigParser(const char *filename):
 	#ifdef VERBOSE
 	std::cout << "ConfigParser filename constructor called" << std::endl;
 	#endif
+
 	if (!m_infile.is_open())
-		throw ConfigParser::InvalidConfig(m_line_number, "couldnt open the config file", strerror(errno));
+		throw ConfigParser::InvalidConfig(m_line_number,
+			"couldnt open the config file", strerror(errno));
 }
 
 ConfigParser::~ConfigParser()
@@ -52,53 +43,47 @@ ConfigParser::~ConfigParser()
 	m_infile.close();
 }
 
-ConfigParser&
-ConfigParser::operator=(const ConfigParser& other)
-{
-	if (this != &other)
-	{
-		m_servers = other.m_servers;
-		// m_infile = other.m_infile; // the ofstream doesn't have an assignment operator
-		m_line_stream.str(other.m_line_stream.str());
-	}
-	#ifdef VERBOSE
-	std::cout << "ConfigParser assignment operator called" << std::endl;
-	#endif
-	return *this;
-}
-
 void
 ConfigParser::assign_file(const char *filename)
 {
 	if (m_infile.is_open())
 		m_infile.close();
+
 	m_infile.open(filename);
 	if (!m_infile.is_open())
-		throw ConfigParser::InvalidConfig(m_line_number, "couldnt open the config file", strerror(errno));
+		throw ConfigParser::InvalidConfig(m_line_number,
+			"couldnt open the config file", strerror(errno));
 }
 
 void
 ConfigParser::run()
 {
 	std::string word;
-	std::pair<std::string, ServerSetup> server_ret;
+	std::pair<std::string, Server> server_ret;
 
 	while (!(word = m_get_next_word()).empty())
 	{
 		if (word != "server")
-			throw ConfigParser::InvalidConfig(m_line_number, "invalid server starting identifier", word.c_str());
+			throw ConfigParser::InvalidConfig(m_line_number,
+				"invalid server starting identifier", word.c_str());
+
 		if (m_get_next_word_protected(false) != "{")
-			throw ConfigParser::InvalidConfig(m_line_number, "server blocks must be followed by {");
+			throw ConfigParser::InvalidConfig(m_line_number,
+				"server blocks must be followed by {");
+
 		server_ret = m_read_server();
 		if (server_ret.first != "}")
-			throw ConfigParser::InvalidConfig(m_line_number, "invalid server identifier", server_ret.first.c_str());
+			throw ConfigParser::InvalidConfig(m_line_number,
+				"invalid server identifier", server_ret.first.c_str());
+
 		const char *error_msg = server_ret.second.check_attributes();
 		if (error_msg != nullptr)
 			throw ConfigParser::InvalidConfig(m_line_number, error_msg);
+
 		m_servers.push_back(server_ret.second);
 	}
-	if (m_servers.empty())
-		throw ConfigParser::InvalidConfig(m_line_number, "at least one server block must be specified");
+
+	m_check_server_configs();
 
 	#ifdef VERBOSE
 	for (size_t i = 0; i < m_servers.size(); ++i)
@@ -106,64 +91,87 @@ ConfigParser::run()
 	#endif
 }
 
-std::pair<std::string, ServerSetup>
+std::pair<std::string, Server>
 ConfigParser::m_read_server()
 {
-	ServerSetup setup;
+	Server server;
 	std::string word;
 
 	while (!(word = m_get_next_word_protected(false)).empty())
 	{
 		if (word == "server_name")
-			setup.set_server_name(m_get_next_word_protected());
+			server.set_server_name(m_get_next_word_protected());
 		else if (word == "root")
 		{
-			if (!setup.set_root(m_get_next_word_protected()))
+			if (!server.set_root(m_get_next_word_protected()))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"only one root shall be specified for each server");
 		}
 		else if (word == "index")
 		{
-			if (!setup.set_index(m_get_next_word_protected()))
+			if (!server.set_index(m_get_next_word_protected()))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"only one index page shall be specified for each server");
 		}
-		else if (word == "max-client-body-size")
+		else if (word == "max_client_body_size")
 		{
-			if (!setup.set_max_client_body_size(m_check_int(m_get_next_word_protected())))
+			if (!server.set_max_client_body_size(m_check_int(m_get_next_word_protected())))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"only one client body size shall be specified for each server");
 		}
 		else if (word == "ip-address")
 		{
-			if (!setup.set_ip_address(m_check_ip_address()))
+			if (!server.set_ip_address(m_check_ip_address()))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"every server must have only one ip address");
 		}
 		else if (word == "port")
-			setup.set_port(m_check_int(m_get_next_word_protected()));
+			server.set_port(m_check_int(m_get_next_word_protected()));
+		else if (word == "allowed_methods")
+		{
+			while (m_line_stream >> word)
+			{
+				if (word.empty() || word[0] == '#')
+				{
+					m_line_stream.str(std::string());
+					break;
+				}
+				if (!server.set_method(word))
+					throw ConfigParser::InvalidConfig(m_line_number,
+						"invalid http-method identifier", word.c_str());
+			}
+		}
 		else if (word == "location")
 		{
-			LocationSetup location;
+			Server::Location location;
 			location.location = m_get_next_word_protected();
+			if (location.location == "{")
+				throw ConfigParser::InvalidConfig(m_line_number,
+					"location blocks must define the directory the operate in");
+
 			if (m_get_next_word_protected(false) != "{")
-				throw ConfigParser::InvalidConfig(m_line_number, "location blocks must start with a {");
+				throw ConfigParser::InvalidConfig(m_line_number, 
+					"location blocks must start with a {");
+
 			std::string location_ret = m_read_location(location);
 			if (location_ret != "}")
-				throw ConfigParser::InvalidConfig(m_line_number, "invalid location identifier", location_ret.c_str());
+				throw ConfigParser::InvalidConfig(m_line_number,
+					"invalid location identifier", location_ret.c_str());
+
 			const char* error_msg = location.check_attributes();
 			if (error_msg != nullptr)
 				throw ConfigParser::InvalidConfig(m_line_number, error_msg);
-			setup.locations.push_back(location);
+
+			server.locations.push_back(location);
 		}
 		else
-			return make_pair(word, setup);
+			return make_pair(word, server);
 	}
-	return make_pair(std::string(), setup);
+	return make_pair(std::string(), server);
 }
 
 std::string
-ConfigParser::m_read_location(LocationSetup& location)
+ConfigParser::m_read_location(Server::Location& location)
 {
 	std::string word;
 	
@@ -180,20 +188,6 @@ ConfigParser::m_read_location(LocationSetup& location)
 			if (!location.set_index(m_get_next_word_protected()))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"only one index page shall be specified for each location");
-		}
-		else if (word == "allowed_methods")
-		{
-			while (m_line_stream >> word)
-			{
-				if (word.empty() || word[0] == '#')
-				{
-					m_line_stream.str(std::string());
-					break;
-				}
-				if (!location.set_method(word))
-					throw ConfigParser::InvalidConfig(m_line_number,
-						"invalid http-method identifier", word.c_str());
-			}
 		}
 		else if (word == "allowed_scripts")
 		{
@@ -250,9 +244,12 @@ ConfigParser::m_get_next_word_protected(bool is_on_same_line)
 	std::string word = m_get_next_word();
 	
 	if (is_on_same_line && current_line != m_line_number)
-		throw ConfigParser::InvalidConfig(current_line, "values must be on the same line as their keyword");
+		throw ConfigParser::InvalidConfig(current_line,
+			"values must be on the same line as their keyword");
+
 	else if (word.empty())
-		throw ConfigParser::InvalidConfig(m_line_number, "unexpected EOF encountered");
+		throw ConfigParser::InvalidConfig(m_line_number,
+			"unexpected EOF encountered");
 	return word;
 }
 
@@ -262,11 +259,14 @@ ConfigParser::m_check_int(const std::string& word)
 	for (std::string::const_iterator it = word.begin(); it != word.end(); ++it)
 	{
 		if (!isdigit(*it))
-			throw ConfigParser::InvalidConfig(m_line_number, "invalid unsigned integer format", word.c_str());
+			throw ConfigParser::InvalidConfig(m_line_number,
+				"invalid unsigned integer format", word.c_str());
 	}
+
 	uint64_t number = strtoul(word.c_str(), NULL, 10);
-	if (number > std::numeric_limits<uint16_t>::max())
-		throw ConfigParser::InvalidConfig(m_line_number, "number too big", word.c_str());
+	if (number > UINT64_MAX)
+		throw ConfigParser::InvalidConfig(m_line_number, 
+			"number too big", word.c_str());
 	return number;
 }
 
@@ -293,6 +293,61 @@ ConfigParser::m_check_ip_address()
 		throw ConfigParser::InvalidConfig(m_line_number, "invalid ip address format", word.c_str());
 	return ip_addr;
 }
+
+/*
+Checks for duplicate ip-address:port combinations
+and server names across all server blocks
+
+Thanks to C++98 this looks very ugly...
+I miss
+for (const auto& i : container)
+{
+	...
+}
+so much here :(
+*/
+void
+ConfigParser::m_check_server_configs()
+{
+	if (m_servers.empty())
+		throw ConfigParser::InvalidConfig(m_line_number,
+			"at least one server block must be specified");
+
+	for (ServerArr::iterator server_it = m_servers.begin();
+		server_it != m_servers.end(); ++server_it)
+	{
+		for (ServerArr::iterator it = server_it + 1; it != m_servers.end(); ++it)
+		{
+			if (server_it->ip_address == it->ip_address)
+			{
+				for (std::vector<uint32_t>::iterator port_it = server_it->ports.begin();
+					port_it != server_it->ports.end(); ++port_it)
+				{
+					if (std::find(it->ports.begin(), it->ports.end(), *port_it)
+						!= it->ports.end())
+							throw ConfigParser::InvalidConfig(m_line_number,
+								"duplicate ip:port combination",
+								std::string(
+									utils::ip_to_string(server_it->ip_address) +
+									":" + utils::to_string(*port_it)
+								).c_str());
+				}
+			}
+
+			for (StringArr::iterator server_name_it = server_it->server_names.begin();
+				server_name_it != server_it->server_names.end(); ++server_name_it)
+			{
+				if (std::find(it->server_names.begin(), it->server_names.end(), *server_name_it)
+					!= it->server_names.end())
+						throw ConfigParser::InvalidConfig(m_line_number,
+							"duplicated server names are not allowed",
+							server_name_it->c_str());
+			}
+		}
+	}
+}
+
+
 
 ConfigParser::InvalidConfig::InvalidConfig(size_t line, const char *msg,
 											const char *details):

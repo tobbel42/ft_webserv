@@ -19,11 +19,12 @@ TPP_FULL = $(addprefix $(IDIR)/, $(TPP))
 SRC = main.cpp\
 	Socket.cpp\
 	Engine.cpp\
-	Connect.cpp\
 	Server.cpp\
 	ConfigParser.cpp \
-	Setup.cpp \
-	Response.cpp
+	Connect.cpp\
+	Response.cpp \
+	utils.cpp
+
 SDIR = src
 SRC_FULL = $(addprefix $(SDIR)/, $(SRC))
 

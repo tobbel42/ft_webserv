@@ -25,42 +25,47 @@
 #include <iostream>
 #include <utility>
 
-#include "Setup.hpp"
+#include "Server.hpp"
 #include "utils.hpp"
+#include "typedefs.hpp"
 
-typedef std::vector<std::string> StringVector;
 
+#ifndef nullptr
+#define nullptr NULL
+#endif
 
 class ConfigParser
 {
 public: // methods
-	ConfigParser();
-	ConfigParser(const char *filename);
+	ConfigParser(ServerArr& servers);
+	ConfigParser(ServerArr& servers, const char *filename);
 	~ConfigParser();
 
 	void assign_file(const char *filename);
 
 	void run();
 
-	inline const std::vector<ServerSetup>& getServerSetup() const { return m_servers; }
 
 private: // methods
-	ConfigParser(const ConfigParser& other);
+	ConfigParser();
+	ConfigParser(const ConfigParser&);
 
-	ConfigParser& operator=(const ConfigParser& other);
+	ConfigParser& operator=(const ConfigParser&);
 
 
 	std::string m_get_next_word();
 	std::string m_get_next_word_protected(bool is_on_same_line = true);
 
+	std::pair<std::string, Server>	m_read_server();
+	std::string						m_read_location(Server::Location& location);
 
-	std::pair<std::string, ServerSetup> m_read_server();
-	std::string m_read_location(LocationSetup& location);
+	void		m_check_server_configs();
+	uint32_t	m_check_int(const std::string& word);
+	uint32_t	m_check_ip_address();
 
-	uint32_t m_check_int(const std::string& word);
-	uint32_t m_check_ip_address();
 
 private: // subclass
+
 	class InvalidConfig: public std::exception
 	{
 	public:
@@ -70,8 +75,10 @@ private: // subclass
 	private:
 		std::string m_errorMsg;
 	};
+
+
 private: // attributes
-	std::vector<ServerSetup>		m_servers;
+	std::vector<Server>&			m_servers; // reference to the engines' servers
 	std::ifstream					m_infile;
 	std::stringstream				m_line_stream;
 	size_t							m_line_number;

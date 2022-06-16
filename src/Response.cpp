@@ -36,7 +36,7 @@ Response::s_init_status_codes()
 	// 4XX: Client Error
 	status_codes.insert(std::make_pair(400, "Bad Request"));
 	status_codes.insert(std::make_pair(401, "Unauthorized"));
-	status_codes.insert(std::make_pair(402, "Payment Required"));
+	status_codes.insert(std::make_pair(402, "Payment Required")); // reserved for future use
 	status_codes.insert(std::make_pair(403, "Forbidden"));
 	status_codes.insert(std::make_pair(404, "Not Found"));
 	status_codes.insert(std::make_pair(405, "Method Not Allowed"));
@@ -91,12 +91,21 @@ std::string
 Response::get_payload() const { return m_payload; }
 
 
+void
+Response::m_add_header_line(const std::string& key, const std::string& value)
+{
+	m_payload += key;
+	m_payload += ": ";
+	m_payload += value;
+	m_payload += "\r\n";
+}
+
 
 
 void
 Response::m_generate_error_response(int error_code)
 {
-	std::string filename = p_server->get_error_pages();
+	std::string filename = "testServerDir"; // p_server->get_error_pages();
 
 	filename += '/';
 	filename += utils::to_string(error_code);
@@ -106,10 +115,33 @@ Response::m_generate_error_response(int error_code)
 	if (file.is_open())
 	{
 		m_payload = s_generate_status_line(error_code);
-
+		// general header:
+		//		Connection: (close or maybe keep-alive)
+		//		Date: the timestamp in http time format
+		// response-header:
+		//		Accept-ranges: (probably none)
+		//		Retry-after: (maybe for 503 and 3XX status codes -> time in seconds)
+		//		Server: webserv (or whatever name we want + version number)
+		// entity-header:
+		//		Allow: The allowed requests for the current server
+		//		Content-Encoding: Must be provided when the coding is not "identity"
+		//						If the coding is not accepted, status code 415 must be sent back
+		//						If there are muliple encodings, the must be listed in order of usage
+		//		Content-Length: The length of the response body. For chunked responses the field 
+		//						should not be incuded (or included as 0)
+		//		Content-Location: The path to the accessed resource. Optional.
+		//		Content-MD5: Used for end-to-end encoding. Not neccessary.
+		//		Content-Range: For multiple byte-ranges in multiple responses.
+		//						Very complicated!
+		//		Content-Type: The type of media sent in MIME format.
+		//						Default is: "application/octet-stream"
+		//		Expires: Date untill the response is valid and should be cached
+		//						Dates in the past (or 0) count as instantly expired
+		//		Last-Modified: Timestamp of the sent resource (e.g. file)
 	}
 	else
 	{
-		// error 404: filename not found
+		// error 501: error file is not where it should be
+		m_payload = s_generate_status_line(501);
 	}
 }

@@ -1,9 +1,11 @@
 #pragma once
 
+#include <ctime>
+#include <cstdint>
+
 #include <string>
 #include <sstream>
 
-typedef	unsigned long	t_fd;
 
 
 
@@ -25,6 +27,37 @@ to_string(const T& value)
 }
 
 
+/*
+@brief Converts the supplied string to the templated value.
+The value must have an overload for the std::ostream::operator >>
+*/
+template<typename T>
+inline T
+from_string(const std::string& s)
+{
+	T value;
+	std::stringstream ss(s);
+	ss >> value;
+	return value;
+}
 
+/*
+@return The current time in the format:
+Weekday-name, Day Month-name Year Hour:Minute:Second Timezone
+*/
+std::string
+get_http_time();
+
+/*
+@brief Converts the supplied string to an ip address
+*/
+uint32_t
+string_to_ip(const std::string& ip_string);
+
+/*
+@brief Converts the supplied ip address to std::string
+*/
+std::string
+ip_to_string(uint32_t ip_addr);
 
 } // namespace utils

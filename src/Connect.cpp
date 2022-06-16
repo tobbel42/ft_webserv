@@ -108,6 +108,7 @@ Connect::writeResponse( s_kevent kevent )
 void
 Connect::composeResponse( void )
 {
+#if 0
 	std::fstream	file;
 
 	size_t	begin = m_request.find(' ') + 1;
@@ -162,5 +163,5 @@ Connect::composeResponse( void )
 	}
 
 	m_action = WRITE;
+#endif
 }
-
