@@ -87,7 +87,8 @@ Request::is_done() {
 	return m_done;
 }
 
-bool Request::check_invalid_char(const std::string & s, char *c, size_t size) {
+bool 
+Request::check_invalid_char(const std::string & s, char *c, size_t size) {
 	for (size_t i = 0; i < size; ++i) {
 		if (s.find(c[i]) != std::string::npos)
 			return true;
@@ -95,14 +96,16 @@ bool Request::check_invalid_char(const std::string & s, char *c, size_t size) {
 	return false;
 }
 
-bool Request::set_error(size_t err_code) {
+bool
+Request::set_error(size_t err_code) {
 	m_err_code = err_code;
 	return false;
 }
 
 /*RequestLineParsing----------------------------------------------------------*/
 
-void Request::get_next_req_line(std::string & line) {
+void
+Request::get_next_req_line(std::string & line) {
 	size_t pos =  m_buffer.find("\r\n", m_offset);
 	if (pos == std::string::npos)
 	{
@@ -116,7 +119,8 @@ void Request::get_next_req_line(std::string & line) {
 	}
 }
 
-bool Request::parse_request_line(const std::string & line){
+bool
+Request::parse_request_line(const std::string & line){
 	size_t pos, pos1; 
 
 	pos = line.find(' ');
@@ -134,7 +138,8 @@ bool Request::parse_request_line(const std::string & line){
 }
 
 //is stupid, maybe overhaul
-bool Request::is_valid_request_line() {
+bool
+Request::is_valid_request_line() {
 
 	char c[4] = {'\t', '\r', '\n', ' '};
 
@@ -149,7 +154,8 @@ bool Request::is_valid_request_line() {
 
 
 //reading request line
-bool Request::parse_first_line() {
+bool
+Request::parse_first_line() {
 		std::string line;
 		get_next_req_line(line);
 
@@ -167,7 +173,8 @@ bool Request::parse_first_line() {
 /*RequestHeaderParsing--------------------------------------------------------*/
 
 //header entrys can span multible lines -> custom lineParser
-void Request::get_next_header_line(std::string & line) {
+void
+Request::get_next_header_line(std::string & line) {
 	size_t pos =  m_buffer.find("\r\n", m_offset);
 	while (pos != std::string::npos && utils::isLWS(m_buffer, pos))
 	{
@@ -187,7 +194,8 @@ void Request::get_next_header_line(std::string & line) {
 	m_offset = pos + 2;
 }
 
-size_t Request::remove_leading_LWS(const std::string & line, size_t pos) {
+size_t
+Request::remove_leading_LWS(const std::string & line, size_t pos) {
 	while(utils::isLWS(line, pos))
 	{
 		if (utils::isWS(line, pos))
@@ -197,7 +205,8 @@ size_t Request::remove_leading_LWS(const std::string & line, size_t pos) {
 	}
 	return pos;
 }
-size_t Request::remove_trailing_LWS(const std::string & line) {
+size_t
+Request::remove_trailing_LWS(const std::string & line) {
 	size_t pos = line.size() - 1;
 	while (utils::isRLWS(line, pos))
 	{
@@ -210,7 +219,8 @@ size_t Request::remove_trailing_LWS(const std::string & line) {
 }
 
 //reading request header
-bool Request::parse_header() {
+bool
+Request::parse_header() {
 	std::string key, value, line;
 	size_t pos;
 
@@ -252,14 +262,17 @@ bool Request::parse_header() {
 
 /*RequestBodyParsing----------------------------------------------------------*/
 
-bool Request::parse_body() {
+bool
+Request::parse_body() {
 		m_body.append(m_buffer.substr(m_offset));
 		if (m_body.size() < m_content_len)
 			return false;
 		return true;
 }
 
-bool Request::parse_chunked_body() {
+bool
+Request::parse_chunked_body() {
+	std::cout << "CHUNK" << std::endl;
 	//getting the chunksize
 	std::string line;
 	get_next_req_line(line);
@@ -290,11 +303,27 @@ bool Request::parse_chunked_body() {
 	return (m_offset >= m_buffer.size())?false:true;
 }
 
+bool
+Request::is_chunked() {
+	std::string value = get_header_entry("transfer-encoding");
+	print_request();
+	if (value == "")
+		return false;
+	
+	StringArr split = utils::str_split(value, ",");
+	for (size_t i = 0; i < split.size(); ++i) {
+		if (split[i] == "chunked")
+			return true;
+	}
+	return false;
+}
+
 /*MainFunction----------------------------------------------------------------*/
 
 //todo: what about illigal bodys
 
-bool Request::append_read(const char *buf) {
+bool
+Request::append_read(const char *buf) {
 	
 	m_buffer.append(buf);
 
@@ -307,7 +336,7 @@ bool Request::append_read(const char *buf) {
 			return is_done();
 
 		//determining if a Body is present, if yes, determining BodyType
-		if (get_header_entry("transfer-encoding") == "chunked")
+		if (is_chunked())
 			m_state = CHUNKED_BODY;
 		else if (get_header_entry("content-length") != "")
 		{
@@ -340,7 +369,8 @@ bool Request::append_read(const char *buf) {
 
 /*Debug-----------------------------------------------------------------------*/
 
-void Request::print_request() {
+void
+Request::print_request() {
 	std::cout << m_methode << "##" << std::endl;
 	std::cout << m_target << "##" << std::endl;
 	std::cout << m_http_ver << "##" << std::endl;

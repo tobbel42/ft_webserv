@@ -55,6 +55,7 @@ class Request {
 	/*RequestBodyParsing------------------------------------------------------*/
 
 	bool parse_body();
+	bool is_chunked();
 	bool parse_chunked_body();
 
 	/*Internal MemberVariabels------------------------------------------------*/

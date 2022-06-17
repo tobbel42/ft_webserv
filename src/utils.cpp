@@ -1,4 +1,4 @@
-#include "../inc/utils.hpp"
+#include "utils.hpp"
 
 #include <arpa/inet.h>
 
@@ -87,6 +87,34 @@ hex_str_to_i(const std::string & str) {
 	ss << std::hex << str;
 	ss >> n;
 	return n;
+}
+
+//ft_split, but make it cool
+StringArr
+str_split(const std::string &s, const std::string & del) {
+	StringArr vec;
+	size_t pos1 = 0, pos2;
+
+	if (del == "")
+	{
+		vec.push_back(s);
+		return vec;
+	}
+
+	while (pos1 <= s.size())
+	{
+		pos2 = pos1;
+		pos1 = s.find(del, pos2);
+		if (pos1 != std::string::npos) {
+			vec.push_back(s.substr(pos2, pos1 - pos2));
+			pos1 += del.size();
+		}
+		else {
+			vec.push_back(s.substr(pos2));
+			break;
+		}
+	}
+	return vec;
 }
 
 } // namespace utils

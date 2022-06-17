@@ -10,6 +10,8 @@
 
 #include <string>
 #include <ctype.h>
+#include "typedefs.hpp"
+
 namespace utils {
 
 void str_tolower(std::string & s);
@@ -77,4 +79,9 @@ ip_to_string(uint32_t ip_addr);
 uint32_t
 hex_str_to_i(const std::string &);
 
+StringArr
+str_split(const std::string &s, const std::string & del);
+
 } // namespace utils
+
+
