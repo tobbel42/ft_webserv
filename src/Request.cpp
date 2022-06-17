@@ -72,7 +72,7 @@ bool Request::isDone() {
 
 bool Request::checkInvalidChar(const std::string & s, char *c, size_t size) {
 	for (size_t i = 0; i < size; ++i) {
-		if (s.find(c[i]))
+		if (s.find(c[i]) != std::string::npos)
 			return true;
 	}
 	return false;
@@ -116,11 +116,11 @@ bool Request::isValidRequestLine() {
 	char c[4] = {'\t', '\r', '\n', ' '};
 
 	if (checkInvalidChar(m_methode, c, 4))
-		return false; 
+		std::cout << "M" << std::endl;
 	if (checkInvalidChar(m_target, c, 4))
-		return false; 
+		std::cout << "t" << std::endl;
 	if (checkInvalidChar(m_httpVer, c, 4))
-		return false; 
+		return false;
 	return true;
 }
 
@@ -129,6 +129,7 @@ bool Request::isValidRequestLine() {
 bool Request::parseFirstLine() {
 		std::string line;
 		getNextReqLine(line);
+		std::cout << "Hello " <<  line << std::endl;
 		while (line == "")
 			getNextReqLine(line);
 		if (parseRequestLine(line) == false ||
@@ -233,11 +234,9 @@ bool Request::parseHeader() {
 
 bool Request::parseBody() {
 		//TODO smartify
-		std::cout << "BODY" << std::endl;
 		m_body.append(m_buffer.substr(m_offset));
 		std::string len = getHeaderEntry("content-length");
 		size_t i = std::strtoll(len.data(), NULL, 10);
-		std::cout << m_body << std::endl;
 		if (m_body.size() < i)
 			return false;
 		return true;
@@ -267,6 +266,8 @@ bool Request::appendRead(const char *buf) {
 	{
 		std::cerr << "NOT JET IMPLEMENTED" << std::endl;
 	}
+
+	std::cout << m_body.size() << std::endl;
 
 	return isDone();
 }
