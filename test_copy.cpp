@@ -133,7 +133,7 @@ int main(int argc, char const *argv[], char **envp)
 					std::string line;
 					std::string all_lines;
 					MyFile myFile(filename, "www/root/", envp);
-					all_lines = myFile.check_file();
+					all_lines = myFile.read_file();
 
 					//all_lines = check_file(filename, "www/root/", envp);
 					//file.open(filename);

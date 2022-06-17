@@ -22,9 +22,12 @@ class MyFile
 {
 
 private:
+
 	std::string _complete_filename;
 	char **_envp;
 
+
+	// checks for valid filename (without .. etc)
 	bool check_valid_filename() // Achtung, was wollen wir machen, wenn das passiert?
 	{
 		if (this->_complete_filename.find("../") != std::string::npos || this->_complete_filename.find("/../") != std::string::npos)
@@ -35,26 +38,25 @@ private:
 		return (true);
 	}
 
+	
 	std::string get_file_content()
 	{
-		// check for valid filename (without .. etc)
 		std::ifstream in;
 		std::string content;
 		std::string line;
 
-		//check_valid_filename(filename); scheint automatisch von Browser schon gemacht zu werden
+		//check_valid_filename(filename); //scheint automatisch von Browser schon gemacht zu werden
 		
-		//in.open(path + filename); // ist das hier wirklich nicht key sensitive?
-		std::cout << "open file: " << this->_complete_filename << std::endl;
+		//std::cout << "open file: " << this->_complete_filename << std::endl;
 		in.open(this->_complete_filename);
-		if (in.is_open())
+		if (in.is_open()) // else??
 		{
-			std::cout << "is opened" << std::endl;
+			//std::cout << "is opened" << std::endl;
 			while (getline (in,line))
 				content = content + line + '\n';
 		in.close();
 		}
-		std::cout << "Content: " << content << std::endl;
+		//std::cout << "Content: " << content << std::endl;
 		return (content);
 	}
 
@@ -70,37 +72,29 @@ private:
 
 	int	create_temp_file(char *filename)
 	{
-			// template for our file.        
 		int fd = mkstemp(filename);    // Creates and opens a new temp file r/w.
-			
-									// Xs are replaced with a unique number.
-		printf("filename: %s\n", filename);
+		//printf("filename: %s\n", filename);
 		if (fd == -1)
 		{
 			std::cout << "creation of file went wrong" << std::endl;
-		}       // Check we managed to open the file.
-		//   write(fd, "abc", 4);           // note 4 bytes total: abc terminating '\0'
-		//   /* ...
-		//      do whatever else you want.
-		//      ... */
-		//   close(fd);
-		//   unlink(filename);     
-			return fd;
+		}
+		//   unlink(filename);??
+		return fd;
 	}
 
 	std::string read_from_file(int fd)
 	{
-		printf("fd: %i\n", fd);
+		//printf("fd: %i\n", fd);
 		std::string content;
 		char* line = get_next_line(fd);
-		printf("line: %s\n", line);
+		//printf("line: %s\n", line);
 		while(line != NULL)
 		{
 			content += line;
 			line = get_next_line(fd);
-			printf("line: %s\n", line);
+			//printf("line: %s\n", line);
 		}
-		std::cout << "content: " << content << std::endl;
+		//std::cout << "content: " << content << std::endl;
 		close(fd);
 	//   unlink(filename);  
 		return content;
@@ -110,15 +104,17 @@ private:
 	std::string execute_cgi(int file_extension)
 	{
 		char *argv[3];
+		char filename_char[] = "/tmp/mytemp.XXXXXX";
+		int fd = create_temp_file(filename_char);
+
 		if (file_extension == PHP)
 			argv[0] = "/usr/bin/php";
 		else
 			argv[0] = "/usr/bin/python";
 		argv[1] = (char *) _complete_filename.c_str();
 		argv[2] = NULL;
-		std::cout << "vor execve"<< std::endl;
-		char filename_char[] = "/tmp/mytemp.XXXXXX";
-		int fd = create_temp_file(filename_char);
+		//std::cout << "vor execve"<< std::endl;
+
 		int pid = fork();
 		if (pid == -1)
 			std::cout << "Problem bei fork" << std::endl;
@@ -133,16 +129,8 @@ private:
 		fsync(fd);
 		//sleep(100);
 		//unlink(filename_char);
-		int fd2 = open(filename_char, 0);
-		printf("fd2: %i\n", fd2);
-		char buff[20];
-		printf("filenamex: %s\n", filename_char);
-		// FILE *file = fdopen(fd, "r");
-		
-		// int ret =read(fd2, buff, 20);
-		// buff[20] = '\0';
-		// printf("buf file: %s, ret: %i\n", buff, ret);
-		return (read_from_file(fd));
+		int fd2 = open(filename_char, 0); // wtf warum kann ich das nicht auskommentieren obwohl es nichts macht
+		return (read_from_file(fd2));
 	}
 
 
@@ -152,7 +140,7 @@ public:
 
 	}
 
-	std::string check_file()
+	std::string read_file()
 	{
 		//check_valid_filename(folder_path + filename);
 		std::cout << "filename: " << this->_complete_filename << std::endl;
