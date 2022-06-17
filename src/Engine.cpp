@@ -1,5 +1,7 @@
 #include "../inc/Engine.hpp"
 
+// ToDo: initialisation of all the member attributes
+
 Engine::Engine( void )
 {
 	#ifdef VERBOSE
@@ -37,7 +39,7 @@ Engine::operator = ( const Engine &rhs )
 /*
 //overloading this operator to use find to search s_kevent by id
 */
-bool s_kevent::operator==( t_fd fd )
+bool s_kevent::operator==( fd_type fd )
 {
 	return (this->ident == fd);
 }
@@ -54,6 +56,13 @@ operator<< ( std::ostream & out, s_kevent const & in )
 	return( out );
 }
 
+
+std::vector<Server>&
+Engine::getServers()
+{
+	return m_servers;
+}
+
 /*
 //in here all the socket binding magic should happen, for now just a dummy
 */
@@ -62,7 +71,7 @@ Engine::initSockets( void )
 {
 	Socket	newSock(INADDR_ANY, 8080);
 	newSock.setDefaultServer(&m_servers[0]);
-	m_sockets.insert(std::pair<t_fd, Socket>(newSock.getSockFd(), newSock));
+	m_sockets.insert(std::pair<fd_type, Socket>(newSock.getSockFd(), newSock));
 }
 
 /*
@@ -71,9 +80,9 @@ Engine::initSockets( void )
 void
 Engine::initServers( void )
 {
-	Server	newServer("localhost", "testServerDir");
+	// Server	newServer("localhost", "testServerDir");
 
-	m_servers.push_back(newServer);
+	// m_servers.push_back(newServer);
 	
 }
 
@@ -107,9 +116,8 @@ Engine::closeConnects( void )
 		close(iter->first);
 }
 
-
 void
-Engine::setKevent( t_fd fd, int16_t filter, uint16_t flag)
+Engine::setKevent( fd_type fd, int16_t filter, uint16_t flag)
 {
 	s_kevent	event;
 
@@ -130,35 +138,41 @@ Engine::debug( void )
 }
 
 void
-Engine::acceptConnect( Socket sock )
+Engine::acceptConnect( Socket & sock )
 {
-	t_fd	fd = sock.acceptConnect();
+	fd_type	fd = sock.acceptConnect();
 
-	Connect	newConnect(fd, sock.getSockFd());
+	Connect	newConnect(fd, sock.getIp(), sock.getPort());
 
-	m_connects.insert(std::pair<t_fd, Connect>(fd, newConnect));
+	m_connects.insert(std::pair<fd_type, Connect>(fd, newConnect));
 	this->setKevent(fd, EVFILT_READ, EV_ADD);
 }
 
 void
 Engine::assignServer( Connect &connect )
 {
-	SockIter iter = m_sockets.find(connect.getSockFd());
+	// SockIter iter = m_sockets.find(connect.getSockFd());
 
-	//Socket not found
-	if (iter == m_sockets.end())
-	{
-		//internal error 500
-		return ;
-	}
+	
 
-	//ToDo: parse he Hostname from the request
+	// //Socket not found
+	// if (iter == m_sockets.end())
+	// {
+	// 	//internal error 500
+	// 	return ;
+	// }
 
-	connect.setServer((*iter).second.getServer(""));
+	// //ToDo: parse he Hostname from the request
+
+	// connect.setServer((*iter).second.getServer(""));
+
+	//smart server find fknt 
+
+	connect.setServer(&m_servers[0]);
 }
 
 void
-Engine::socketEvent( s_kevent kevent )
+Engine::socketEvent( s_kevent & kevent )
 {
 	SockIter	iter = m_sockets.find(kevent.ident);
 
@@ -171,7 +185,7 @@ Engine::socketEvent( s_kevent kevent )
 }
 
 void
-Engine::connectEvent( s_kevent kevent )
+Engine::connectEvent( s_kevent & kevent )
 {
 	//check if the FD is linked to a connection
 	CnctIter	iter = m_connects.find(kevent.ident);
@@ -179,9 +193,13 @@ Engine::connectEvent( s_kevent kevent )
 	if (iter == m_connects.end())
 		return ;
 
+	#ifdef VERBOSE
+		std::cout << "ConnectEvent" << std::endl;
+	#endif
+
 	//eyeCandy
 
-	Connect	& cnct = (*iter).second;
+	Connect	& cnct = iter->second;
 
 	//A connection can have multible states
 	//on read we read as many bytes, as in the kevent specified
@@ -192,8 +210,8 @@ Engine::connectEvent( s_kevent kevent )
 	if (cnct.getAction() == READ)
 	{
 		//read the Request: ToDo Handling of chuncked requests(multible reads and concatenate)
-		cnct.readRequest(kevent);
-
+		if (cnct.readRequest(kevent))
+		{	
 		//if read done 
 			//removing the read event from the from the change vector
 			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
@@ -207,6 +225,7 @@ Engine::connectEvent( s_kevent kevent )
 
 			//adding the write event to the change vector
 			setKevent(kevent.ident, EVFILT_WRITE, EV_ADD);
+		}
 	}
 	//On write 
 	else if (cnct.getAction() == WRITE)
@@ -243,7 +262,7 @@ Engine::launch( void )
 	int	n_events = 0;
 
 	//the main Socket loop
-	while (true)
+	while (0b00101010)
 	{
 		n_events = kevent(m_kqueue,
 			&(*m_changes.begin()), m_changes.size(),

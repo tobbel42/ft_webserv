@@ -9,7 +9,10 @@ INC = Engine.hpp\
 	Socket.hpp\
 	utils.hpp\
 	Connect.hpp\
-	Server.hpp
+	Server.hpp\
+	Request.hpp\
+	Response.hpp\
+	ConfigParser.hpp
 IDIR = inc
 INC_FULL = $(addprefix $(IDIR)/, $(INC))
 
@@ -19,8 +22,15 @@ TPP_FULL = $(addprefix $(IDIR)/, $(TPP))
 SRC = main.cpp\
 	Socket.cpp\
 	Engine.cpp\
-	Connect.cpp\
-	Server.cpp
+	Server.cpp\
+	Request.cpp\
+	Response.cpp\
+	utils.cpp\
+	ConfigParser.cpp \
+	Connect.cpp
+
+
+
 SDIR = src
 SRC_FULL = $(addprefix $(SDIR)/, $(SRC))
 
