@@ -16,10 +16,10 @@ bool	strriseq(const char *s1, const char *s2)
 	return i_s2 == -1;
 }
 
-
-
 int main(int argc, char **argv)
 {
+	Response response;
+	std::cout <<  response.s_get_mime_type("test.js") << std::endl;
 	if (argc > 2)
 	{
 		std::cerr << "Error:\nwrong number of arguments\nusage: "

@@ -89,4 +89,16 @@ hex_str_to_i(const std::string & str) {
 	return n;
 }
 
+std::string
+read_file(std::istream& file)
+{
+	std::string contents;
+	std::string line;
+
+	while (std::getline(file, line))
+		contents.append(line);
+	contents.append(line);
+	return contents;
+}
+
 } // namespace utils

@@ -20,7 +20,7 @@
 
 struct	s_kevent: public kevent
 {
-	bool	operator==( t_fd fd );
+	bool	operator==( fd_type fd );
 /*
 inherited from struct kevent:
     uintptr_t ident;	     identifier for this event
@@ -51,8 +51,8 @@ class Engine
 	private:
 		std::vector<s_kevent>			m_changes;
 		std::vector<s_kevent>			m_events;
-		std::map<t_fd, Socket>			m_sockets;
-		std::map<t_fd, Connect>			m_connects;
+		std::map<fd_type, Socket>			m_sockets;
+		std::map<fd_type, Connect>			m_connects;
 		ServerArr						m_servers; // will be populated by the ConfigParser
 		int								m_kqueue;
 

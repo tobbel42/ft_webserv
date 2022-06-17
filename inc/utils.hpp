@@ -6,10 +6,8 @@
 
 #include <string>
 #include <sstream>
+#include <fstream>
 
-
-#include <string>
-#include <ctype.h>
 
 namespace utils {
 
@@ -85,5 +83,12 @@ ip_to_string(uint32_t ip_addr);
 
 uint32_t
 hex_str_to_i(const std::string &);
+
+/*
+@brief reads all the contents from the provided stream and
+	generates a std::string out of them
+*/
+std::string
+read_file(std::istream& file);
 
 } // namespace utils
