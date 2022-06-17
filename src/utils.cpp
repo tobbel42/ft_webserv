@@ -80,4 +80,13 @@ ip_to_string(uint32_t ip_addr)
 	return ip_string.str();
 }
 
+uint32_t
+hex_str_to_i(const std::string & str) {
+	u_int32_t n;
+	std::stringstream ss;
+	ss << std::hex << str;
+	ss >> n;
+	return n;
+}
+
 } // namespace utils

@@ -111,7 +111,8 @@ Connect::composeResponse( void )
 	if (filename == "/")
 		filename = "/index.html";
 
-	fs.open(p_server->getDirectory() + filename);
+	//just a fix
+	//fs.open("testServerDir" + filename);
 
 	std::cout << filename << std::endl;
 
