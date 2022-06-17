@@ -10,16 +10,16 @@
 
 #include <string>
 #include <ctype.h>
+namespace utils {
+
 void str_tolower(std::string & s);
 bool isLWS(const std::string & s, size_t pos);
 bool isWS(const std::string & s, size_t pos);
 bool isCRLF(const std::string & s, size_t pos);
 bool isRLWS(const std::string & s, size_t pos);
 bool isRCRLF(const std::string & s, size_t pos);
-#endif
 
 
-namespace utils {
 
 /*
 @brief Converts the supplied string to uppercase
@@ -74,6 +74,7 @@ string_to_ip(const std::string& ip_string);
 std::string
 ip_to_string(uint32_t ip_addr);
 
-
+uint32_t
+hex_str_to_i(const std::string &);
 
 } // namespace utils

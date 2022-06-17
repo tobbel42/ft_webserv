@@ -49,12 +49,14 @@ class Request {
 	/*RequestBodyParsing------------------------------------------------------*/
 
 	bool parseBody();
+	bool parseChunkedBody();
 
 	/*Internal MemberVariabels------------------------------------------------*/
 
 	std::string	m_buffer;
 	size_t		m_offset;
 	e_reqState	m_state;
+	bool		m_done;
 
 	/*DataMemberVariabels-----------------------------------------------------*/
 
