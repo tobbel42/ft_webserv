@@ -107,7 +107,7 @@ Connect::composeResponse( void )
 	// std::cout << begin << " " << end << std::endl;
 	// std::string filename =  m_req.m_buffer.substr(begin, end - begin);
 	// std::cout << "hello" << "$" << m_req.m_target << "$" << std::endl;
-	std::string filename = m_req.get_target();
+	std::string filename = m_req.getTarget();
 	if (filename == "/")
 		filename = "/index.html";
 
@@ -161,4 +161,3 @@ Connect::composeResponse( void )
 
 	m_action = WRITE;
 }
-

@@ -184,6 +184,7 @@ bool Request::parseHeader() {
 		}
 		key = line.substr(0, pos);
 
+<<<<<<< HEAD
 		++pos;
 	
 		//skipping LWS
@@ -194,6 +195,11 @@ bool Request::parseHeader() {
 			else
 				pos += 2;
 		}
+=======
+			//httpRequest are case insenitive, standardizing the input
+			utils::str_tolower(key);
+			utils::str_tolower(value);
+>>>>>>> 7861d8539840724b498c1f317a820dfff3247fef
 
 		//check if value is empty
 		if (pos >= line.size())
