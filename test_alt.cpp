@@ -40,7 +40,7 @@ bool check_valid_filename(std::string filename) // Achtung, was wollen wir mache
 	return (true);
 }
 
-std::string get_file_content(std::string filename, std::string path)
+std::string get_file_content(std::string filename)
 {
 	// check for valid filename (without .. etc)
 	std::ifstream in;
@@ -49,8 +49,9 @@ std::string get_file_content(std::string filename, std::string path)
 
 	//check_valid_filename(filename); scheint automatisch von Browser schon gemacht zu werden
 	
-	//in.open(path + filename); // ist das hier wirklich nicht key sensitive?
-	in.open(path);
+	in.open(filename); // ist das hier wirklich nicht key sensitive?
+	//in.open(path);
+	std::cout << "Path: " << filename << std::endl;
 	if (in.is_open())
 	{
 		std::cout << "is opened" << std::endl;
@@ -101,6 +102,7 @@ std::string read_from_file(int fd)
 	{
 		content += line;
 		line = get_next_line(fd);
+		printf("line: %s\n", line);
 	}
 	std::cout << "content: " << content << std::endl;
 	close(fd);
@@ -110,10 +112,13 @@ std::string read_from_file(int fd)
 
 std::string execute_cgi(std::string filename, int file_extension, char **envp)
 {
+	char *argv[3];
 	if (file_extension == PHP)
-		char *argv[] = {"/usr/bin/php",(char *) filename.c_str(), NULL};
+		argv[0] = "/usr/bin/php";
 	else
-		char *argv[] = {"/usr/bin/python",(char *) filename.c_str(), NULL};
+		argv[0] = "/usr/bin/python";
+	argv[1] = (char *) filename.c_str();
+	argv[2] = NULL;
 	std::cout << "vor execve"<< std::endl;
 	char filename_char[] = "/tmp/mytemp.XXXXXX";
 	int fd = create_temp_file(filename_char);
@@ -146,14 +151,14 @@ std::string execute_cgi(std::string filename, int file_extension, char **envp)
 std::string check_file(std::string filename, std::string folder_path, char **envp)
 {
 	//check_valid_filename(folder_path + filename);
-	std::cout << "filename: " << folder_path +filename << std::endl;
+	std::cout << "filename: " << folder_path + filename << std::endl;
 	filename = folder_path + filename;
 	int file_extension = check_file_extension(filename);
 	std::cout << "file extension: " << file_extension << std::endl;
 	if (file_extension == PHP || file_extension == PYTHON)
 		return execute_cgi(filename, file_extension, envp);
 	else
-	return get_file_content(filename, folder_path);
+	return get_file_content(filename);
 }
 
 int main(int argc, char const *argv[], char **envp)
