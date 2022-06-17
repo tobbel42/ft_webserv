@@ -110,7 +110,10 @@ std::string read_from_file(int fd)
 
 std::string execute_cgi(std::string filename, int file_extension, char **envp)
 {
-	char *argv[] = {"/usr/bin/php",(char *) filename.c_str(), NULL};
+	if (file_extension == PHP)
+		char *argv[] = {"/usr/bin/php",(char *) filename.c_str(), NULL};
+	else
+		char *argv[] = {"/usr/bin/python",(char *) filename.c_str(), NULL};
 	std::cout << "vor execve"<< std::endl;
 	char filename_char[] = "/tmp/mytemp.XXXXXX";
 	int fd = create_temp_file(filename_char);
@@ -123,7 +126,7 @@ std::string execute_cgi(std::string filename, int file_extension, char **envp)
 		if (execve(argv[0], argv, envp) == -1)
 			std::cout << "Problem bei execve" << std::endl; // exiten hier??
 	}
-	wait(NULL);
+	wait(NULL); // Achtung, wenn Endlosschleife, dann kann es hier zu Problemen kommen
 	close(fd);
 	fsync(fd);
 	//sleep(100);
