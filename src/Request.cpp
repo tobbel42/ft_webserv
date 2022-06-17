@@ -236,7 +236,7 @@ bool Request::parseBody() {
 		//TODO smartify
 		m_body.append(m_buffer.substr(m_offset));
 		std::string len = getHeaderEntry("content-length");
-		size_t i = std::strtoll(len.data(), NULL, 10);
+		size_t i = std::strtoll(len.c_str(), NULL, 10);
 		if (m_body.size() < i)
 			return false;
 		return true;

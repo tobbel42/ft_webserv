@@ -264,7 +264,7 @@ ConfigParser::m_check_int(const std::string& word)
 	}
 
 	uint64_t number = strtoul(word.c_str(), NULL, 10);
-	if (number > UINT64_MAX)
+	if (number > UINT32_MAX)
 		throw ConfigParser::InvalidConfig(m_line_number, 
 			"number too big", word.c_str());
 	return number;
