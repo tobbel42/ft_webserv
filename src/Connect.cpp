@@ -82,7 +82,7 @@ Connect::readRequest( s_kevent kevent )
 	int		len = ((READSIZE < kevent.data)?READSIZE : kevent.data);
 	memset(buf, '\0', READSIZE + 1);
 	long	i = read(kevent.ident, buf, len);
-	return m_req.appendRead(buf);
+	return m_req.append_read(buf);
 	//return true;
 }
 
@@ -107,14 +107,14 @@ Connect::composeResponse( void )
 	// std::cout << begin << " " << end << std::endl;
 	// std::string filename =  m_req.m_buffer.substr(begin, end - begin);
 	// std::cout << "hello" << "$" << m_req.m_target << "$" << std::endl;
-	std::string filename = m_req.getTarget();
+	std::string filename = m_req.get_target();
 	if (filename == "/")
 		filename = "/index.html";
 
 	//just a fix
-	//fs.open("testServerDir" + filename);
+	fs.open("testServerDir" + filename);
 
-	std::cout << filename << std::endl;
+	std::cout << "FILENAME" << ("testServerDir" + filename) << std::endl;
 
 	if (fs.is_open())
 	{
