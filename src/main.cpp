@@ -17,6 +17,7 @@ bool	strriseq(const char *s1, const char *s2)
 }
 
 
+
 int main(int argc, char **argv)
 {
 	if (argc > 2)

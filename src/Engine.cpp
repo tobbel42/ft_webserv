@@ -116,7 +116,6 @@ Engine::closeConnects( void )
 		close(iter->first);
 }
 
-
 void
 Engine::setKevent( fd_type fd, int16_t filter, uint16_t flag)
 {
