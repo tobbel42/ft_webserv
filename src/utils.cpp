@@ -95,9 +95,13 @@ read_file(std::istream& file)
 	std::string contents;
 	std::string line;
 
-	while (std::getline(file, line))
+	do
+	{
+		std::getline(file, line);
 		contents.append(line);
-	contents.append(line);
+		contents.append("\r\n");
+	} while (file);
+
 	return contents;
 }
 

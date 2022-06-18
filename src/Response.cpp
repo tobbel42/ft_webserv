@@ -20,6 +20,14 @@ Response::Response( const Response & cpy ) {
 	*this = cpy;
 }
 
+Response::Response(int status_code, const std::string& body, Server* server):
+	p_server(server),
+	m_status_code(status_code),
+	m_header(),
+	m_body(body),
+	m_payload()
+{}
+
 Response::~Response() {
 	#ifdef VERBOSE
 		std::cout << "Response: Destructor called" << std::endl;
@@ -30,11 +38,14 @@ Response & Response::operator=( const Response & rhs ) {
 	#ifdef VERBOSE
 		std::cout << "Response: Assignation operator called" << std::endl;
 	#endif
-	m_buffer = rhs.m_buffer;
-	m_status_code = rhs.m_status_code;
-	m_httpVer = rhs.m_httpVer;
-	m_header = rhs.m_header;
-	m_body = rhs.m_body;
+	if (this != &rhs)
+	{
+		p_server = rhs.p_server;
+		m_status_code = rhs.m_status_code;
+		m_header = rhs.m_header;
+		m_body = rhs.m_body;
+		m_payload = rhs.m_payload;
+	}
 	return (*this);
 }
 
@@ -62,16 +73,12 @@ Response::s_generate_general_header(int status_code)
 const char*
 Response::s_get_mime_type(const std::string& filename)
 {
-	typedef std::string::const_reverse_iterator const_rit;
-
 	// find the last dot in the filename
-	const_rit dot = std::find(filename.rbegin(), filename.rend(), '.');
-	if (dot == filename.rend())
+	size_t pos = filename.find_last_of('.');
+	if (pos == std::string::npos)
 		return DEFAULT_MIME_TYPE;
+	std::string file_extension = filename.substr(pos + 1);
 
-	std::string file_extension = filename.substr(filename.size() -
-											(dot - filename.rbegin()));
-	
 	MimeIter mime_type = s_mime_types.find(file_extension);
 	if (mime_type == s_mime_types.end()) // file extension is not in the list
 		return DEFAULT_MIME_TYPE;
@@ -83,21 +90,36 @@ Response::s_get_mime_type(const std::string& filename)
 void
 Response::set_server(Server* server) { p_server = server; }
 
+void
+Response::set_status_code(int status_code) { m_status_code = status_code; }
+
+void
+Response::set_body(const std::string& body) { m_body = body; }
+
 
 std::string
 Response::get_payload() const { return m_payload; }
 
+size_t
+Response::get_body_size() const { return m_body.size(); }
 
 void
 Response::m_add_header_line(const std::string& key, const std::string& value)
 {
-	m_payload += key;
-	m_payload += ": ";
-	m_payload += value;
+	m_header += key;
+	m_header += ": ";
+	m_header += value;
+	m_header += "\r\n";
+}
+
+void
+Response::m_add_to_payload(const std::string& to_add)
+{
+	m_payload += to_add;
 	m_payload += "\r\n";
 }
 
-std::string
+std::pair<std::string, size_t>
 Response::generate_response()
 {
 	switch (m_status_code)
@@ -112,16 +134,20 @@ Response::generate_response()
 
 		break;
 	default: // atm all error codes
-		m_generate_error_response(m_status_code);
+		m_generate_error_response();
 		break;
 	}
-	return m_payload;
+	m_add_header_line("Server", "lil l and the beachboys 1.0");
+	m_add_to_payload(m_header);
+	m_payload += "\r\n";
+	m_add_to_payload(m_body);
+	return std::make_pair(m_payload, m_body.size());
 }
 
 void
 Response::m_status_switching_protocols()
 {
-	m_payload = s_generate_general_header(m_status_code);
+	m_header = s_generate_general_header(m_status_code);
 
 	std::string supported_http = "HTTP/";
 	supported_http += utils::to_string(HTTP_VERSION);
@@ -129,59 +155,71 @@ Response::m_status_switching_protocols()
 }
 
 void
-Response::m_generate_error_response(int error_code)
+Response::m_generate_error_response()
 {
-	std::string filename = "testServerDir"; // p_server->get_error_pages();
-
-
+	std::string filename = p_server->error_pages;
 
 	filename += '/';
-	filename += utils::to_string(error_code);
+	filename += utils::to_string(m_status_code);
 	filename += ".html";
 
 	std::ifstream file(filename.c_str());
-	if (file.is_open())
+	if (!file.is_open())
 	{
-		m_payload = s_generate_general_header(error_code);
-		// response-header:
-		//		Accept-ranges: (probably none)
-		//		Retry-after: (maybe for 503 and 3XX status codes -> time in seconds)
-		//		Server: webserv (or whatever name we want + version number)
-		// entity-header:
-		//		Allow: The allowed requests for the current server
-		//		Content-Encoding: Must be provided when the coding is not "identity"
-		//						If the coding is not accepted, status code 415 must be sent back
-		//						If there are muliple encodings, the must be listed in order of usage
-		//		Content-Length: The length of the response body. For chunked responses the field 
-		//						should not be incuded (or included as 0)
-		//		Content-Location: The path to the accessed resource. Optional.
-		//		Content-MD5: Used for end-to-end encoding. Not neccessary.
-		//		Content-Range: For multiple byte-ranges in multiple responses.
-		//						Very complicated!
-		//		Content-Type: The type of media sent in MIME format.
-		//						Default is: "application/octet-stream"
-		//		Expires: Date untill the response is valid and should be cached
-		//						Dates in the past (or 0) count as instantly expired
-		//		Last-Modified: Timestamp of the sent resource (e.g. file)
-	}
-	else
-	{
-		file.open(DEFAULT_ERROR_PAGES);
-		if (file.is_open())
+		// trying to use the default errror pages
+		// if the provided ones don't work
+		filename = DEFAULT_ERROR_PAGES;
+		filename += '/';
+		filename += utils::to_string(m_status_code);
+		filename += ".html";
+		file.open(filename.c_str());
+		if (!file.is_open())
 		{
-			m_payload = s_generate_general_header(m_status_code);
+			// if everything goes wrong just send 500
+			char error_msg[] = "<html>\r\n<head>"
+								"<title>internal server error</title></head>\r\n"
+								"<body><h1>errorcode 500: internal server error</h1>"
+								"</body></html>\r\n";
 
-		}
-		else
-		{
 			m_status_code = 500;
-			m_payload = s_generate_general_header(m_status_code);
+			m_header = s_generate_general_header(m_status_code);
 			m_add_header_line("Content-Length", utils::to_string(126));
-			m_payload += "\r\n";
-			m_payload += "<html>\r\n<head><title>internal server error</title></head>\r\n";
-			m_payload += "<body><h1>errorcode 500: internal server error</h1></body></html>";
+			m_body.insert(m_body.end(), error_msg, error_msg + 126);
+			return;
 		}
 	}
+	m_header = s_generate_general_header(m_status_code);
+
+	// Retry-after should be specified for all redirections and Service Unavailable
+	// so we just hardcode it to 120 seconds
+	if (m_status_code == 503 || (m_status_code >= 300 && m_status_code <= 307))
+		m_add_header_line("Retry-after", utils::to_string(120));
+	m_body = utils::read_file(file);
+	
+	m_add_header_line("Content-Length", utils::to_string(m_body.size()));
+	m_add_header_line("Content-Location", filename);
+	m_add_header_line("Content-Type", s_get_mime_type(filename));
+
+	// response-header:
+	//		Accept-ranges: (probably none)
+	//		Retry-after: (maybe for 503 and 3XX status codes -> time in seconds)
+	//		Server: webserv (or whatever name we want + version number)
+	// entity-header:
+	//		Allow: The allowed requests for the current server
+	//		Content-Encoding: Must be provided when the coding is not "identity"
+	//						If the coding is not accepted, status code 415 must be sent back
+	//						If there are muliple encodings, the must be listed in order of usage
+	//		Content-Length: The length of the response body. For chunked responses the field 
+	//						should not be incuded (or included as 0)
+	//		Content-Location: The path to the accessed resource. Optional.
+	//		Content-MD5: Used for end-to-end encoding. Not neccessary.
+	//		Content-Range: For multiple byte-ranges in multiple responses.
+	//						Very complicated!
+	//		Content-Type: The type of media sent in MIME format.
+	//						Default is: "application/octet-stream"
+	//		Expires: Date untill the response is valid and should be cached
+	//						Dates in the past (or 0) count as instantly expired
+	//		Last-Modified: Timestamp of the sent resource (e.g. file)
 }
 
 

@@ -112,53 +112,56 @@ Connect::composeResponse( void )
 		filename = "/index.html";
 
 	//just a fix
-	//fs.open("testServerDir" + filename);
+	fs.open(p_server->root + filename);
 
 	std::cout << filename << std::endl;
 
-	if (fs.is_open())
-	{
+	Response response(404, utils::read_file(fs), p_server);
+	std::pair<std::string, size_t> resp_pair =  response.generate_response();
+	m_response = resp_pair.first;
+	// if (fs.is_open())
+	// {
 
-		std::string			line;
-		std::string			file;
-		std::stringstream	ss;
+	// 	std::string			line;
+	// 	std::string			file;
+	// 	std::stringstream	ss;
 
-		while (1)
-		{
-			std::getline(fs, line);
-			file.append(line);
-			file.append("\n");
-			if (fs.eof())
-				break;
-		}
-		m_response.clear();
-		m_response.append("HTTP/1.1 200 OK\r\n");
-		if (filename.find(".ico") == std::string::npos)
-		{
-			ss << file.size();
-			m_response.append("Content-Type: text/html\r\n");
-			m_response.append("Content-Lenght: " + ss.str() + "\r\n");
-		}
-		else
-		{
-			m_response.append("Content-Type: image/x-icon\r\n");
-			ss << (file.size() - 1);
-			m_response.append("Content-Lenght: " + ss.str() + "\r\n");
-		}
-		m_response.append("\r\n");
-		m_response.append(file);
-		m_response.append("\r\n");
-	}
-	else
-	{
-		m_response.clear();
-		m_response.append("HTTP/1.1 404 Not Found\r\n");
-		m_response.append("Content-Type: text/html\r\n");
-		m_response.append("Content-Lenght: 19\r\n");
-		m_response.append("\r\n");
-		m_response.append("<h1>Not Found</h1>");
-		m_response.append("\r\n");
-	}
+	// 	while (1)
+	// 	{
+	// 		std::getline(fs, line);
+	// 		file.append(line);
+	// 		file.append("\n");
+	// 		if (fs.eof())
+	// 			break;
+	// 	}
+	// 	m_response.clear();
+	// 	m_response.append("HTTP/1.1 200 OK\r\n");
+	// 	if (filename.find(".ico") == std::string::npos)
+	// 	{
+	// 		ss << file.size();
+	// 		m_response.append("Content-Type: text/html\r\n");
+	// 		m_response.append("Content-Lenght: " + ss.str() + "\r\n");
+	// 	}
+	// 	else
+	// 	{
+	// 		m_response.append("Content-Type: image/x-icon\r\n");
+	// 		ss << (file.size() - 1);
+	// 		m_response.append("Content-Lenght: " + ss.str() + "\r\n");
+	// 	}
+	// 	m_response.append("\r\n");
+	// 	m_response.append(file);
+	// 	m_response.append("\r\n");
+	// }
+	// else
+	// {
+	// 	m_response.clear();
+	// 	m_response.append("HTTP/1.1 404 Not Found\r\n");
+	// 	m_response.append("Content-Type: text/html\r\n");
+	// 	m_response.append("Content-Lenght: 19\r\n");
+	// 	m_response.append("\r\n");
+	// 	m_response.append("<h1>Not Found</h1>");
+	// 	m_response.append("\r\n");
+	// }
 
 	m_action = WRITE;
 }

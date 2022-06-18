@@ -81,6 +81,13 @@ void
 Engine::initServers( void )
 {
 	// Server	newServer("localhost", "testServerDir");
+	Server server;
+
+	server.set_server_name("testserver");
+	server.set_ip_address(utils::string_to_ip("127.0.0.1"));
+	server.set_port(8080);
+	server.set_root("testServerDir");
+	server.set_index("index.html");
 
 	// m_servers.push_back(newServer);
 	

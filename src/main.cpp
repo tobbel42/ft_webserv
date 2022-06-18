@@ -36,12 +36,12 @@ int main(int argc, char **argv)
 	Engine	e;
 	ConfigParser parser(e.getServers());
 	
-	if (argc == 1)
-		parser.assign_file("config/default.conf");
-	else
-		parser.assign_file(argv[1]);
 	try
 	{
+		if (argc == 1)
+			parser.assign_file("config/default.conf");
+		else
+			parser.assign_file(argv[1]);
 		parser.run();
 	}
 	catch (const std::exception& e)

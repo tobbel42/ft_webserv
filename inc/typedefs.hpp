@@ -17,3 +17,4 @@ class Server;
 
 typedef std::vector<std::string>	StringArr;
 typedef std::vector<Server>			ServerArr;
+typedef std::vector<char>			ByteArr;
