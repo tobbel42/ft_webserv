@@ -78,12 +78,21 @@ Connect::setServer( Server * server ) { p_server = server; }
 bool
 Connect::readRequest( s_kevent kevent )
 {
-	char	buf[READSIZE + 1];
+	// char	buf[READSIZE + 1];
+	// int		len = ((READSIZE < kevent.data)?READSIZE : kevent.data);
+	// memset(buf, '\0', READSIZE + 1);
+	// long	i = read(kevent.ident, buf, len);
+	
+	std::vector<char> buf;
 	int		len = ((READSIZE < kevent.data)?READSIZE : kevent.data);
-	memset(buf, '\0', READSIZE + 1);
-	long	i = read(kevent.ident, buf, len);
-	return m_req.appendRead(buf);
-	//return true;
+
+	buf.resize(len, '\0');
+	ssize_t read_len = read(kevent.ident, &(*buf.begin()), len);
+
+	if (len != read_len)
+		std::cerr << "ERROR: read" << std::endl;
+
+	return m_req.append_read(buf, read_len);
 }
 
 void
@@ -91,7 +100,7 @@ Connect::writeResponse( s_kevent kevent )
 {
 	//ToDo Errorhandling
 	std::cout << "RESPONSE" << std::endl;
-	std::cout << m_response << std::endl;
+	//std::cout << m_response << std::endl;
 	write(kevent.ident, m_response.c_str(), m_response.size());
 }
 
@@ -107,14 +116,14 @@ Connect::composeResponse( void )
 	// std::cout << begin << " " << end << std::endl;
 	// std::string filename =  m_req.m_buffer.substr(begin, end - begin);
 	// std::cout << "hello" << "$" << m_req.m_target << "$" << std::endl;
-	std::string filename = m_req.getTarget();
+	std::string filename = m_req.get_target();
 	if (filename == "/")
 		filename = "/index.html";
 
 	//just a fix
-	//fs.open("testServerDir" + filename);
+	fs.open("testServerDir" + filename);
 
-	std::cout << filename << std::endl;
+	std::cout << "FILENAME" << ("testServerDir" + filename) << std::endl;
 
 	if (fs.is_open())
 	{
