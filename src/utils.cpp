@@ -99,10 +99,26 @@ read_file(std::istream& file)
 	{
 		std::getline(file, line);
 		contents.append(line);
-		contents.append("\r\n");
+		contents.append("\n");
 	} while (file);
 
 	return contents;
+}
+
+std::string
+arr_to_csv(const StringArr& arr, const char* sep)
+{
+	std::string result;
+
+	StringArr::const_iterator it = arr.begin();
+	while (it != arr.end())
+	{
+		result += *it;
+		++it;
+		if (it != arr.end())
+			result += sep;
+	}
+	return result;
 }
 
 } // namespace utils

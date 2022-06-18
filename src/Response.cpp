@@ -80,7 +80,7 @@ Response::m_init_header()
 	// general header:
 	//		Connection: (close or maybe keep-alive)
 	//		Date: the timestamp in http time format
-	m_add_header_line("Date", utils::get_http_time());
+	m_add_to_head("Date", utils::get_http_time());
 }
 
 
@@ -118,7 +118,7 @@ size_t
 Response::get_body_size() const { return m_body.size(); }
 
 std::pair<std::string, size_t>
-Response::generate_response()
+Response::generate()
 {
 	switch (m_status_code)
 	{
@@ -135,7 +135,7 @@ Response::generate_response()
 		m_error();
 		break;
 	}
-	m_add_header_line("Server", "lil l and the beachboys 1.0");
+	m_add_to_head("Server", "lil l and the beachboys 1.0");
 	m_add_to_payload(m_header);
 	m_payload += "\r\n";
 	m_add_to_payload(m_body);
@@ -148,7 +148,7 @@ Response::m_switching_protocols()
 	m_init_header();
 	std::string supported_http = "HTTP/";
 	supported_http += utils::to_string(HTTP_VERSION);
-	m_add_header_line("Upgrade", supported_http);
+	m_add_to_head("Upgrade", supported_http);
 }
 
 
@@ -157,13 +157,14 @@ Response::m_success()
 {
 	m_init_header();
 
-	m_add_header_line("Content-Length", utils::to_string(m_body.size()));
+	m_add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
+	m_add_to_head("Content-Length", utils::to_string(m_body.size()));
 
 	// std::string header_entry = p_request->getHeaderEntry("Content-Location");
 	// if (!header_entry.empty())
 	// {
-	// 	m_add_header_line("Content-Type", s_get_mime_type(header_entry));
-	// 	m_add_header_line("Content-Location", header_entry);
+	// 	m_add_to_head("Content-Type", s_get_mime_type(header_entry));
+	// 	m_add_to_head("Content-Location", header_entry);
 	// }
 	switch (m_status_code)
 	{
@@ -186,7 +187,7 @@ Response::m_redirect()
 {
 	m_init_header();
 
-	m_add_header_line("Retry-after", utils::to_string(120));
+	m_add_to_head("Retry-after", utils::to_string(120));
 }
 
 void
@@ -219,23 +220,23 @@ Response::m_error()
 						"<title>internal server error</title></head>\r\n"
 						"<body><h1>errorcode 500: internal server error</h1>"
 					"</body></html>\r\n";
-			m_add_header_line("Content-Length", utils::to_string(m_body.size()));
+			m_add_to_head("Content-Length", utils::to_string(m_body.size()));
 			return;
 		}
 	}
 
 	m_init_header();
-
 	// Retry-after should be specified for Service Unavailable
 	// so we just hardcode it to 120 seconds
 	if (m_status_code == 503)
-		m_add_header_line("Retry-after", utils::to_string(120));
+		m_add_to_head("Retry-after", utils::to_string(120));
 
 	m_body = utils::read_file(file);
 	
-	m_add_header_line("Content-Length", utils::to_string(m_body.size()));
-	m_add_header_line("Content-Location", filename);
-	m_add_header_line("Content-Type", s_get_mime_type(filename));
+	m_add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
+	m_add_to_head("Content-Length", utils::to_string(m_body.size()));
+	m_add_to_head("Content-Location", filename);
+	m_add_to_head("Content-Type", s_get_mime_type(filename));
 
 	// response-header:
 	//		Accept-ranges: HTTP 1.1 is designed not to rely on those
@@ -260,7 +261,7 @@ Response::m_error()
 }
 
 void
-Response::m_add_header_line(const std::string& key, const std::string& value)
+Response::m_add_to_head(const std::string& key, const std::string& value)
 {
 	m_header += key;
 	m_header += ": ";

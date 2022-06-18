@@ -9,6 +9,8 @@
 #include <sstream>
 #include <fstream>
 
+#include "typedefs.hpp"
+
 
 namespace utils {
 
@@ -91,5 +93,12 @@ hex_str_to_i(const std::string &);
 */
 std::string
 read_file(std::istream& file);
+
+/*
+@brief Concentrates the supplied string aray seperating
+	every entry by sep
+*/
+std::string
+arr_to_csv(const StringArr& arr, const char* sep);
 
 } // namespace utils

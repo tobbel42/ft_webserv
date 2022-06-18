@@ -33,7 +33,7 @@ public: // methods
 	size_t			get_body_size() const;
 
 	// first = payload, second = client body size
-	std::pair<std::string, size_t> generate_response();
+	std::pair<std::string, size_t> generate();
 
 
 private: // methods
@@ -43,7 +43,7 @@ private: // methods
 	void m_redirect();
 	void m_error();
 
-	void m_add_header_line(const std::string& key, const std::string& value);
+	void m_add_to_head(const std::string& key, const std::string& value);
 
 	void m_add_to_payload(const std::string& to_add);
 
@@ -57,10 +57,6 @@ private: // typedefs
 
 
 private: // attributes
-
-
-	// std::string							m_httpVer;
-	// std::string 						m_buffer;
 
 	Server*								p_server;
 	Request*							p_request;

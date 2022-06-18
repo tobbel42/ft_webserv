@@ -124,20 +124,18 @@ Connect::composeResponse( void )
 
 	if (fs.is_open())
 	{
-		response.set_body(utils::read_file(fs));
-		response.set_status_code(200);
-		// std::string			line;
-		// std::string			file;
-		// std::stringstream	ss;
+		std::string			line;
+		std::string			file;
+		std::stringstream	ss;
 
-		// while (1)
-		// {
-		// 	std::getline(fs, line);
-		// 	file.append(line);
-		// 	file.append("\r\n");
-		// 	if (fs.eof())
-		// 		break;
-		// }
+		while (1)
+		{
+			std::getline(fs, line);
+			file.append(line);
+			file.append("\n");
+			if (fs.eof())
+				break;
+		}
 		// m_response.clear();
 		// m_response.append("HTTP/1.1 200 OK\r\n");
 		// if (filename.find(".ico") == std::string::npos)
@@ -153,14 +151,16 @@ Connect::composeResponse( void )
 		// 	m_response.append("Content-Lenght: " + ss.str() + "\r\n");
 		// }
 		// m_response.append("\r\n");
-		// m_response.append(file);
-		// m_response.append("\r\n");
+		m_response.append(file);
+		m_response.append("\r\n");
+		response.set_status_code(200);
+		response.set_body(m_response);
 	}
 	else
 	{
 		response.set_status_code(404);
 	}
-	std::pair<std::string, size_t> resp_pair =  response.generate_response();
+	std::pair<std::string, size_t> resp_pair = response.generate();
 	m_response = resp_pair.first;
 	m_action = WRITE;
 }
