@@ -251,7 +251,7 @@ Engine::connectEvent( s_kevent & kevent )
 //Main loop of the Socket.
 */
 void
-Engine::launch( void )
+Engine::launch()
 {
 	//init kqueue
 	m_kqueue = kqueue();

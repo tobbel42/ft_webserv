@@ -27,7 +27,9 @@ SRC = main.cpp\
 	Response.cpp\
 	utils.cpp\
 	ConfigParser.cpp \
-	Connect.cpp
+	Connect.cpp\
+	get_next_line.c\
+	get_next_line_utils.c
 
 
 
@@ -39,7 +41,7 @@ OBJ = $(patsubst $(SDIR)/%.cpp, $(ODIR)/%.o, $(SRC_FULL))
 
 
 
-$(NAME): $(ODIR) $(OBJ) $(INC_FULL) $(TPP_FULL)
+$(NAME): $(ODIR) $(OBJ) $(INC_FULL) $(TPP_FULL) 
 	$(CC) $(CFLAGS) $(OBJ) -o $(NAME) -I $(IDIR)
 
 $(ODIR):

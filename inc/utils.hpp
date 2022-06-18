@@ -10,6 +10,7 @@
 
 #include <string>
 #include <ctype.h>
+extern char ** g_envp;
 #include "typedefs.hpp"
 
 namespace utils {

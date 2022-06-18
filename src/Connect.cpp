@@ -116,35 +116,41 @@ Connect::composeResponse( void )
 	// std::cout << begin << " " << end << std::endl;
 	// std::string filename =  m_req.m_buffer.substr(begin, end - begin);
 	// std::cout << "hello" << "$" << m_req.m_target << "$" << std::endl;
+
 	std::string filename = m_req.get_target();
 	if (filename == "/")
 		filename = "/index.html";
 
 	//just a fix
-	fs.open("testServerDir" + filename);
+
+    MyFile f(filename, "www/root", g_envp);
+
+	f.read_file();
+
+	fs.open("www/root" + filename);
 
 	std::cout << "FILENAME" << ("testServerDir" + filename) << std::endl;
 
-	if (fs.is_open())
+	if (1)
 	{
 
 		std::string			line;
 		std::string			file;
 		std::stringstream	ss;
 
-		while (1)
-		{
-			std::getline(fs, line);
-			file.append(line);
-			file.append("\n");
-			if (fs.eof())
-				break;
-		}
+		// while (1)
+		// {
+		// 	std::getline(fs, line);
+		// 	file.append(line);
+		// 	file.append("\n");
+		// 	if (fs.eof())
+		// 		break;
+		// }
 		m_response.clear();
 		m_response.append("HTTP/1.1 200 OK\r\n");
 		if (filename.find(".ico") == std::string::npos)
 		{
-			ss << file.size();
+			ss << f.read_file().size();
 			m_response.append("Content-Type: text/html\r\n");
 			m_response.append("Content-Lenght: " + ss.str() + "\r\n");
 		}
@@ -155,7 +161,7 @@ Connect::composeResponse( void )
 			m_response.append("Content-Lenght: " + ss.str() + "\r\n");
 		}
 		m_response.append("\r\n");
-		m_response.append(file);
+		m_response.append(f.read_file());
 		m_response.append("\r\n");
 	}
 	else

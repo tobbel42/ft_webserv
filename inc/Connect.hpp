@@ -12,6 +12,7 @@
 #include "Server.hpp"
 #include "utils.hpp"
 #include "typedefs.hpp"
+#include "../MyFile.hpp"
 
 enum	e_action { READ, WRITE };
 
