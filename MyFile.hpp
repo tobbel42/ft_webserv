@@ -4,10 +4,13 @@
 
 #define PHP 1
 #define PYTHON 2
+#define HTML 3
+#define FOLDER 4
 
 
 #include <iostream>
 #include <fstream>
+#include <string>
 // open
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -17,6 +20,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "get_next_line.h"
+#include "MyDirectory.hpp"
 
 class MyFile
 {
@@ -25,6 +29,7 @@ private:
 
 	std::string _complete_filename;
 	char **_envp;
+	bool directory_listing;
 
 
 	// checks for valid filename (without .. etc)
@@ -66,6 +71,10 @@ private:
 			return PHP;
 		else if(this->_complete_filename.substr(this->_complete_filename.find_last_of(".") + 1) == "py")
 			return PYTHON;
+		else if (this->_complete_filename.substr(this->_complete_filename.find_last_of(".") + 1) == "html")
+			return HTML;
+		else if (this->_complete_filename.find_last_of(".") == std::string::npos)
+			return FOLDER; // macht das Sinn??
 		else
 			return 0; // ist es angreifbar wenn wir sonst einfach die File ausgeben??
 	}
@@ -134,10 +143,17 @@ private:
 	}
 
 
+	std::string get_directory_content()
+	{
+		MyDirectory dir(_complete_filename);
+		return (dir.list_content());
+	}
+
+
 public:
 	MyFile(std::string filename, std::string path, char **envp) : _complete_filename(path + filename), _envp(envp)
 	{
-
+		directory_listing = true; //prüfen
 	}
 
 	std::string read_file()
@@ -148,8 +164,12 @@ public:
 		std::cout << "file extension: " << file_extension << std::endl;
 		if (file_extension == PHP || file_extension == PYTHON)
 			return execute_cgi(file_extension);
+		else if (file_extension == HTML)
+			return get_file_content();
+		else if (file_extension == FOLDER && directory_listing == true)
+			return get_directory_content();
 		else
-		return get_file_content();
+			return ""; // prüfen
 	}
 };
 #endif
