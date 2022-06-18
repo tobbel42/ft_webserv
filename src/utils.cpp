@@ -47,6 +47,25 @@ bool isRLWS(const std::string & s, size_t pos) {
 		pos -= 2;
 	return isWS(s, pos);
 }
+
+bool isLWS(const std::vector<char> &vec, size_t pos) {
+	if (isCRLF(vec, pos))
+		pos += 2;
+	return isWS(vec, pos);
+}
+
+bool isWS(const std::vector<char> &vec, size_t pos) {
+	if (pos < vec.size() && (vec[pos] == '\t' || vec[pos] == ' '))
+		return true;
+	return false;
+}
+
+bool isCRLF(const std::vector<char> &vec, size_t pos) {
+	if (pos + 1 < vec.size() && vec[pos] == '\r' && vec[pos + 1] == '\n')
+		return true;
+	return false;
+}
+
 std::string
 get_http_time()
 {

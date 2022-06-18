@@ -35,6 +35,7 @@ class Connect
 		Server		*p_server;
 		e_action	m_action;
 
+
 		//To be phased out 
 		std::string	m_rawReq;
 		std::string	m_response;

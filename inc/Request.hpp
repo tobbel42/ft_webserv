@@ -60,7 +60,8 @@ class Request {
 
 	/*Internal MemberVariabels------------------------------------------------*/
 
-	std::string	m_buffer;
+	//std::string	m_buffer;
+	std::vector<char> m_buffer;
 	size_t		m_offset;
 	
 	e_req_state	m_state;
@@ -75,13 +76,15 @@ class Request {
 	std::string m_target;
 	std::string m_http_ver;
 	std::map<std::string, std::string> m_header; 
-	std::string	m_body;
+	//std::string	m_body;
+	std::vector<char> m_body;
 
 	public:
 
 	/*Public Functions--------------------------------------------------------*/
 
-	bool	append_read(const char *);
+//	bool	append_read(const char *, size_t);
+	bool	append_read(std::vector<char>, size_t);
 
 	/*Debug only--------------------------------------------------------------*/	
 
@@ -93,7 +96,8 @@ class Request {
 	const std::string & get_target() const;
 	const std::string & get_http_ver() const;
 	std::string 		get_header_entry(const std::string &);
-	const std::string & get_body() const;
+	//const std::string & get_body() const;
+	const std::vector<char> & get_body() const;
 	uint32_t 			get_err_code() const;
 };
 

@@ -69,7 +69,10 @@ Request::get_header_entry(const std::string & field_name) {
 	return field_value;
 }
 
-const std::string &
+// const std::string &
+// Request::get_body() const { return m_body; }
+
+const std::vector<char> &
 Request::get_body() const { return m_body; }
 
 uint32_t
@@ -83,7 +86,10 @@ Request::is_done() {
 	print_request();
 	#endif
 	if (m_err_code != 0)
+	{
+		std::cout << "ERRCODE: " << m_err_code << std::endl;
 		return true;
+	}
 	return m_done;
 }
 
@@ -104,18 +110,37 @@ Request::set_error(size_t err_code) {
 
 /*RequestLineParsing----------------------------------------------------------*/
 
+// void
+// Request::get_next_req_line(std::string & line) {
+// 	size_t pos =  m_buffer.find("\r\n", m_offset);
+// 	if (pos == std::string::npos)
+// 	{
+// 		line = m_buffer.substr(m_offset);
+// 		m_offset = m_buffer.size();
+// 	}
+// 	else
+// 	{
+// 		line = m_buffer.substr(m_offset, pos - m_offset);
+// 		m_offset = pos + 2;
+// 	}
+// }
 void
 Request::get_next_req_line(std::string & line) {
-	size_t pos =  m_buffer.find("\r\n", m_offset);
-	if (pos == std::string::npos)
+	std::vector<char> CRLF;
+	CRLF.push_back('\r');
+	CRLF.push_back('\n');
+	std::vector<char>::iterator pos = std::search(
+		m_buffer.begin() + m_offset, m_buffer.end(),
+		CRLF.begin(), CRLF.end()); 
+	if (pos == m_buffer.end())
 	{
-		line = m_buffer.substr(m_offset);
+		line = std::string(m_buffer.begin() + m_offset, pos);
 		m_offset = m_buffer.size();
 	}
 	else
 	{
-		line = m_buffer.substr(m_offset, pos - m_offset);
-		m_offset = pos + 2;
+		line = std::string(m_buffer.begin() + m_offset, pos);
+		m_offset = (pos - m_buffer.begin()) + 2;
 	}
 }
 
@@ -163,7 +188,6 @@ Request::parse_first_line() {
 		while (line == "")
 			get_next_req_line(line);
 
-
 		if (parse_request_line(line) == false ||
 			is_valid_request_line() == false)
 				return set_error(400);
@@ -172,26 +196,35 @@ Request::parse_first_line() {
 
 /*RequestHeaderParsing--------------------------------------------------------*/
 
-//header entrys can span multible lines -> custom lineParser
+// //header entrys can span multible lines -> custom lineParser
 void
 Request::get_next_header_line(std::string & line) {
-	size_t pos =  m_buffer.find("\r\n", m_offset);
-	while (pos != std::string::npos && utils::isLWS(m_buffer, pos))
+	std::vector<char> CRLF;
+	CRLF.push_back('\r');
+	CRLF.push_back('\n');
+
+	std::vector<char>::iterator pos = std::search(
+		m_buffer.begin() + m_offset, m_buffer.end(),
+		CRLF.begin(), CRLF.end());
+	
+	while (pos != m_buffer.end() &&
+		utils::isLWS(m_buffer, (pos - m_buffer.begin())))
 	{
-		if (utils::isWS(m_buffer, pos))
+		if (utils::isWS(m_buffer, (pos - m_buffer.begin())))
 			pos += 1;
 		else
 			pos += 2;
-		pos = m_buffer.find("\r\n", pos);
+		pos = std::search(
+			pos, m_buffer.end(),
+			CRLF.begin(), CRLF.end());
 	}
-	if (pos == std::string::npos)
-	{
-		line = m_buffer.substr(m_offset);
+
+	line = std::string(m_buffer.begin() + m_offset, pos);
+
+	if (pos == m_buffer.end())
 		m_offset = m_buffer.size();
-		return ;
-	}
-	line = m_buffer.substr(m_offset, pos - m_offset);
-	m_offset = pos + 2;
+	else
+		m_offset = (pos - m_buffer.begin()) + 2;
 }
 
 size_t
@@ -264,7 +297,9 @@ Request::parse_header() {
 
 bool
 Request::parse_body() {
-		m_body.append(m_buffer.substr(m_offset));
+		std::vector<char> vec(m_buffer.begin() + m_offset, m_buffer.end());
+		m_body.insert(m_body.end(), vec.begin(), vec.end());
+		m_offset += vec.size();
 		if (m_body.size() < m_content_len)
 			return false;
 		return true;
@@ -272,7 +307,6 @@ Request::parse_body() {
 
 bool
 Request::parse_chunked_body() {
-	std::cout << "CHUNK" << std::endl;
 	//getting the chunksize
 	std::string line;
 	get_next_req_line(line);
@@ -281,8 +315,10 @@ Request::parse_chunked_body() {
 
 	//checking if the chunksize matches actual size
 
-	if (m_buffer.find("\r\n", m_offset + chunk_size) - m_offset != chunk_size)
-		set_error(400);
+	if (m_offset + chunk_size + 2 > m_buffer.size()
+		|| m_buffer[m_offset + chunk_size] != '\r' 
+		|| m_buffer[m_offset + chunk_size + 1] != '\n')
+		return set_error(400);
 
 	//checking for last chunk
 
@@ -294,8 +330,8 @@ Request::parse_chunked_body() {
 
 	//appending chunk to body
 
-	m_body.append(m_buffer.substr(m_offset, chunk_size));
-
+	m_body.insert(m_body.end(),
+		m_buffer.begin() + m_offset, m_buffer.begin() + m_offset + chunk_size);
 	m_offset += chunk_size + 2; // skipping CRLF
 
 	//check if more there are more chunks in the buffer;
@@ -306,7 +342,7 @@ Request::parse_chunked_body() {
 bool
 Request::is_chunked() {
 	std::string value = get_header_entry("transfer-encoding");
-	print_request();
+	//print_request();
 	if (value == "")
 		return false;
 	
@@ -323,9 +359,9 @@ Request::is_chunked() {
 //todo: what about illigal bodys
 
 bool
-Request::append_read(const char *buf) {
+Request::append_read(std::vector<char> buf, size_t read_len) {
 	
-	m_buffer.append(buf);
+	m_buffer.insert(m_buffer.end(), buf.begin(), buf.end());
 
 	if (m_state == HEADER)
 	{
@@ -344,13 +380,14 @@ Request::append_read(const char *buf) {
 			std::string len = get_header_entry("content-length");
 			m_content_len = std::strtoll(len.data(), NULL, 10);
 		}
-		else 
+		else
 			m_done = true;
 	}
 
 	//Handling of BodyParsing
-	if (m_state == BODY)
+	if (m_state == BODY){
 		m_done = parse_body();
+	}
 	else if (m_state == CHUNKED_BODY)
 	{
 		while (m_done != true)
@@ -361,8 +398,9 @@ Request::append_read(const char *buf) {
 	}
 
 	#ifdef VERBOSE
-	printRequest();
+	print_request();
 	#endif
+
 
 	return is_done();
 }
