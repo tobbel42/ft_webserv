@@ -91,6 +91,7 @@ private:
 		return fd;
 	}
 
+#if 0
 	std::string read_from_file(int fd)
 	{
 		//printf("fd: %i\n", fd);
@@ -141,6 +142,30 @@ private:
 		int fd2 = open(filename_char, 0); // wtf warum kann ich das nicht auskommentieren obwohl es nichts macht
 		return (read_from_file(fd2));
 	}
+#else
+
+	std::string
+	execute_cgi(int file_extension)
+	{
+		std::string filename;
+		
+		if (file_extension == PHP)
+			filename = "php " + _complete_filename;
+		else
+			filename = "python " + _complete_filename;
+		
+		FILE* pipe = popen(filename.c_str(), "r");
+		char buffer[1000];
+		std::string content;
+		while (fread(buffer, sizeof(*buffer), sizeof(buffer), pipe) == sizeof(buffer))
+			content += buffer;
+		content += buffer;
+		pclose(pipe);
+		return content;
+	}
+
+
+#endif
 
 
 	std::string get_directory_content()
