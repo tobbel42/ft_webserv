@@ -18,8 +18,6 @@ bool	strriseq(const char *s1, const char *s2)
 
 int main(int argc, char **argv)
 {
-	Response response;
-	std::cout <<  response.s_get_mime_type("test.js") << std::endl;
 	if (argc > 2)
 	{
 		std::cerr << "Error:\nwrong number of arguments\nusage: "
@@ -50,7 +48,6 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	//atm müssen die server vor den Sockets initialisiert werden, sonst segfault
-	e.initServers();
 	e.initSockets();
 	e.launch();
 	return 0;

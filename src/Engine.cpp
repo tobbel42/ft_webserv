@@ -81,13 +81,6 @@ void
 Engine::initServers( void )
 {
 	// Server	newServer("localhost", "testServerDir");
-	Server server;
-
-	server.set_server_name("testserver");
-	server.set_ip_address(utils::string_to_ip("127.0.0.1"));
-	server.set_port(8080);
-	server.set_root("testServerDir");
-	server.set_index("index.html");
 
 	// m_servers.push_back(newServer);
 	
@@ -218,7 +211,7 @@ Engine::connectEvent( s_kevent & kevent )
 	{
 		//read the Request: ToDo Handling of chuncked requests(multible reads and concatenate)
 		if (cnct.readRequest(kevent))
-		{	
+		{
 		//if read done 
 			//removing the read event from the from the change vector
 			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));

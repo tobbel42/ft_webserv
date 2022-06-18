@@ -64,7 +64,7 @@ class Request {
 	std::string m_methode;
 	std::string m_target;
 	std::string m_httpVer;
-	std::map<std::string, std::string> m_header; 
+	std::map<std::string, std::string> m_header;
 	std::string	m_body;
 
 	public:

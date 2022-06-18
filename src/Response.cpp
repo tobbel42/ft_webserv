@@ -20,8 +20,9 @@ Response::Response( const Response & cpy ) {
 	*this = cpy;
 }
 
-Response::Response(int status_code, const std::string& body, Server* server):
+Response::Response(int status_code, const std::string& body, Server* server, Request* request):
 	p_server(server),
+	p_request(request),
 	m_status_code(status_code),
 	m_header(),
 	m_body(body),
@@ -41,6 +42,7 @@ Response & Response::operator=( const Response & rhs ) {
 	if (this != &rhs)
 	{
 		p_server = rhs.p_server;
+		p_request = rhs.p_request;
 		m_status_code = rhs.m_status_code;
 		m_header = rhs.m_header;
 		m_body = rhs.m_body;
@@ -49,24 +51,36 @@ Response & Response::operator=( const Response & rhs ) {
 	return (*this);
 }
 
-// general header:
-//		Connection: (close or maybe keep-alive)
-//		Date: the timestamp in http time format
-std::string
-Response::s_generate_general_header(int status_code)
+void
+Response::m_init_header()
 {
-	std::string header = "HTTP/";
+	typedef std::map<int, const char*>::iterator Iter;
 
-	header += utils::to_string(HTTP_VERSION);
-	header += ' ';
-	header += utils::to_string(status_code);
-	header += ' ';
-	header += s_status_codes[status_code]; // creates new nodes for invalid status codes!
-	header += "\r\n";
-	header += "Date: ";
-	header += utils::get_http_time();
-	header += "\r\n";
-	return header;
+	// status line:
+	//	HTTP/[version] [status code] [reason phrase]
+	m_header = "HTTP/";
+	m_header += utils::to_string(HTTP_VERSION);
+	m_header += ' ';
+
+	Iter status_code = s_status_codes.find(m_status_code);
+	if (status_code != s_status_codes.end())
+	{
+		m_header += utils::to_string(m_status_code);
+		m_header += ' ';
+		m_header += status_code->second;
+	}
+	else
+	{
+		m_header += utils::to_string(404);
+		m_header += ' ';
+		m_header += s_status_codes[404];
+	}
+	m_header += "\r\n";
+
+	// general header:
+	//		Connection: (close or maybe keep-alive)
+	//		Date: the timestamp in http time format
+	m_add_header_line("Date", utils::get_http_time());
 }
 
 
@@ -103,38 +117,22 @@ Response::get_payload() const { return m_payload; }
 size_t
 Response::get_body_size() const { return m_body.size(); }
 
-void
-Response::m_add_header_line(const std::string& key, const std::string& value)
-{
-	m_header += key;
-	m_header += ": ";
-	m_header += value;
-	m_header += "\r\n";
-}
-
-void
-Response::m_add_to_payload(const std::string& to_add)
-{
-	m_payload += to_add;
-	m_payload += "\r\n";
-}
-
 std::pair<std::string, size_t>
 Response::generate_response()
 {
 	switch (m_status_code)
 	{
 	case 101:
-		m_status_switching_protocols();
+		m_switching_protocols();
 		break;
 	case 200 ... 207:
-
+		m_success();
 		break;
 	case 300 ... 308:
-
+		m_redirect();
 		break;
 	default: // atm all error codes
-		m_generate_error_response();
+		m_error();
 		break;
 	}
 	m_add_header_line("Server", "lil l and the beachboys 1.0");
@@ -145,17 +143,54 @@ Response::generate_response()
 }
 
 void
-Response::m_status_switching_protocols()
+Response::m_switching_protocols()
 {
-	m_header = s_generate_general_header(m_status_code);
-
+	m_init_header();
 	std::string supported_http = "HTTP/";
 	supported_http += utils::to_string(HTTP_VERSION);
 	m_add_header_line("Upgrade", supported_http);
 }
 
+
 void
-Response::m_generate_error_response()
+Response::m_success()
+{
+	m_init_header();
+
+	m_add_header_line("Content-Length", utils::to_string(m_body.size()));
+
+	// std::string header_entry = p_request->getHeaderEntry("Content-Location");
+	// if (!header_entry.empty())
+	// {
+	// 	m_add_header_line("Content-Type", s_get_mime_type(header_entry));
+	// 	m_add_header_line("Content-Location", header_entry);
+	// }
+	switch (m_status_code)
+	{
+	case 200:
+		
+		break;
+	case 201:
+
+		break;
+	case 202:
+		break;
+	
+	default:
+		break;
+	}
+}
+
+void
+Response::m_redirect()
+{
+	m_init_header();
+
+	m_add_header_line("Retry-after", utils::to_string(120));
+}
+
+void
+Response::m_error()
 {
 	std::string filename = p_server->error_pages;
 
@@ -172,28 +207,30 @@ Response::m_generate_error_response()
 		filename += '/';
 		filename += utils::to_string(m_status_code);
 		filename += ".html";
+		std::cout << filename << std::endl;
 		file.open(filename.c_str());
 		if (!file.is_open())
 		{
 			// if everything goes wrong just send 500
-			char error_msg[] = "<html>\r\n<head>"
-								"<title>internal server error</title></head>\r\n"
-								"<body><h1>errorcode 500: internal server error</h1>"
-								"</body></html>\r\n";
-
 			m_status_code = 500;
-			m_header = s_generate_general_header(m_status_code);
-			m_add_header_line("Content-Length", utils::to_string(126));
-			m_body.insert(m_body.end(), error_msg, error_msg + 126);
+
+			m_init_header();
+			m_body = "<html>\r\n<head>"
+						"<title>internal server error</title></head>\r\n"
+						"<body><h1>errorcode 500: internal server error</h1>"
+					"</body></html>\r\n";
+			m_add_header_line("Content-Length", utils::to_string(m_body.size()));
 			return;
 		}
 	}
-	m_header = s_generate_general_header(m_status_code);
 
-	// Retry-after should be specified for all redirections and Service Unavailable
+	m_init_header();
+
+	// Retry-after should be specified for Service Unavailable
 	// so we just hardcode it to 120 seconds
-	if (m_status_code == 503 || (m_status_code >= 300 && m_status_code <= 307))
+	if (m_status_code == 503)
 		m_add_header_line("Retry-after", utils::to_string(120));
+
 	m_body = utils::read_file(file);
 	
 	m_add_header_line("Content-Length", utils::to_string(m_body.size()));
@@ -201,9 +238,9 @@ Response::m_generate_error_response()
 	m_add_header_line("Content-Type", s_get_mime_type(filename));
 
 	// response-header:
-	//		Accept-ranges: (probably none)
+	//		Accept-ranges: HTTP 1.1 is designed not to rely on those
 	//		Retry-after: (maybe for 503 and 3XX status codes -> time in seconds)
-	//		Server: webserv (or whatever name we want + version number)
+	//		Server: lil l and the beachboys 1.0
 	// entity-header:
 	//		Allow: The allowed requests for the current server
 	//		Content-Encoding: Must be provided when the coding is not "identity"
@@ -220,6 +257,22 @@ Response::m_generate_error_response()
 	//		Expires: Date untill the response is valid and should be cached
 	//						Dates in the past (or 0) count as instantly expired
 	//		Last-Modified: Timestamp of the sent resource (e.g. file)
+}
+
+void
+Response::m_add_header_line(const std::string& key, const std::string& value)
+{
+	m_header += key;
+	m_header += ": ";
+	m_header += value;
+	m_header += "\r\n";
+}
+
+void
+Response::m_add_to_payload(const std::string& to_add)
+{
+	m_payload += to_add;
+	m_payload += "\r\n";
 }
 
 

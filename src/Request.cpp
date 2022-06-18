@@ -64,7 +64,7 @@ uint32_t Request::get_errCode() const { return m_errCode; }
 /*Utils-----------------------------------------------------------------------*/
 
 bool Request::isDone() {
-	printRequest();
+	// printRequest();
 	if (m_errCode != 0) {
 		std::cout << "ERR: " << m_errCode << std::endl;
 		return true;
@@ -314,7 +314,7 @@ bool Request::appendRead(const char *buf) {
 		}
 				
 	}
-	printRequest();
+	// printRequest();
 
 	//std::cout << m_body.size() << std::endl;
 
