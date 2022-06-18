@@ -113,6 +113,12 @@ ConfigParser::m_read_server()
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"only one index page shall be specified for each server");
 		}
+		else if (word == "errorpages")
+		{
+			if (!server.set_error_pages(m_get_next_word_protected()))
+				throw ConfigParser::InvalidConfig(m_line_number,
+					"only one errorpage directory shall be specified for each server");
+		}
 		else if (word == "max_client_body_size")
 		{
 			if (!server.set_max_client_body_size(m_check_int(m_get_next_word_protected())))
@@ -147,7 +153,7 @@ ConfigParser::m_read_server()
 			location.location = m_get_next_word_protected();
 			if (location.location == "{")
 				throw ConfigParser::InvalidConfig(m_line_number,
-					"location blocks must define the directory the operate in");
+					"location blocks must define the directory they operate in");
 
 			if (m_get_next_word_protected(false) != "{")
 				throw ConfigParser::InvalidConfig(m_line_number, 

@@ -37,12 +37,12 @@ int main(int argc, char **argv, char **envp)
 	Engine	e;
 	ConfigParser parser(e.getServers());
 	
-	if (argc == 1)
-		parser.assign_file("config/default.conf");
-	else
-		parser.assign_file(argv[1]);
 	try
 	{
+		if (argc == 1)
+			parser.assign_file("config/default.conf");
+		else
+			parser.assign_file(argv[1]);
 		parser.run();
 	}
 	catch (const std::exception& e)
@@ -51,7 +51,6 @@ int main(int argc, char **argv, char **envp)
 		return 1;
 	}
 	//atm müssen die server vor den Sockets initialisiert werden, sonst segfault
-	e.initServers();
 	e.initSockets();
 	e.launch();
 	return 0;

@@ -211,7 +211,7 @@ Engine::connectEvent( s_kevent & kevent )
 	{
 		//read the Request: ToDo Handling of chuncked requests(multible reads and concatenate)
 		if (cnct.readRequest(kevent))
-		{	
+		{
 		//if read done 
 			//removing the read event from the from the change vector
 			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));

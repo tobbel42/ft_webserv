@@ -5,13 +5,14 @@
 #include <cctype>
 
 #include <string>
+#include <vector>
 #include <sstream>
+#include <fstream>
 
-
-#include <string>
-#include <ctype.h>
-extern char ** g_envp;
 #include "typedefs.hpp"
+
+
+extern char** g_envp; // remember to erase this filth!!
 
 namespace utils {
 
@@ -93,6 +94,21 @@ hex_str_to_i(const std::string &);
 
 StringArr
 str_split(const std::string &s, const std::string & del);
+
+/*
+@brief reads all the contents from the provided stream and
+	generates a std::string out of them. Newline characters
+	are replaced by the parameter nl
+*/
+std::string
+read_file(std::istream& file, const char* nl);
+
+/*
+@brief Concentrates the supplied string aray seperating
+	every entry by sep
+*/
+std::string
+arr_to_csv(const StringArr& arr, const char* sep);
 
 } // namespace utils
 

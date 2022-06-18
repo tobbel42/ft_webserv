@@ -136,4 +136,37 @@ str_split(const std::string &s, const std::string & del) {
 	return vec;
 }
 
+
+std::string
+read_file(std::istream& file, const char* nl)
+{
+	std::string contents;
+	std::string line;
+
+	do
+	{
+		std::getline(file, line);
+		contents.append(line);
+		contents.append(nl);
+	} while (file);
+
+	return contents;
+}
+
+std::string
+arr_to_csv(const StringArr& arr, const char* sep)
+{
+	std::string result;
+
+	StringArr::const_iterator it = arr.begin();
+	while (it != arr.end())
+	{
+		result += *it;
+		++it;
+		if (it != arr.end())
+			result += sep;
+	}
+	return result;
+}
+
 } // namespace utils

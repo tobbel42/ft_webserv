@@ -99,8 +99,8 @@ void
 Connect::writeResponse( s_kevent kevent )
 {
 	//ToDo Errorhandling
-	std::cout << "RESPONSE" << std::endl;
-	//std::cout << m_response << std::endl;
+	// std::cout << "RESPONSE" << std::endl;
+	// std::cout << m_response << std::endl;
 	write(kevent.ident, m_response.c_str(), m_response.size());
 }
 
@@ -119,25 +119,29 @@ Connect::composeResponse( void )
 
 	std::string filename = m_req.get_target();
 	if (filename == "/")
-		filename = "/index.html";
+		filename += p_server->index;
 
-	//just a fix
+    MyFile f(filename, p_server->root, g_envp);
+	std::string file = f.read_file();
 
-    MyFile f(filename, "www/root", g_envp);
+	fs.open(p_server->root + filename);
 
-	f.read_file();
 
-	fs.open("www/root" + filename);
 
-	std::cout << "FILENAME" << ("testServerDir" + filename) << std::endl;
+	// the response should also have access to the file that was accessed
+	// to determine the MINE type of the body
+	Response response;
+	response.set_server(p_server);
 
-	if (1)
+
+
+	// std::cout << "FILENAME" << ("testServerDir" + filename) << std::endl;
+
+	if (fs.is_open())
 	{
-
-		std::string			line;
-		std::string			file;
-		std::stringstream	ss;
-
+		// std::string			line;
+		// std::string			file;
+		// std::stringstream	ss;
 		// while (1)
 		// {
 		// 	std::getline(fs, line);
@@ -146,34 +150,31 @@ Connect::composeResponse( void )
 		// 	if (fs.eof())
 		// 		break;
 		// }
-		m_response.clear();
-		m_response.append("HTTP/1.1 200 OK\r\n");
-		if (filename.find(".ico") == std::string::npos)
-		{
-			ss << f.read_file().size();
-			m_response.append("Content-Type: text/html\r\n");
-			m_response.append("Content-Lenght: " + ss.str() + "\r\n");
-		}
-		else
-		{
-			m_response.append("Content-Type: image/x-icon\r\n");
-			ss << (file.size() - 1);
-			m_response.append("Content-Lenght: " + ss.str() + "\r\n");
-		}
+		// m_response.clear();
+		// m_response.append("HTTP/1.1 200 OK\r\n");
+		// if (filename.find(".ico") == std::string::npos)
+		// {
+		// 	ss << file.size();
+		// 	m_response.append("Content-Type: text/html\r\n");
+		// 	m_response.append("Content-Lenght: " + ss.str() + "\r\n");
+		// }
+		// else
+		// {
+		// 	m_response.append("Content-Type: image/x-icon\r\n");
+		// 	ss << (file.size() - 1);
+		// 	m_response.append("Content-Lenght: " + ss.str() + "\r\n");
+		// }
+		// m_response.append("\r\n");
+		m_response.append(file);
 		m_response.append("\r\n");
-		m_response.append(f.read_file());
-		m_response.append("\r\n");
+		response.set_status_code(200);
+		response.set_body(m_response);
 	}
 	else
 	{
-		m_response.clear();
-		m_response.append("HTTP/1.1 404 Not Found\r\n");
-		m_response.append("Content-Type: text/html\r\n");
-		m_response.append("Content-Lenght: 19\r\n");
-		m_response.append("\r\n");
-		m_response.append("<h1>Not Found</h1>");
-		m_response.append("\r\n");
+		response.set_status_code(404);
 	}
-
+	std::pair<std::string, size_t> resp_pair = response.generate();
+	m_response = resp_pair.first;
 	m_action = WRITE;
 }

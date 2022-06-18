@@ -7,7 +7,7 @@ Server::Server():
 	server_names(),
 	root("/"),
 	index("index.html"),
-	error_pages("./error_pages"),
+	error_pages(DEFAULT_ERROR_PAGES),
 	ip_address(),
 	ports(),
 	max_client_body_size(std::numeric_limits<uint32_t>::max()),
