@@ -122,16 +122,19 @@ Response::generate()
 {
 	switch (m_status_code)
 	{
+	case 100: // Just continue whatever you're doing
+		m_init_header();
+		break;
 	case 101:
 		m_switching_protocols();
 		break;
-	case 200 ... 207:
+	case 200 ... 206:
 		m_success();
 		break;
-	case 300 ... 308:
+	case 300 ... 307:
 		m_redirect();
 		break;
-	default: // atm all error codes
+	default: // 400 ... 417 && 500 ... 505
 		m_error();
 		break;
 	}
