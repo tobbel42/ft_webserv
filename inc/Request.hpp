@@ -5,7 +5,7 @@
 #include <iostream>
 #include "utils.hpp"
 
-enum e_reqState{
+enum e_req_state{
 	HEADER,
 	BODY,
 	CHUNKED_BODY
@@ -15,6 +15,7 @@ enum e_reqState{
 
 //Data class which parses the Requests and exposens the elements to the User
 //Detects Malformed requests
+//trivia: LWS(linearwhiteSpace) = (' ' or '\t' or "\r\n" followed by ' ' or '\t'
 class Request {
 
 	public:
@@ -23,69 +24,81 @@ class Request {
 
 	Request();
 	~Request();
-	Request(const Request & cpy);
-	Request & operator=(const Request & rhs);
+	Request(const Request &);
+	Request & operator=(const Request &);
 
 	private:
 
 	/*Utils-------------------------------------------------------------------*/
 
-	bool checkInvalidChar(const std::string & s, char *c, size_t size);
-	bool	isDone();
+	bool check_invalid_char(const std::string &, char *, size_t);
+	bool is_done();
+	bool set_error(size_t);
 
 	/*RequestLineParsing------------------------------------------------------*/
 
-	bool parseFirstLine();
-	void getNextReqLine(std::string & line);
-	bool parseRequestLine(const std::string & line);
-	bool isValidRequestLine();
-	bool isValidHttpVer();
+	bool parse_first_line();
+	void get_next_req_line(std::string &);
+	bool parse_request_line(const std::string &);
+	bool is_valid_request_line();
+
+	//these are mayber
+	bool is_valid_http_ver();
 
 	/*RequestHeaderParsing----------------------------------------------------*/
 
-	void getNextHeaderLine(std::string & line);
-	bool parseHeader();
+	void get_next_header_line(std::string &);
+	bool parse_header();
+	size_t remove_leading_LWS(const std::string &, size_t);
+	size_t remove_trailing_LWS(const std::string &);
 
 	/*RequestBodyParsing------------------------------------------------------*/
 
-	bool parseBody();
-	bool parseChunkedBody();
+	bool parse_body();
+	bool is_chunked();
+	bool parse_chunked_body();
 
 	/*Internal MemberVariabels------------------------------------------------*/
 
-	std::string	m_buffer;
+	//std::string	m_buffer;
+	std::vector<char> m_buffer;
 	size_t		m_offset;
-	e_reqState	m_state;
+	
+	e_req_state	m_state;
 	bool		m_done;
+
+	size_t		m_content_len;
 
 	/*DataMemberVariabels-----------------------------------------------------*/
 
-	uint32_t	m_errCode;
+	uint32_t	m_err_code;
 	std::string m_methode;
 	std::string m_target;
-	std::string m_httpVer;
+	std::string m_http_ver;
 	std::map<std::string, std::string> m_header; 
-	std::string	m_body;
+	//std::string	m_body;
+	std::vector<char> m_body;
 
 	public:
 
 	/*Public Functions--------------------------------------------------------*/
 
-	bool	appendRead(const char *buf);
+//	bool	append_read(const char *, size_t);
+	bool	append_read(std::vector<char>, size_t);
 
 	/*Debug only--------------------------------------------------------------*/	
 
-	void	printRequest();
+	void	print_request();
 
 	/*Getter------------------------------------------------------------------*/
 
 	const std::string & get_methode() const;
 	const std::string & get_target() const;
-	const std::string & getHttpVer() const;
-	std::string getHeaderEntry(const std::string & fieldName) const;
-	const std::string & getBody() const;
-	uint32_t	get_errCode() const;
-	std::string getTarget() const { return m_target; } // added to be able to compile
+	const std::string & get_http_ver() const;
+	std::string 		get_header_entry(const std::string &);
+	//const std::string & get_body() const;
+	const std::vector<char> & get_body() const;
+	uint32_t 			get_err_code() const;
 };
 
 #endif
