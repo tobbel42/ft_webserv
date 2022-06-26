@@ -9,7 +9,7 @@
 #include <iostream>
 #include <iostream>
 #include <fstream>
-#include "get_next_line.h"
+#include "get_next_line.hpp"
 #include "MyFile.hpp"
 
 // open

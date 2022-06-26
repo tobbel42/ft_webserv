@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <cstdio>
 
 // wait
 #include <sys/types.h>
@@ -23,6 +24,9 @@
 #include "get_next_line.hpp"
 #include "MyDirectory.hpp"
 
+
+//404 file not found
+// 500 internal error
 class MyFile
 {
 
@@ -32,6 +36,7 @@ private:
 	std::string _current_url;
 	char **_envp;
 	bool _directory_listing;
+	int _errorcode;
 
 
 
@@ -48,6 +53,8 @@ private:
 				content = content + line + '\n';
 		in.close();
 		}
+		else
+			_errorcode = 404;
 		return (content);
 	}
 
@@ -69,13 +76,25 @@ private:
 	{
 		int fd = mkstemp(filename); // Creates and opens a new temp file r/w.
 		if (fd == -1)
-			std::cout << "creation of file went wrong" << std::endl; //Errorhandling
+		{
+			std::cerr << "creation of file went wrong" << std::endl;
+			_errorcode = 500;
+		}
 		return fd;
 	}
 
 	std::string read_from_file(int fd)
 	{
 		std::string content;
+		#if 0
+		FILE* file = fdopen(fd, "r");
+		char buffer[1000];
+		while (fread(buffer, sizeof(*buffer), sizeof(buffer), file) == sizeof(buffer))
+			content += buffer;
+		content += buffer;
+		fclose(file);
+		close(fd);
+		#else
 		char* line = get_next_line(fd);
 		while(line != NULL)
 		{
@@ -83,6 +102,7 @@ private:
 			line = get_next_line(fd);
 		}
 		close(fd);
+		#endif
 		return content;
 	}
 
@@ -91,26 +111,30 @@ private:
 	{
 		char *argv[3];
 		char filename_char[] = "/tmp/mytemp.XXXXXX";
-		std::string python_executable("/usr/bin/python");
-		std::string php_executable("/usr/bin/php");
 
 		int fd = create_temp_file(filename_char);
 
 		if (file_extension == PHP)
-			argv[0] = (char *) php_executable.c_str();
+			argv[0] = (char *) "/usr/bin/php";
 		else
-			argv[0] = (char *) python_executable.c_str();
+			argv[0] = (char *) "/usr/bin/python";
 		argv[1] = (char *) _complete_filename.c_str();
 		argv[2] = NULL;
 
 		int pid = fork();
 		if (pid == -1)
-			std::cout << "Problem bei fork" << std::endl;
+		{
+			std::cerr << "Problem bei fork" << std::endl;
+			_errorcode = 500;
+		}
 		if (pid == 0)
 		{
 			dup2(fd, STDOUT_FILENO);
 			if (execve(argv[0], argv, this->_envp) == -1)
-				std::cout << "Problem bei execve" << std::endl; // exiten hier??
+			{
+				std::cout << "Problem bei execve" << std::endl;
+				_errorcode = 500;
+			}
 		}
 		wait(NULL); // Achtung, wenn Endlosschleife, dann kann es hier zu Problemen kommen
 		close(fd);
@@ -128,11 +152,17 @@ private:
 	}
 
 
+
 public:
 	MyFile(std::string filename, std::string path, std::string current_url, char **envp, bool directory_listing)
 		: _complete_filename(path + filename), _current_url(current_url + "/"), _envp(envp), _directory_listing(directory_listing)
 	{
-	
+		_errorcode = 0;
+	}
+
+	int	get_error_code() const
+	{
+		return _errorcode;
 	}
 
 	std::string read_file()
@@ -149,9 +179,15 @@ public:
 		else if (file_extension == HTML)
 			return get_file_content();
 		else if (file_extension == FOLDER && _directory_listing == true)
-			return get_directory_content();
+		{
+			std::string dir_list = get_directory_content();
+			if(dir_list == "page not found")
+				_errorcode = 500;
+			return dir_list;
+		}
 		else
 			return ""; // prüfen
 	}
 };
+
 #endif
