@@ -121,7 +121,8 @@ Connect::composeResponse( void )
 	if (filename == "/")
 		filename += p_server->index;
 
-    MyFile f(filename, p_server->root, g_envp);
+    //MyFile f(filename, p_server->root, g_envp);
+	MyFile f(filename, p_server->root, "http://" + m_req.get_header_entry("host") + filename, g_envp,true);
 	std::string file = f.read_file();
 
 	fs.open(p_server->root + filename);

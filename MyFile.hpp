@@ -19,6 +19,7 @@
 // wait
 #include <sys/types.h>
 #include <sys/wait.h>
+
 #include "get_next_line.h"
 #include "MyDirectory.hpp"
 
@@ -33,36 +34,20 @@ private:
 	bool _directory_listing;
 
 
-	// checks for valid filename (without .. etc)
-	bool check_valid_filename() // Achtung, was wollen wir machen, wenn das passiert?
-	{
-		if (this->_complete_filename.find("../") != std::string::npos || this->_complete_filename.find("/../") != std::string::npos)
-		{
-			std::cout << "This filename is invalid" << std::endl;
-			return (false);
-		}
-		return (true);
-	}
 
-	
 	std::string get_file_content()
 	{
 		std::ifstream in;
 		std::string content;
 		std::string line;
 
-		//check_valid_filename(filename); //scheint automatisch von Browser schon gemacht zu werden
-		
-		//std::cout << "open file: " << this->_complete_filename << std::endl;
 		in.open(this->_complete_filename);
 		if (in.is_open()) // else??
 		{
-			//std::cout << "is opened" << std::endl;
 			while (getline (in,line))
 				content = content + line + '\n';
 		in.close();
 		}
-		//std::cout << "Content: " << content << std::endl;
 		return (content);
 	}
 
@@ -82,22 +67,17 @@ private:
 
 	int	create_temp_file(char *filename)
 	{
-		int fd = mkstemp(filename);    // Creates and opens a new temp file r/w.
-		//printf("filename: %s\n", filename);
+		int fd = mkstemp(filename); // Creates and opens a new temp file r/w.
 		if (fd == -1)
-		{
-			std::cout << "creation of file went wrong" << std::endl;
-		}
-		//   unlink(filename);??
+			std::cout << "creation of file went wrong" << std::endl; //Errorhandling
+		//unlink(filename);
 		return fd;
 	}
 
 	std::string read_from_file(int fd)
 	{
-		//printf("fd: %i\n", fd);
 		std::string content;
 		char* line = get_next_line(fd);
-		//printf("line: %s\n", line);
 		while(line != NULL)
 		{
 			content += line;
@@ -123,7 +103,6 @@ private:
 			argv[0] = "/usr/bin/python";
 		argv[1] = (char *) _complete_filename.c_str();
 		argv[2] = NULL;
-		//std::cout << "vor execve"<< std::endl;
 
 		int pid = fork();
 		if (pid == -1)
@@ -137,9 +116,8 @@ private:
 		wait(NULL); // Achtung, wenn Endlosschleife, dann kann es hier zu Problemen kommen
 		close(fd);
 		fsync(fd);
-		//sleep(100);
+		int fd2 = open(filename_char, 0);
 		//unlink(filename_char);
-		int fd2 = open(filename_char, 0); // wtf warum kann ich das nicht auskommentieren obwohl es nichts macht
 		return (read_from_file(fd2));
 	}
 
@@ -155,14 +133,8 @@ public:
 	MyFile(std::string filename, std::string path, std::string current_url, char **envp, bool directory_listing)
 		: _complete_filename(path + filename), _current_url(current_url + "/"), _envp(envp), _directory_listing(directory_listing)
 	{
-		//directory_listing = true; //prüfen
+	
 	}
-
-	//MyFile(std::string filename, std::string path, char **envp) : _complete_filename(path + filename), _envp(envp)
-	//{
-	//	directory_listing = true; //prüfen
-	//	_current_url = "http://localhost:8080/";
-	//}
 
 	std::string read_file()
 	{

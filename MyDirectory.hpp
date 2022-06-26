@@ -15,11 +15,11 @@ private:
 
 	std::string get_mod_date(std::string element)
 	{
-		std::cout << "element: " << _directory_path + "/" + element << std::endl;
-		
-		element = _directory_path + "/" + element; // Achtung Hardgecoded
 		struct stat result;
-		if(stat(element.c_str(), &result)==0)
+
+		std::cout << "element: " << _directory_path + "/" + element << std::endl;
+		element = _directory_path + "/" + element; // Achtung Hardgecoded
+		if(stat(element.c_str(), &result) == 0)
 		{
 			char time[50];
 			strftime(time, 50, "%Y-%m-%d %H:%M:%S", localtime(&result.st_mtime));
@@ -44,7 +44,8 @@ private:
 	}
 	std::string get_list_content_helper()
 	{
-		DIR *dir; struct dirent *diread;
+		DIR *dir;
+		struct dirent *diread;
 		std::vector<char *> files;
 		std::string content = 
 			"<table> \
@@ -58,7 +59,7 @@ private:
 				files.push_back(diread->d_name);
 			}
 			closedir (dir);
-			for (int i = 0; i < files.size(); i++)
+			for (size_t i = 0; i < files.size(); i++)
 			{
 				std::string element(files[i]);
 				content = content + generate_table_row(element);
