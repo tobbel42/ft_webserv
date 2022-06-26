@@ -123,18 +123,19 @@ int main(int argc, char const *argv[], char **envp)
 				std::string new_buffer = buffer;
 				std::string filename = new_buffer.substr(i, j - i);
 
-				std::string return_req;
-				if (filename.length() != 0)
-				{
+				//std::string return_req;
+				//if (filename.length() != 0)
+				//{
 
 
 					std::cout << filename << std::endl << std::endl;
 					std::ifstream file;
 					std::string line;
 					std::string all_lines;
-					MyFile myFile(filename, "www/root/", envp);
+					MyFile myFile(filename, "/Users/lhoerger/Documents/curriculum/webserv/ft_webserv/www/root/", "http://localhost:8080/" + filename, envp, true);
+					//MyFile myFile(filename, "/home/hoerger/Desktop/ecole 42/ft_webserv/www/root/", envp);
 					all_lines = myFile.read_file();
-
+					//system("leaks a.out");
 					//all_lines = check_file(filename, "www/root/", envp);
 					//file.open(filename);
 					//while (getline(file, line))
@@ -154,13 +155,13 @@ int main(int argc, char const *argv[], char **envp)
 					
 					//std::cout << "return req: " << return_req << std::endl;
 				write(new_socket , return_req.c_str() , return_req.length());
-				}
-				else
-				{
-					return_req.assign(hello, strlen(hello));
-				//std::cout << "return req: " << hello << std::endl;
-				write(new_socket , hello , strlen(hello));
-				}
+				//}
+				//else
+				//{
+				//	return_req.assign(hello, strlen(hello));
+				////std::cout << "return req: " << hello << std::endl;
+				//write(new_socket , hello , strlen(hello));
+				//}
 				printf("------------------Hello message sent-------------------");
 				close(new_socket);
 			//}

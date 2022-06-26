@@ -28,8 +28,8 @@ SRC = main.cpp\
 	utils.cpp\
 	ConfigParser.cpp \
 	Connect.cpp\
-	get_next_line.c\
-	get_next_line_utils.c
+	get_next_line.cpp\
+	get_next_line_utils.cpp
 
 
 
