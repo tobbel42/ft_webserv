@@ -64,8 +64,14 @@ Connect::getFd( void ) const { return m_fd; }
 e_action
 Connect::getAction( void ) const { return m_action; }
 
+std::string
+Connect::get_hostname() const { return m_req.get_header_entry("Host"); }
+
 void
 Connect::setServer( Server * server ) { p_server = server; }
+
+void
+Connect::set_status(int status_code) { m_status_code = status_code; }
 
 bool
 Connect::readRequest( s_kevent kevent )
@@ -95,6 +101,12 @@ Connect::writeResponse( s_kevent kevent )
 void
 Connect::composeResponse( void )
 {
+	if (p_server == nullptr)
+	{
+		m_res.set_status_code(404);
+		m_action = WRITE;
+		return;
+	}
 	std::string filename = m_req.get_target();
 	if (filename == "/") // und directory listing ist aus
 		filename += p_server->index;

@@ -11,6 +11,9 @@
 
 #include "typedefs.hpp"
 
+#define PRINT(msg) (std::cout << msg << std::endl)
+#define EPRINT(msg) (std::cerr << msg << std::endl)
+
 
 extern char** g_envp; // remember to erase this filth!!
 

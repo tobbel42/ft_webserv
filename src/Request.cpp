@@ -58,7 +58,7 @@ Request::get_http_ver() const { return m_http_ver; }
 
 //returns an empty string when field_name not found
 std::string 
-Request::get_header_entry(std::string field_name) {
+Request::get_header_entry(std::string field_name) const {
 	utils::str_tolower(field_name);
 	std::map<std::string,std::string>::const_iterator iter;
 	iter = m_header.find(field_name);

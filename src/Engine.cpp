@@ -64,14 +64,21 @@ Engine::getServers()
 }
 
 /*
-//in here all the socket binding magic should happen, for now just a dummy
+@brief initializes all the unique host:port combinations of the servers
+		and saves them in a map
 */
 void
 Engine::initSockets( void )
 {
-	Socket	newSock(INADDR_ANY, 8080);
-	newSock.setDefaultServer(&m_servers[0]);
-	m_sockets.insert(std::pair<fd_type, Socket>(newSock.getSockFd(), newSock));
+	for (size_t i = 0; i < m_servers.size(); ++i)
+	{
+		const Server& server = m_servers[i];
+		for (size_t j = 0; j < server.ports.size(); ++j)
+		{
+			Socket	newSock(server.ip_address, server.ports[j]);
+			m_sockets.insert(std::make_pair(newSock.getSockFd(), newSock));
+		}
+	}
 }
 
 /*
@@ -148,6 +155,40 @@ Engine::acceptConnect( Socket & sock )
 	this->setKevent(fd, EVFILT_READ, EV_ADD);
 }
 
+Server*
+Engine::find_server(const Connect& cnct)
+{
+	Server* default_server = nullptr;
+	for (size_t i = 0; i < m_servers.size(); ++i)
+	{
+		// look for a matching ip:port combination
+		const Server& server = m_servers[i];
+
+		if (cnct.getIp() == server.ip_address)
+		{
+			for (size_t j = 0; j < server.ports.size(); ++j)
+			{
+				uint32_t port = server.ports[j];
+
+				if (port == cnct.getPort())
+				{
+					if (default_server == nullptr)
+						default_server = &server;
+
+					// look for a matching server_name
+					for (size_t k = 0; k < server.server_names.size(); ++k)
+					{
+						if (cnct.get_hostname() == server.server_names[k])
+							return &server;
+					}
+				}
+			}
+		}
+	}
+	return default_server;
+}
+
+
 void
 Engine::assignServer( Connect &connect )
 {
@@ -162,13 +203,15 @@ Engine::assignServer( Connect &connect )
 	// 	return ;
 	// }
 
-	// //ToDo: parse he Hostname from the request
-
 	// connect.setServer((*iter).second.getServer(""));
 
 	//smart server find fknt 
 
-	connect.setServer(&m_servers[0]);
+	Server* server = find_server(connect);
+	if (server == nullptr)
+		connect.set_status(404);
+	else
+		connect.setServer(server);
 }
 
 void

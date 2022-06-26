@@ -11,9 +11,6 @@
 
 #include "typedefs.hpp"
 
-#ifndef nullptr
-#define nullptr NULL
-#endif
 
 class Server
 {

@@ -74,11 +74,14 @@ Socket::m_init()
 	{
 		// throw
 	}
+	EPRINT("ip:" << utils::ip_to_string(m_ip) << ", port: " << m_port);
 	m_address.sin_family = AF_INET;
 	m_address.sin_addr.s_addr = htonl(m_ip);
 	m_address.sin_port = htons(m_port);
 	if (bind(m_sockfd, reinterpret_cast<sockaddr*>(&m_address), sizeof m_address) == -1)
 	{
+		EPRINT(utils::ip_to_string(m_ip));
+		EPRINT("bind failed: " << strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	

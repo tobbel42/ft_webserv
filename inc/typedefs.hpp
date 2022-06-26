@@ -11,6 +11,10 @@
 #define DEFAULT_ERROR_PAGES "config/default_error_pages"
 #define READSIZE 8192 //we reading at max 8kb of data, might change
 
+#ifndef nullptr
+#define nullptr NULL
+#endif
+
 typedef	unsigned long	fd_type;
 
 class Server;

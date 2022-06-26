@@ -35,6 +35,7 @@ class Connect
 		//fd_type		m_sockFd;
 		Server		*p_server;
 		e_action	m_action;
+		int			m_status_code;
 
 
 		//To be phased out 
@@ -61,9 +62,11 @@ class Connect
 
 		fd_type		getSockFd( void ) const;
 		Server *	getServer( void ) const;
-		e_action	getAction( void ) const;	
+		e_action	getAction( void ) const;
+		std::string	get_hostname() const;
 	
 		void		setServer( Server * server );
+		void		set_status(int status_code);
 		bool		readRequest( s_kevent kevent );
 		void		writeResponse( s_kevent kevent );
 		void		composeResponse( void );

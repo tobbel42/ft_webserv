@@ -72,6 +72,7 @@ class Engine
 		void		listenSockets( void );
 
 		void		assignServer( Connect &connect );
+		Server*		find_server(const Connect& cnct);
 
 	public:
 		Engine( void );

@@ -196,14 +196,20 @@ Response::m_redirect()
 void
 Response::m_error()
 {
-	std::string filename = p_server->error_pages;
+	std::ifstream file;
+	std::string filename;
 
-	filename += '/';
-	filename += utils::to_string(m_status_code);
-	filename += ".html";
+	if (p_server != nullptr)
+	{
+		filename = p_server->error_pages;
 
-	std::ifstream file(filename.c_str());
-	if (!file.is_open())
+		filename += '/';
+		filename += utils::to_string(m_status_code);
+		filename += ".html";
+
+		file.open(filename.c_str());
+	}
+	if (p_server == nullptr || !file.is_open())
 	{
 		// trying to use the default errror pages
 		// if the provided ones don't work
@@ -236,7 +242,8 @@ Response::m_error()
 
 	m_body = utils::read_file(file, "\r\n");
 	
-	m_add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
+	if (p_server != nullptr)
+		m_add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
 	m_add_to_head("Content-Length", utils::to_string(m_body.size()));
 	m_add_to_head("Content-Location", filename);
 	m_add_to_head("Content-Type", s_get_mime_type(filename));
