@@ -85,7 +85,6 @@ class Engine
 		//ToDo: ErrorHandling
 
 		void		initSockets( void );
-		void		initServers( void );
 		void		launch( void );
 
 

@@ -57,7 +57,7 @@ operator<< ( std::ostream & out, s_kevent const & in )
 }
 
 
-std::vector<Server>&
+ServerArr&
 Engine::getServers()
 {
 	return m_servers;
@@ -79,18 +79,6 @@ Engine::initSockets( void )
 			m_sockets.insert(std::make_pair(newSock.getSockFd(), newSock));
 		}
 	}
-}
-
-/*
-//in here the servers should be initialized
-*/
-void
-Engine::initServers( void )
-{
-	// Server	newServer("localhost", "testServerDir");
-
-	// m_servers.push_back(newServer);
-	
 }
 
 void
@@ -162,7 +150,7 @@ Engine::find_server(const Connect& cnct)
 	for (size_t i = 0; i < m_servers.size(); ++i)
 	{
 		// look for a matching ip:port combination
-		const Server& server = m_servers[i];
+		Server& server = m_servers[i];
 
 		if (cnct.getIp() == server.ip_address)
 		{
@@ -172,6 +160,7 @@ Engine::find_server(const Connect& cnct)
 
 				if (port == cnct.getPort())
 				{
+					// the first one is the default server
 					if (default_server == nullptr)
 						default_server = &server;
 
