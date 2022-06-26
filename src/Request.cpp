@@ -69,9 +69,6 @@ Request::get_header_entry(const std::string & field_name) {
 	return field_value;
 }
 
-// const std::string &
-// Request::get_body() const { return m_body; }
-
 const std::vector<char> &
 Request::get_body() const { return m_body; }
 
@@ -87,9 +84,11 @@ Request::is_done() {
 	#endif
 	if (m_err_code != 0)
 	{
-		std::cout << "ERRCODE: " << m_err_code << std::endl;
 		return true;
 	}
+	else if (m_done && get_header_entry("host") == "")
+		m_err_code = 400;
+	std::cout << "ERRCODE: " << m_err_code << std::endl;
 	return m_done;
 }
 
@@ -110,20 +109,6 @@ Request::set_error(size_t err_code) {
 
 /*RequestLineParsing----------------------------------------------------------*/
 
-// void
-// Request::get_next_req_line(std::string & line) {
-// 	size_t pos =  m_buffer.find("\r\n", m_offset);
-// 	if (pos == std::string::npos)
-// 	{
-// 		line = m_buffer.substr(m_offset);
-// 		m_offset = m_buffer.size();
-// 	}
-// 	else
-// 	{
-// 		line = m_buffer.substr(m_offset, pos - m_offset);
-// 		m_offset = pos + 2;
-// 	}
-// }
 void
 Request::get_next_req_line(std::string & line) {
 	std::vector<char> CRLF;
@@ -162,6 +147,11 @@ Request::parse_request_line(const std::string & line){
 	return true;
 }
 
+bool
+Request::is_valid_http_ver() {
+
+}
+
 //is stupid, maybe overhaul
 bool
 Request::is_valid_request_line() {
@@ -196,7 +186,7 @@ Request::parse_first_line() {
 
 /*RequestHeaderParsing--------------------------------------------------------*/
 
-// //header entrys can span multible lines -> custom lineParser
+//header entrys can span multible lines -> custom lineParser
 void
 Request::get_next_header_line(std::string & line) {
 	std::vector<char> CRLF;
@@ -288,7 +278,11 @@ Request::parse_header() {
 
 		//multible instances of the same fieldnames are combined into a csv list
 		if (i.second == false)
+		{
+			if (key == "host")
+				return set_error(400);
 			i.first->second.append("," + value);
+		}
 	}
 	return true;
 }
