@@ -28,6 +28,7 @@ class MyFile
 private:
 
 	std::string _complete_filename;
+	std::string _current_url;
 	char **_envp;
 	bool directory_listing;
 
@@ -76,7 +77,7 @@ private:
 		else if (this->_complete_filename.find_last_of(".") == std::string::npos)
 			return FOLDER; // macht das Sinn??
 		else
-			return 0; // ist es angreifbar wenn wir sonst einfach die File ausgeben??
+			return HTML; // ist es angreifbar wenn wir sonst einfach die File ausgeben??
 	}
 
 	int	create_temp_file(char *filename)
@@ -145,15 +146,21 @@ private:
 
 	std::string get_directory_content()
 	{
-		MyDirectory dir(_complete_filename);
+		MyDirectory dir(_complete_filename, _current_url);
 		return (dir.list_content());
 	}
 
 
 public:
+	MyFile(std::string filename, std::string path, std::string current_url, char **envp) : _complete_filename(path + filename), _current_url(current_url + "/"), _envp(envp)
+	{
+		directory_listing = true; //prüfen
+	}
+
 	MyFile(std::string filename, std::string path, char **envp) : _complete_filename(path + filename), _envp(envp)
 	{
 		directory_listing = true; //prüfen
+		_current_url = "http://localhost:8080/";
 	}
 
 	std::string read_file()

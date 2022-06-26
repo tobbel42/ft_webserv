@@ -132,7 +132,8 @@ int main(int argc, char const *argv[], char **envp)
 					std::ifstream file;
 					std::string line;
 					std::string all_lines;
-					MyFile myFile(filename, "www/root/", envp);
+					//MyFile myFile(filename, "/home/hoerger/Desktop/ecole 42/ft_webserv/www/root/", "http://localhost:8080/" + filename, envp);
+					MyFile myFile(filename, "/home/hoerger/Desktop/ecole 42/ft_webserv/www/root/", envp);
 					all_lines = myFile.read_file();
 
 					//all_lines = check_file(filename, "www/root/", envp);
