@@ -117,6 +117,24 @@ Response::get_payload() const { return m_payload; }
 size_t
 Response::get_body_size() const { return m_body.size(); }
 
+void
+Response::send(const s_kevent& kevent)
+{
+	if (p_server != nullptr)
+	{
+		if (p_server->max_client_body_size > m_body.size())
+			write(kevent.ident, m_payload.c_str(), m_payload.size());
+		else
+		{
+			set_status_code(413); // request too large
+			generate();
+			write(kevent.ident, m_payload.c_str(), m_payload.size());
+		}
+	}
+	else
+		write(kevent.ident, m_payload.c_str(), m_payload.size());
+}
+
 std::pair<std::string, size_t>
 Response::generate()
 {
@@ -149,6 +167,7 @@ void
 Response::m_switching_protocols()
 {
 	m_init_header();
+
 	std::string supported_http = "HTTP/";
 	supported_http += utils::to_string(HTTP_VERSION);
 	m_add_to_head("Upgrade", supported_http);

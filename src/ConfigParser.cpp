@@ -315,18 +315,21 @@ so much here :(
 void
 ConfigParser::m_check_server_configs()
 {
+	typedef ServerArr::iterator				ServerIt;
+	typedef std::vector<uint32_t>::iterator	PortIt;
+
 	if (m_servers.empty())
 		throw ConfigParser::InvalidConfig(m_line_number,
 			"at least one server block must be specified");
 
-	for (ServerArr::iterator server_it = m_servers.begin();
+	for (ServerIt server_it = m_servers.begin();
 		server_it != m_servers.end(); ++server_it)
 	{
-		for (ServerArr::iterator it = server_it + 1; it != m_servers.end(); ++it)
+		for (ServerIt it = server_it + 1; it != m_servers.end(); ++it)
 		{
 			if (server_it->ip_address == it->ip_address)
 			{
-				for (std::vector<uint32_t>::iterator port_it = server_it->ports.begin();
+				for (PortIt port_it = server_it->ports.begin();
 					port_it != server_it->ports.end(); ++port_it)
 				{
 					if (std::find(it->ports.begin(), it->ports.end(), *port_it)
@@ -343,11 +346,12 @@ ConfigParser::m_check_server_configs()
 			for (StringArr::iterator server_name_it = server_it->server_names.begin();
 				server_name_it != server_it->server_names.end(); ++server_name_it)
 			{
-				if (std::find(it->server_names.begin(), it->server_names.end(), *server_name_it)
+				const std::string& name = *server_name_it;
+				if (std::find(it->server_names.begin(), it->server_names.end(), name)
 					!= it->server_names.end())
 						throw ConfigParser::InvalidConfig(m_line_number,
 							"duplicated server names are not allowed",
-							server_name_it->c_str());
+							name.c_str());
 			}
 		}
 	}

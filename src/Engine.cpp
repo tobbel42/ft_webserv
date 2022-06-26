@@ -36,14 +36,6 @@ Engine::operator = ( const Engine &rhs )
 	return (*this);
 }
 
-/*
-//overloading this operator to use find to search s_kevent by id
-*/
-bool s_kevent::operator==( fd_type fd )
-{
-	return (this->ident == fd);
-}
-
 std::ostream &
 operator<< ( std::ostream & out, s_kevent const & in )
 {

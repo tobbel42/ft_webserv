@@ -6,6 +6,7 @@
 #include <limits>
 
 #include <cstdint>
+#include <sys/event.h>
 
 #define HTTP_VERSION 1.1
 #define DEFAULT_ERROR_PAGES "config/default_error_pages"
@@ -22,3 +23,21 @@ class Server;
 typedef std::vector<std::string>	StringArr;
 typedef std::vector<Server>			ServerArr;
 typedef std::vector<char>			ByteArr;
+
+struct	s_kevent: public kevent
+{
+	inline bool operator==( fd_type fd )
+	{
+		return ident == fd;
+	}
+/*
+inherited from struct kevent:
+    uintptr_t ident;	     identifier for this event
+    short     filter;	     filter for event
+    u_short   flags;	     action flags for kqueue
+    u_int     fflags;	     filter flag value
+    int64_t   data;		     filter data value 
+    void      *udata;	     opaque user data identifier
+    uint64_t  ext[4];	     extensions
+*/
+};

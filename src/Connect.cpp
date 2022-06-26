@@ -94,8 +94,9 @@ Connect::readRequest( s_kevent kevent )
 void
 Connect::writeResponse( s_kevent kevent )
 {
-	std::pair<std::string, size_t> resp_pair = m_res.generate();
-	write(kevent.ident, resp_pair.first.c_str(), resp_pair.first.size());
+	m_res.generate();
+	m_res.send(kevent);
+	// write(kevent.ident, resp_pair.first.c_str(), resp_pair.first.size());
 }
 
 void

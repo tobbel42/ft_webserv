@@ -8,6 +8,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <unistd.h>
+
 #include "Server.hpp"
 #include "Request.hpp"
 #include "utils.hpp"
@@ -34,6 +36,8 @@ public: // methods
 
 	// first = payload, second = client body size
 	std::pair<std::string, size_t> generate();
+
+	void							send(const s_kevent& kevent);
 
 
 private: // methods

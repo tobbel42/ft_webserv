@@ -86,14 +86,13 @@ private:
 	std::string read_from_file(int fd)
 	{
 		std::string content;
-		#if 0
+		#if 1
 		FILE* file = fdopen(fd, "r");
 		char buffer[1000];
 		while (fread(buffer, sizeof(*buffer), sizeof(buffer), file) == sizeof(buffer))
 			content += buffer;
 		content += buffer;
 		fclose(file);
-		close(fd);
 		#else
 		char* line = get_next_line(fd);
 		while(line != NULL)
@@ -138,7 +137,10 @@ private:
 		}
 		wait(NULL); // Achtung, wenn Endlosschleife, dann kann es hier zu Problemen kommen
 		close(fd);
-		fsync(fd);
+		if (fsync(fd) < 0)
+			std::cerr << "fsync failed" << std::endl;
+		else
+			std::cerr << "fsync success" << std::endl;
 		int fd2 = open(filename_char, 0);
 		unlink(filename_char); // deletes the temp file after closing
 		return (read_from_file(fd2));
