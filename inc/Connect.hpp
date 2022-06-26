@@ -38,8 +38,7 @@ class Connect
 
 
 		//To be phased out 
-		std::string	m_rawReq;
-		std::string	m_response;
+		//std::string	m_rawReq;
 
 		request_type		m_req;
 		response_type		m_res;

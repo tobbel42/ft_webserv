@@ -88,7 +88,8 @@ Connect::readRequest( s_kevent kevent )
 void
 Connect::writeResponse( s_kevent kevent )
 {
-	write(kevent.ident, m_response.c_str(), m_response.size());
+	std::pair<std::string, size_t> resp_pair = m_res.generate();
+	write(kevent.ident, resp_pair.first.c_str(), resp_pair.first.size());
 }
 
 void
@@ -104,8 +105,7 @@ Connect::composeResponse( void )
 
 	// the response should also have access to the file that was accessed
 	// to determine the MINE type of the body
-	Response response;
-	response.set_server(p_server);
+	m_res.set_server(p_server);
 
 	//here we need a Myfile methode which returns on interanl error
 	//->no error
@@ -113,16 +113,12 @@ Connect::composeResponse( void )
 	//->500 on exec fail
 	if (1)
 	{
-		m_response.append(file);
-		m_response.append("\r\n");
-		response.set_status_code(200);
-		response.set_body(m_response);
+		m_res.set_status_code(200);
+		m_res.set_body(file + "\r\n");
 	}
 	else
 	{
-		response.set_status_code(404);
+		m_res.set_status_code(404);
 	}
-	std::pair<std::string, size_t> resp_pair = response.generate();
-	m_response = resp_pair.first;
 	m_action = WRITE;
 }
