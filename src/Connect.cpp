@@ -117,8 +117,6 @@ Connect::composeResponse( void )
 		m_res.set_body(file + "\r\n");
 	}
 	else
-	{
 		m_res.set_status_code(404);
-	}
 	m_action = WRITE;
 }
