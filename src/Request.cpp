@@ -58,7 +58,8 @@ Request::get_http_ver() const { return m_http_ver; }
 
 //returns an empty string when field_name not found
 std::string 
-Request::get_header_entry(const std::string & field_name) {
+Request::get_header_entry(std::string field_name) {
+	utils::str_tolower(field_name);
 	std::map<std::string,std::string>::const_iterator iter;
 	iter = m_header.find(field_name);
 
@@ -68,9 +69,6 @@ Request::get_header_entry(const std::string & field_name) {
 		field_value = iter->second;
 	return field_value;
 }
-
-// const std::string &
-// Request::get_body() const { return m_body; }
 
 const std::vector<char> &
 Request::get_body() const { return m_body; }
@@ -87,9 +85,11 @@ Request::is_done() {
 	#endif
 	if (m_err_code != 0)
 	{
-		std::cout << "ERRCODE: " << m_err_code << std::endl;
 		return true;
 	}
+	else if (m_done && get_header_entry("host") == "")
+		m_err_code = 400;
+	std::cout << "ERRCODE: " << m_err_code << std::endl;
 	return m_done;
 }
 
@@ -110,20 +110,6 @@ Request::set_error(size_t err_code) {
 
 /*RequestLineParsing----------------------------------------------------------*/
 
-// void
-// Request::get_next_req_line(std::string & line) {
-// 	size_t pos =  m_buffer.find("\r\n", m_offset);
-// 	if (pos == std::string::npos)
-// 	{
-// 		line = m_buffer.substr(m_offset);
-// 		m_offset = m_buffer.size();
-// 	}
-// 	else
-// 	{
-// 		line = m_buffer.substr(m_offset, pos - m_offset);
-// 		m_offset = pos + 2;
-// 	}
-// }
 void
 Request::get_next_req_line(std::string & line) {
 	std::vector<char> CRLF;
@@ -162,6 +148,20 @@ Request::parse_request_line(const std::string & line){
 	return true;
 }
 
+void
+Request::parse_target() {
+	char c[2];
+	c[1] = '\0' ;
+	for (size_t i = 0; i < m_target.size(); ++i) {
+		if (m_target[i] == '%' && i <= m_target.size() - 2) {
+			std::string hexcode = m_target.substr(i + 1, 2);
+			c[0] = utils::hex_str_to_i(hexcode);
+			m_target.erase(i, 3);
+			m_target.insert(i, c);
+		}
+	}
+}
+
 //is stupid, maybe overhaul
 bool
 Request::is_valid_request_line() {
@@ -191,12 +191,13 @@ Request::parse_first_line() {
 		if (parse_request_line(line) == false ||
 			is_valid_request_line() == false)
 				return set_error(400);
+		parse_target();
 		return true;
 }
 
 /*RequestHeaderParsing--------------------------------------------------------*/
 
-// //header entrys can span multible lines -> custom lineParser
+//header entrys can span multible lines -> custom lineParser
 void
 Request::get_next_header_line(std::string & line) {
 	std::vector<char> CRLF;
@@ -288,7 +289,11 @@ Request::parse_header() {
 
 		//multible instances of the same fieldnames are combined into a csv list
 		if (i.second == false)
+		{
+			if (key == "host")
+				return set_error(400);
 			i.first->second.append("," + value);
+		}
 	}
 	return true;
 }
@@ -307,10 +312,10 @@ Request::parse_body() {
 
 bool
 Request::parse_chunked_body() {
-	//getting the chunksize
 	std::string line;
 	get_next_req_line(line);
 
+	//getting the chunksize
 	u_int32_t  chunk_size = utils::hex_str_to_i(line);
 
 	//checking if the chunksize matches actual size
@@ -359,8 +364,8 @@ Request::is_chunked() {
 //todo: what about illigal bodys
 
 bool
-Request::append_read(std::vector<char> buf, size_t read_len) {
-	
+Request::append_read(std::vector<char> buf) {
+
 	m_buffer.insert(m_buffer.end(), buf.begin(), buf.end());
 
 	if (m_state == HEADER)
@@ -417,5 +422,9 @@ Request::print_request() {
 		iter != m_header.end(); ++iter) {
 		std::cout << (*iter).first << ": " 
 			<< (*iter).second << "##" << std::endl;
+	}
+	std::cout << "BODY" << std::endl;
+	for (size_t i = 0; i < m_body.size(); ++i) {
+		std::cout << m_body[i];
 	}
 }

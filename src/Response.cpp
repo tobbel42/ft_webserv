@@ -327,6 +327,7 @@ Response::s_init_status_codes()
 	status_codes.insert(std::make_pair(415, "Unsupported Media Type"));
 	status_codes.insert(std::make_pair(416, "Requested range not satisfiable"));
 	status_codes.insert(std::make_pair(417, "Expectation Failed"));
+	status_codes.insert(std::make_pair(418, "I'm a teapot"));
 
 	// 5XX: Server Error
 	status_codes.insert(std::make_pair(500, "Internal Server Error"));

@@ -5,7 +5,7 @@ PORT = 8080  # The port used by the server
 
 #REQUEST = "\r\nGET / HTTP/1.1\r\nlol: \t\t \r\n hello         \r\nlocal: \r\n\t\t   hihi   \r\nlocal: hehe \r\n\r\n"
 
-chunkReq = [ "GET / HTTP/1.1\r\nContent-Type: text/plain\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: twer\r\n\r\n7\r\nMozilla\r\n"
+chunkReq = [ "GET /%63%61%6c%63.html HTTP/1.1\r\nHost: 127.0.0.1:8080\r\nContent-Type: text/plain\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: twer\r\n\r\n7\r\nMozilla\r\n"
 	,"9\r\nDeveloper\r\n"
 	,"7\r\nNetwork\r\n"
 	,"0\r\n\r\n" ]

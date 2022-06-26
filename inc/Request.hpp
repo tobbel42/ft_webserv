@@ -42,7 +42,9 @@ class Request {
 	bool parse_request_line(const std::string &);
 	bool is_valid_request_line();
 
-	//these are mayber
+	void parse_target();
+
+	//these are maybe
 	bool is_valid_http_ver();
 
 	/*RequestHeaderParsing----------------------------------------------------*/
@@ -60,7 +62,6 @@ class Request {
 
 	/*Internal MemberVariabels------------------------------------------------*/
 
-	//std::string	m_buffer;
 	std::vector<char> m_buffer;
 	size_t		m_offset;
 	
@@ -76,15 +77,13 @@ class Request {
 	std::string m_target;
 	std::string m_http_ver;
 	std::map<std::string, std::string> m_header; 
-	//std::string	m_body;
 	std::vector<char> m_body;
 
 	public:
 
 	/*Public Functions--------------------------------------------------------*/
 
-//	bool	append_read(const char *, size_t);
-	bool	append_read(std::vector<char>, size_t);
+	bool	append_read(std::vector<char>);
 
 	/*Debug only--------------------------------------------------------------*/	
 
@@ -95,8 +94,7 @@ class Request {
 	const std::string & get_methode() const;
 	const std::string & get_target() const;
 	const std::string & get_http_ver() const;
-	std::string 		get_header_entry(const std::string &);
-	//const std::string & get_body() const;
+	std::string 		get_header_entry(std::string);
 	const std::vector<char> & get_body() const;
 	uint32_t 			get_err_code() const;
 };
