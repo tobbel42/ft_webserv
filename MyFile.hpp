@@ -20,7 +20,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "get_next_line.h"
+#include "get_next_line.hpp"
 #include "MyDirectory.hpp"
 
 class MyFile
@@ -91,12 +91,15 @@ private:
 	{
 		char *argv[3];
 		char filename_char[] = "/tmp/mytemp.XXXXXX";
+		std::string python_executable("/usr/bin/python");
+		std::string php_executable("/usr/bin/php");
+
 		int fd = create_temp_file(filename_char);
 
 		if (file_extension == PHP)
-			argv[0] = "/usr/bin/php";
+			argv[0] = (char *) php_executable.c_str();
 		else
-			argv[0] = "/usr/bin/python";
+			argv[0] = (char *) python_executable.c_str();
 		argv[1] = (char *) _complete_filename.c_str();
 		argv[2] = NULL;
 
@@ -134,9 +137,13 @@ public:
 
 	std::string read_file()
 	{
+		#ifdef VERBOSE
 		std::cout << "filename: " << this->_complete_filename << std::endl;
+		#endif
 		int file_extension = check_file_extension();
+		#ifdef VERBOSE
 		std::cout << "file extension: " << file_extension << std::endl;
+		#endif
 		if (file_extension == PHP || file_extension == PYTHON)
 			return execute_cgi(file_extension);
 		else if (file_extension == HTML)
