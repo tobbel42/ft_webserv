@@ -76,7 +76,7 @@ private:
 public:
 	MyDirectory(std::string directory_path, std::string current_url) : _directory_path(directory_path), _current_url(current_url)
 	{
-		_current_url = "http://localhost:8080/test/";
+		std::cout << "current url: " << _current_url << std::endl;
 	}
 
 	std::string list_content()

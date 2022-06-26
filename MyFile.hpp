@@ -30,7 +30,7 @@ private:
 	std::string _complete_filename;
 	std::string _current_url;
 	char **_envp;
-	bool directory_listing;
+	bool _directory_listing;
 
 
 	// checks for valid filename (without .. etc)
@@ -152,16 +152,17 @@ private:
 
 
 public:
-	MyFile(std::string filename, std::string path, std::string current_url, char **envp) : _complete_filename(path + filename), _current_url(current_url + "/"), _envp(envp)
+	MyFile(std::string filename, std::string path, std::string current_url, char **envp, bool directory_listing)
+		: _complete_filename(path + filename), _current_url(current_url + "/"), _envp(envp), _directory_listing(directory_listing)
 	{
-		directory_listing = true; //prüfen
+		//directory_listing = true; //prüfen
 	}
 
-	MyFile(std::string filename, std::string path, char **envp) : _complete_filename(path + filename), _envp(envp)
-	{
-		directory_listing = true; //prüfen
-		_current_url = "http://localhost:8080/";
-	}
+	//MyFile(std::string filename, std::string path, char **envp) : _complete_filename(path + filename), _envp(envp)
+	//{
+	//	directory_listing = true; //prüfen
+	//	_current_url = "http://localhost:8080/";
+	//}
 
 	std::string read_file()
 	{
@@ -173,7 +174,7 @@ public:
 			return execute_cgi(file_extension);
 		else if (file_extension == HTML)
 			return get_file_content();
-		else if (file_extension == FOLDER && directory_listing == true)
+		else if (file_extension == FOLDER && _directory_listing == true)
 			return get_directory_content();
 		else
 			return ""; // prüfen
