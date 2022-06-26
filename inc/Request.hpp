@@ -94,7 +94,7 @@ class Request {
 	const std::string & get_methode() const;
 	const std::string & get_target() const;
 	const std::string & get_http_ver() const;
-	std::string 		get_header_entry(const std::string &);
+	std::string 		get_header_entry(std::string);
 	const std::vector<char> & get_body() const;
 	uint32_t 			get_err_code() const;
 };
