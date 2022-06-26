@@ -17,7 +17,9 @@ private:
 	{
 		struct stat result;
 
+		#ifdef VERBOSE
 		std::cout << "element: " << _directory_path + "/" + element << std::endl;
+		#endif
 		element = _directory_path + "/" + element; // Achtung Hardgecoded
 		if(stat(element.c_str(), &result) == 0)
 		{
@@ -77,7 +79,9 @@ private:
 public:
 	MyDirectory(std::string directory_path, std::string current_url) : _directory_path(directory_path), _current_url(current_url)
 	{
+		#ifdef VERBOSE
 		std::cout << "current url: " << _current_url << std::endl;
+		#endif
 	}
 
 	std::string list_content()

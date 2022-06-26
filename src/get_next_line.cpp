@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   get_next_line.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tgrossma <tgrossma@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lhoerger <lhoerger@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/07/01 10:44:54 by lhoerger          #+#    #+#             */
-/*   Updated: 2022/06/18 17:29:24 by tgrossma         ###   ########.fr       */
+/*   Updated: 2022/06/26 14:46:28 by lhoerger         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../get_next_line.h"
+#include "../get_next_line.hpp"
 
 /* 
 This function joins s1 with s2.
