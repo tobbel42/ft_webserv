@@ -15,12 +15,14 @@ private:
 
 	std::string get_mod_date(std::string element)
 	{
+		std::cout << "element: " << _directory_path + "/" + element << std::endl;
+		
+		element = _directory_path + "/" + element; // Achtung Hardgecoded
 		struct stat result;
 		if(stat(element.c_str(), &result)==0)
 		{
 			char time[50];
 			strftime(time, 50, "%Y-%m-%d %H:%M:%S", localtime(&result.st_mtime));
-			printf ("%s\n", time);
 			std::string mod_date(time);
 			return "<td>" + mod_date + "</td> </tr>";
 		}
@@ -31,12 +33,14 @@ private:
 	std::string generate_table_row(std::string element)
 	{
 		std::string content;
-						
-				content = content + 
-					"<tr> \
-						<td> <a href =\"" + _current_url + element + "\">" + element + "</a> </td>";
-				content = content + get_mod_date(element);
-				return (content);
+		
+		if (element == ".." || element == ".")
+			return "";
+		content = content + 
+			"<tr> \
+				<td> <a href =\"" + _current_url + element + "\">" + element + "</a> </td>";
+		content = content + get_mod_date(element);
+		return (content);
 	}
 	std::string get_list_content_helper()
 	{
@@ -70,9 +74,9 @@ private:
 	}
 
 public:
-	MyDirectory(std::string directory_path) : _directory_path(directory_path)
+	MyDirectory(std::string directory_path, std::string current_url) : _directory_path(directory_path), _current_url(current_url)
 	{
-		_current_url = "http://localhost:8080/test/";
+		std::cout << "current url: " << _current_url << std::endl;
 	}
 
 	std::string list_content()

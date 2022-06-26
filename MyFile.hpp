@@ -28,8 +28,9 @@ class MyFile
 private:
 
 	std::string _complete_filename;
+	std::string _current_url;
 	char **_envp;
-	bool directory_listing;
+	bool _directory_listing;
 
 
 	// checks for valid filename (without .. etc)
@@ -76,7 +77,7 @@ private:
 		else if (this->_complete_filename.find_last_of(".") == std::string::npos)
 			return FOLDER; // macht das Sinn??
 		else
-			return 0; // ist es angreifbar wenn wir sonst einfach die File ausgeben??
+			return HTML; // ist es angreifbar wenn wir sonst einfach die File ausgeben??
 	}
 
 	int	create_temp_file(char *filename)
@@ -145,16 +146,23 @@ private:
 
 	std::string get_directory_content()
 	{
-		MyDirectory dir(_complete_filename);
+		MyDirectory dir(_complete_filename, _current_url);
 		return (dir.list_content());
 	}
 
 
 public:
-	MyFile(std::string filename, std::string path, char **envp) : _complete_filename(path + filename), _envp(envp)
+	MyFile(std::string filename, std::string path, std::string current_url, char **envp, bool directory_listing)
+		: _complete_filename(path + filename), _current_url(current_url + "/"), _envp(envp), _directory_listing(directory_listing)
 	{
-		directory_listing = true; //prüfen
+		//directory_listing = true; //prüfen
 	}
+
+	//MyFile(std::string filename, std::string path, char **envp) : _complete_filename(path + filename), _envp(envp)
+	//{
+	//	directory_listing = true; //prüfen
+	//	_current_url = "http://localhost:8080/";
+	//}
 
 	std::string read_file()
 	{
@@ -166,7 +174,7 @@ public:
 			return execute_cgi(file_extension);
 		else if (file_extension == HTML)
 			return get_file_content();
-		else if (file_extension == FOLDER && directory_listing == true)
+		else if (file_extension == FOLDER && _directory_listing == true)
 			return get_directory_content();
 		else
 			return ""; // prüfen
