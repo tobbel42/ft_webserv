@@ -118,10 +118,10 @@ Connect::composeResponse( void )
 	// std::cout << "hello" << "$" << m_req.m_target << "$" << std::endl;
 
 	std::string filename = m_req.get_target();
-	if (filename == "/")
+	if (filename == "/") // und directory listing ist aus
 		filename += p_server->index;
 
-    //MyFile f(filename, p_server->root, g_envp);
+	//TOO: letztes Argument mit directory listing bool ersetzen
 	MyFile f(filename, p_server->root, "http://" + m_req.get_header_entry("host") + filename, g_envp,true);
 	std::string file = f.read_file();
 

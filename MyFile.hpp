@@ -70,7 +70,6 @@ private:
 		int fd = mkstemp(filename); // Creates and opens a new temp file r/w.
 		if (fd == -1)
 			std::cout << "creation of file went wrong" << std::endl; //Errorhandling
-		//unlink(filename);
 		return fd;
 	}
 
@@ -82,11 +81,8 @@ private:
 		{
 			content += line;
 			line = get_next_line(fd);
-			//printf("line: %s\n", line);
 		}
-		//std::cout << "content: " << content << std::endl;
 		close(fd);
-	//   unlink(filename);  
 		return content;
 	}
 
@@ -117,7 +113,7 @@ private:
 		close(fd);
 		fsync(fd);
 		int fd2 = open(filename_char, 0);
-		//unlink(filename_char);
+		unlink(filename_char); // deletes the temp file after closing
 		return (read_from_file(fd2));
 	}
 
@@ -138,7 +134,6 @@ public:
 
 	std::string read_file()
 	{
-		//check_valid_filename(folder_path + filename);
 		std::cout << "filename: " << this->_complete_filename << std::endl;
 		int file_extension = check_file_extension();
 		std::cout << "file extension: " << file_extension << std::endl;

@@ -135,7 +135,7 @@ int main(int argc, char const *argv[], char **envp)
 					MyFile myFile(filename, "/Users/lhoerger/Documents/curriculum/webserv/ft_webserv/www/root/", "http://localhost:8080/" + filename, envp, true);
 					//MyFile myFile(filename, "/home/hoerger/Desktop/ecole 42/ft_webserv/www/root/", envp);
 					all_lines = myFile.read_file();
-
+					//system("leaks a.out");
 					//all_lines = check_file(filename, "www/root/", envp);
 					//file.open(filename);
 					//while (getline(file, line))
