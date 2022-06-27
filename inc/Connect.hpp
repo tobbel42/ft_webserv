@@ -62,11 +62,11 @@ class Connect
 		void		setServer( Server * server );
 		void		set_status(int status_code);
 		#ifdef KQUEUE
-		bool		readRequest( s_kevent kevent );
-		void		writeResponse( s_kevent kevent );
+		bool		readRequest(s_kevent & kevent);
+		void		writeResponse(s_kevent & kevent);
 		#else
-		bool		readRequest(s_pollfd poll);
-		void		writeResponse(s_pollfd poll);
+		bool		readRequest(s_pollfd & poll);
+		void		writeResponse(s_pollfd & poll);
 		#endif
 		void		composeResponse( void );
 		

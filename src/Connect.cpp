@@ -75,7 +75,7 @@ Connect::set_status(int status_code) { m_status_code = status_code; }
 
 #ifdef KQUEUE
 bool
-Connect::readRequest( s_kevent kevent )
+Connect::readRequest(s_kevent & kevent)
 {
 	std::vector<char> buf;
 	int	len = ((READSIZE < kevent.data)?READSIZE : kevent.data);
@@ -93,7 +93,7 @@ Connect::readRequest( s_kevent kevent )
 }
 #else
 bool
-Connect::readRequest(s_pollfd poll)
+Connect::readRequest(s_pollfd & poll)
 {
 	std::vector<char> buf;
 
@@ -115,14 +115,14 @@ Connect::readRequest(s_pollfd poll)
 
 #ifdef KQUEUE
 void
-Connect::writeResponse( s_kevent kevent )
+Connect::writeResponse(s_kevent & kevent)
 {
 	m_res.generate();
 	m_res.send(kevent);
 }
 #else
 void
-Connect::writeResponse(s_pollfd poll)
+Connect::writeResponse(s_pollfd & poll)
 {
 	m_res.generate();
 	m_res.send(poll);

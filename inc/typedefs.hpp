@@ -54,8 +54,10 @@ inherited from struct kevent:
     uint64_t  ext[4];	     extensions
 */
 };
+//std::ostream	&operator<<(std::ofstream & out, s_kevent const & in);
 #else
 struct s_pollfd: public pollfd {
 	inline bool operator==(fd_type fd1) { return fd == fd1; };
 };
+//std::ostream	&operator<<(std::ostream & out, s_pollfd const & in);
 #endif

@@ -35,7 +35,7 @@ int main(int argc, char **argv, char **envp)
 	}
 
 	Engine	e;
-	ConfigParser parser(e.getServers());
+	ConfigParser parser(e.get_servers());
 	
 	try
 	{
@@ -44,14 +44,19 @@ int main(int argc, char **argv, char **envp)
 		else
 			parser.assign_file(argv[1]);
 		parser.run();
+
+	//atm müssen die server vor den Sockets initialisiert werden, sonst segfault
+
+		if (e.init_sockets() == false)
+			return EXIT_FAILURE;
+		if (e.launch() == false)
+			return EXIT_FAILURE;
 	}
 	catch (const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
 		return 1;
 	}
-	//atm müssen die server vor den Sockets initialisiert werden, sonst segfault
-	e.initSockets();
-	e.launch();
-	return 0;
+	
+	return EXIT_SUCCESS;
 }

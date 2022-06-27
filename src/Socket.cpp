@@ -25,7 +25,7 @@ Socket::Socket(uint32_t ip, uint32_t port):
 	#ifdef VERBOSE
 		std::cout << "Socket: Constructor called" << std::endl;
 	#endif
-	m_init();
+	//m_init();
 }
 
 Socket::Socket(const Socket& other):
@@ -65,25 +65,29 @@ Socket::operator=(const Socket& other)
 	return (*this);
 }
 
-void
+bool
 Socket::m_init()
 {
 	m_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_sockfd < 0)
 	{
-		// throw
+		EPRINT("ERROR: could not create Socket");
+		return false;
 	}
-	EPRINT("ip:" << utils::ip_to_string(m_ip) << ", port: " << m_port);
+
+	#ifdef VERBOSE
+	PRINT("ip:" << utils::ip_to_string(m_ip) << ", port: " << m_port);
+	#endif
+
 	m_address.sin_family = AF_INET;
 	m_address.sin_addr.s_addr = htonl(m_ip);
 	m_address.sin_port = htons(m_port);
 	if (bind(m_sockfd, reinterpret_cast<sockaddr*>(&m_address), sizeof m_address) == -1)
 	{
-		EPRINT(utils::ip_to_string(m_ip));
-		EPRINT("bind failed: " << strerror(errno));
-		exit(EXIT_FAILURE);
+		EPRINT("ERROR: bind failed");
+		return false;
 	}
-	
+	return true;
 }
 
 fd_type
@@ -102,7 +106,7 @@ Socket::operator==( fd_type fd )
 }
 
 fd_type
-Socket::acceptConnect( void )
+Socket::acceptConnect() 
 {
 	fd_type	fd = accept(
 				m_sockfd,
