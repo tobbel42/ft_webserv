@@ -7,17 +7,13 @@
 #include <map>
 #include <algorithm>
 #include <stdio.h>
+#include <ctime>
 
 #include <Socket.hpp>
 #include <Connect.hpp>
 #include <Server.hpp>
 #include <utils.hpp>
 #include "typedefs.hpp"
-
-# define ENGINE_BACKLOG 10
-
-
-
 
 std::ostream	&operator<< ( std::ofstream & out, s_kevent const & in );
 
@@ -37,14 +33,16 @@ class Engine
 	private:
 		std::vector<s_kevent>			m_changes;
 		std::vector<s_kevent>			m_events;
-		std::map<fd_type, Socket>			m_sockets;
-		std::map<fd_type, Connect>			m_connects;
+		std::map<fd_type, Socket>		m_sockets;
+		std::map<fd_type, Connect>		m_connects;
 		ServerArr						m_servers; // will be populated by the ConfigParser
+		std::map<fd_type, std::time_t>	m_timers;
 		int								m_kqueue;
 
-		typedef	std::map<fd_type, Socket>::iterator	SockIter;
-		typedef	std::map<fd_type, Connect>::iterator	CnctIter;
-		typedef	std::vector<s_kevent>::iterator		KeventIter;
+		typedef	std::map<fd_type, Socket>::iterator			SockIter;
+		typedef	std::map<fd_type, Connect>::iterator		CnctIter;
+		typedef	std::vector<s_kevent>::iterator				KeventIter;
+		typedef std::map<fd_type, std::time_t>::iterator	TimerIter;
 
 
 
@@ -59,6 +57,8 @@ class Engine
 
 		void		assignServer( Connect &connect );
 		Server*		find_server(const Connect& cnct);
+
+		void		check_for_timeout();
 
 	public:
 		Engine( void );

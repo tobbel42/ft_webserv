@@ -30,17 +30,11 @@ class Connect
 		typedef Response response_type;
 
 		fd_type		m_fd;
-		unsigned int 	m_ip;
-		unsigned int 	m_port;
-		//fd_type		m_sockFd;
+		uint32_t	m_ip;
+		uint32_t	m_port;
 		Server		*p_server;
 		e_action	m_action;
 		int			m_status_code;
-
-
-		//To be phased out 
-		//std::string	m_rawReq;
-
 		request_type		m_req;
 		response_type		m_res;
 		
@@ -49,7 +43,7 @@ class Connect
 		
 	public:
 
-		Connect( fd_type fd, unsigned int ip, unsigned int port);
+		Connect( fd_type fd, uint32_t ip, uint32_t port);
 		~Connect();
 		Connect( const Connect &copy );
 
@@ -57,8 +51,8 @@ class Connect
 
 		fd_type		getFd( void ) const;
 
-		unsigned int getIp() const;
-		unsigned int getPort() const;
+		uint32_t getIp() const;
+		uint32_t getPort() const;
 
 		fd_type		getSockFd( void ) const;
 		Server *	getServer( void ) const;

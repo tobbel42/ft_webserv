@@ -129,9 +129,18 @@ Engine::acceptConnect( Socket & sock )
 {
 	fd_type	fd = sock.acceptConnect();
 
+	if (fd == -1)
+	{
+		EPRINT("error: failed to accept connection");
+		return ;
+	}
+
 	Connect	newConnect(fd, sock.getIp(), sock.getPort());
 
 	m_connects.insert(std::pair<fd_type, Connect>(fd, newConnect));
+
+	m_timers.insert(std::make_pair(fd, std::time(nullptr)));
+
 	this->setKevent(fd, EVFILT_READ, EV_ADD);
 }
 
@@ -173,21 +182,6 @@ Engine::find_server(const Connect& cnct)
 void
 Engine::assignServer( Connect &connect )
 {
-	// SockIter iter = m_sockets.find(connect.getSockFd());
-
-	
-
-	// //Socket not found
-	// if (iter == m_sockets.end())
-	// {
-	// 	//internal error 500
-	// 	return ;
-	// }
-
-	// connect.setServer((*iter).second.getServer(""));
-
-	//smart server find fknt 
-
 	Server* server = find_server(connect);
 	if (server == nullptr)
 		connect.set_status(404);
@@ -225,26 +219,27 @@ Engine::connectEvent( s_kevent & kevent )
 
 	Connect	& cnct = iter->second;
 
-	//A connection can have multible states
+	//connection can have multible states
+
 	//on read we read as many bytes, as in the kevent specified
-	//ToDo:
-	// parse the read data( is it chunked, does is need multible read cycles)
-	// we need to assign a server to the connection
-	// depending on the request we 
 	if (cnct.getAction() == READ)
 	{
+		m_timers[cnct.getFd()] = std::time(nullptr);
+
 		//read the Request: ToDo Handling of chuncked requests(multible reads and concatenate)
 		if (cnct.readRequest(kevent))
 		{
-		//if read done 
 			//removing the read event from the from the change vector
 			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
+			//remove the fd from the timerlist
+			m_timers.erase(cnct.getFd());
 
-			//assign a server, if not yet given (search for Hostname in Socket servers/ default server)
+			//assign a server, if not yet given
+			//(search for Hostname in Socket servers/ default server)
 			if (cnct.getServer() == NULL)
 				assignServer(cnct);
 
-			//formulate the request (result or error), chunking of big responses
+			//formulate the request (result or error)
 			cnct.composeResponse();
 
 			//adding the write event to the change vector
@@ -270,6 +265,27 @@ Engine::connectEvent( s_kevent & kevent )
 
 }
 
+void
+Engine::check_for_timeout() {
+	std::time_t	time = std::time(nullptr);
+	TimerIter 	i = m_timers.begin();
+	fd_type 	fd;
+
+	while (i != m_timers.end()) {
+		if (i->second < time - CNCT_TIMEOUT)
+		{
+			fd = i->first;
+			++i;
+			close(fd);
+			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), fd));
+			m_connects.erase(fd);
+			m_timers.erase(fd);
+		}
+		else
+			++i;
+	}
+}
+
 
 /*
 //Main loop of the Socket.
@@ -284,6 +300,7 @@ Engine::launch()
 	listenSockets();
 	
 	int	n_events = 0;
+	struct timespec timeout = {1, 0};
 
 	//the main Socket loop
 	while (0b00101010)
@@ -291,7 +308,7 @@ Engine::launch()
 		n_events = kevent(m_kqueue,
 			&(*m_changes.begin()), m_changes.size(),
 			&(*m_events.begin()), m_events.size(),
-			NULL);
+			&timeout);
 
 		#ifdef VERBOSE
 		{
@@ -305,7 +322,7 @@ Engine::launch()
 			socketEvent(m_events[i]);
 			connectEvent(m_events[i]);
 		}
-				
+		check_for_timeout();
 	}
 	//closing of sockets is happening in the Engine destructor
 }

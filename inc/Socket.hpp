@@ -23,35 +23,31 @@ class Socket
 {
 public:
 	Socket(const Socket& other);
-	Socket(unsigned int ip, unsigned int port);
+	Socket(uint32_t ip, uint32_t port);
 	~Socket();
 	
 	Socket& operator=(const Socket& other);
 	
 	fd_type	getSockFd( void ) const;
 	fd_type	acceptConnect( void );
-	Server	*getServer( std::string hostname );
+	// Server	*getServer( std::string hostname );
 
 	bool	operator==( fd_type fd );
 
-	void	setDefaultServer( Server *server );
+	// void	setDefaultServer( Server *server );
 
-	unsigned int getIp(void) const;
-	unsigned int getPort(void) const;
+	uint32_t getIp(void) const;
+	uint32_t getPort(void) const;
 	
 	
 private:
 	Socket();
 
-	unsigned int			m_ip;
-	unsigned int			m_port;
+	uint32_t			m_ip;
+	uint32_t			m_port;
 	sockaddr_in 			m_address;
 	fd_type 				m_sockfd;
 	socklen_t				m_addLen;
-
-	// this needs to be removed, new approch check servers till right one found
-	Server							*m_defaultServer;
-	std::map<std::string, Server *>	m_Servers;
 
 	void m_init();
 	
