@@ -36,6 +36,7 @@ Engine::operator = ( const Engine &rhs )
 	return (*this);
 }
 
+#ifdef KQUEUE
 std::ostream &
 operator<< ( std::ostream & out, s_kevent const & in )
 {
@@ -47,6 +48,15 @@ operator<< ( std::ostream & out, s_kevent const & in )
 	out << "\nudata:\t" << in.udata;
 	return( out );
 }
+#else
+std::ostream &
+operator<<(std::ostream & out, s_pollfd const & in) {
+	out << "\nfd:\t\t" << in.fd;
+	out << "\nevents:\t" << in.events;
+	out << "\nrevents:\t" << in.revents;
+	return out;
+}
+#endif
 
 
 ServerArr&
@@ -85,7 +95,11 @@ Engine::listenSockets( void )
 			std::cerr << "Listen error: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		this->setKevent(iter->first, EVFILT_READ, EV_ADD);
+		#ifdef KQUEUE
+			setKevent(iter->first, EVFILT_READ, EV_ADD);
+		#else
+			setPoll(iter->first, POLLIN);
+		#endif
 	}
 }
 
@@ -103,6 +117,7 @@ Engine::closeConnects( void )
 		close(iter->first);
 }
 
+#ifdef KQUEUE
 void
 Engine::setKevent( fd_type fd, int16_t filter, uint16_t flag)
 {
@@ -112,16 +127,32 @@ Engine::setKevent( fd_type fd, int16_t filter, uint16_t flag)
 	m_changes.push_back(event);
 	m_events.resize(m_changes.size());
 }
+#else
+void
+Engine::setPoll(fd_type fd, short events) {
+	s_pollfd	poll;
+
+	poll.fd = fd;
+	poll.events = events;
+	m_polls.push_back(poll);
+}
+#endif
 
 void
 Engine::debug( void )
 {
+	#ifdef KQUEUE
 	std::cout << "\n\nEvents:" << std::endl;
 	for (KeventIter iter = m_events.begin(); iter != m_events.end(); ++iter)
 		std::cout << *iter << std::endl;
 	std::cout << "\n\nChanges:" << std::endl;
 	for (KeventIter iter = m_changes.begin(); iter != m_changes.end(); ++iter)
 		std::cout << *iter << std::endl;
+	#else
+	PRINT("\n\nPOLLS:");
+	for (PollIter iter = m_polls.begin(); iter != m_polls.end(); ++iter)
+		PRINT(*iter);
+	#endif
 }
 
 void
@@ -141,7 +172,11 @@ Engine::acceptConnect( Socket & sock )
 
 	m_timers.insert(std::make_pair(fd, std::time(nullptr)));
 
-	this->setKevent(fd, EVFILT_READ, EV_ADD);
+	#ifdef KQUEUE
+	setKevent(fd, EVFILT_READ, EV_ADD);
+	#else
+	setPoll(fd, POLLIN);
+	#endif
 }
 
 Server*
@@ -189,6 +224,7 @@ Engine::assignServer( Connect &connect )
 		connect.setServer(server);
 }
 
+#ifdef KQUEUE
 void
 Engine::socketEvent( s_kevent & kevent )
 {
@@ -201,7 +237,22 @@ Engine::socketEvent( s_kevent & kevent )
 	#endif
 	this->acceptConnect(iter->second);
 }
+#else
+void
+Engine::socketEvent(s_pollfd & poll)
+{
+	SockIter	iter = m_sockets.find(poll.fd);
 
+	if (iter == m_sockets.end())
+		return ;
+	#ifdef VERBOSE
+		std::cout << "Socket Event" << std::endl;
+	#endif
+	this->acceptConnect(iter->second);
+}
+#endif
+
+#ifdef KQUEUE
 void
 Engine::connectEvent( s_kevent & kevent )
 {
@@ -262,8 +313,68 @@ Engine::connectEvent( s_kevent & kevent )
 			//remove connection from FD pool
 			m_connects.erase(iter);
 	}
-
 }
+#else
+void
+Engine::connectEvent(s_pollfd & poll)
+{
+	//check if the FD is linked to a connection
+	CnctIter	iter = m_connects.find(poll.fd);
+
+	if (iter == m_connects.end())
+		return ;
+
+	#ifdef VERBOSE
+		std::cout << "ConnectEvent" << std::endl;
+	#endif
+
+	//eyeCandy
+
+	Connect	& cnct = iter->second;
+
+	//connection can have multible states
+
+	//on read we read as many bytes, as in the kevent specified
+	if (cnct.getAction() == READ)
+	{
+		m_timers[cnct.getFd()] = std::time(nullptr);
+
+		//read the Request: ToDo Handling of chuncked requests(multible reads and concatenate)
+		if (cnct.readRequest(poll))
+		{
+			poll.events = POLLOUT;
+
+			//remove the fd from the timerlist
+			m_timers.erase(cnct.getFd());
+
+			//assign a server, if not yet given
+			//(search for Hostname in Socket servers/ default server)
+			if (cnct.getServer() == NULL)
+				assignServer(cnct);
+
+			//formulate the request (result or error)
+			cnct.composeResponse();
+
+		}
+	}
+	//On write 
+	else if (cnct.getAction() == WRITE)
+	{
+		//write the response
+		cnct.writeResponse(poll);
+
+		//if write done
+			//remove the event form the change vector
+			m_polls.erase(std::find(m_polls.begin(), m_polls.end(), poll.fd));
+
+			//close the connection
+			close(cnct.getFd());
+
+			//remove connection from FD pool
+			m_connects.erase(iter);
+	}
+}
+#endif
 
 void
 Engine::check_for_timeout() {
@@ -277,7 +388,11 @@ Engine::check_for_timeout() {
 			fd = i->first;
 			++i;
 			close(fd);
+			#ifdef KQUEUE
 			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), fd));
+			#else
+			m_polls.erase(std::find(m_polls.begin(), m_polls.end(), fd));
+			#endif
 			m_connects.erase(fd);
 			m_timers.erase(fd);
 		}
@@ -293,22 +408,32 @@ Engine::check_for_timeout() {
 void
 Engine::launch()
 {
+	#ifdef KQUEUE
 	//init kqueue
 	m_kqueue = kqueue();
+	#endif
 
 	//start to listen to Socket, add the Sockets to the kqueue
 	listenSockets();
 	
 	int	n_events = 0;
+	#ifdef KQUEUE
 	struct timespec timeout = {1, 0};
+	#else
+
+	#endif
 
 	//the main Socket loop
 	while (0b00101010)
 	{
+		#ifdef KQUEUE
 		n_events = kevent(m_kqueue,
 			&(*m_changes.begin()), m_changes.size(),
 			&(*m_events.begin()), m_events.size(),
 			&timeout);
+		#else
+		n_events = poll(&(*m_polls.begin()), m_polls.size(), 1000);
+		#endif
 
 		#ifdef VERBOSE
 		{
@@ -317,11 +442,22 @@ Engine::launch()
 		}
 		#endif
 
+		#ifdef KQUEUE
 		for	(int i = 0; i < n_events; ++i)
 		{
 			socketEvent(m_events[i]);
 			connectEvent(m_events[i]);
 		}
+		#else
+		if (n_events > 0) {
+			for (size_t i = 0; i < m_polls.size(); ++i) {
+				if (m_polls[i].revents == m_polls[i].events) {
+					socketEvent(m_polls[i]);
+					connectEvent(m_polls[i]);
+				}
+			}
+		}
+		#endif
 		check_for_timeout();
 	}
 	//closing of sockets is happening in the Engine destructor

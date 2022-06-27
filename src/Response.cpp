@@ -117,6 +117,7 @@ Response::get_payload() const { return m_payload; }
 size_t
 Response::get_body_size() const { return m_body.size(); }
 
+#ifdef KQUEUE
 void
 Response::send(const s_kevent& kevent)
 {
@@ -134,6 +135,25 @@ Response::send(const s_kevent& kevent)
 	else
 		write(kevent.ident, m_payload.c_str(), m_payload.size());
 }
+#else
+void
+Response::send(const s_pollfd& poll)
+{
+	if (p_server != nullptr)
+	{
+		if (p_server->max_client_body_size > m_body.size())
+			write(poll.fd, m_payload.c_str(), m_payload.size());
+		else
+		{
+			set_status_code(413); // request too large
+			generate();
+			write(poll.fd, m_payload.c_str(), m_payload.size());
+		}
+	}
+	else
+		write(poll.fd, m_payload.c_str(), m_payload.size());
+}
+#endif
 
 std::pair<std::string, size_t>
 Response::generate()

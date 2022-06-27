@@ -37,8 +37,11 @@ public: // methods
 	// first = payload, second = client body size
 	std::pair<std::string, size_t> generate();
 
+	#ifdef KQUEUE
 	void							send(const s_kevent& kevent);
-
+	#else
+	void							send(const s_pollfd & poll);
+	#endif
 
 private: // methods
 
