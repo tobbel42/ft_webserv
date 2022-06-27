@@ -6,13 +6,23 @@
 #include <limits>
 
 #include <cstdint>
+
+#ifdef __APPLE__
+	#define KQUEUE
+#endif
+
+#ifdef KQUEUE
 #include <sys/event.h>
+#else
+#include <sys/poll.h>
+#endif
 
 #define HTTP_VERSION 1.1
 #define DEFAULT_ERROR_PAGES "config/default_error_pages"
 #define READSIZE 8192 //we reading at max 8kb of data, might change
 #define CNCT_TIMEOUT 2 // in seconds
 #define ENGINE_BACKLOG 10
+
 
 #ifndef nullptr
 #define nullptr NULL
@@ -26,6 +36,7 @@ typedef std::vector<std::string>	StringArr;
 typedef std::vector<Server>			ServerArr;
 typedef std::vector<char>			ByteArr;
 
+#ifdef KQUEUE
 struct	s_kevent: public kevent
 {
 	inline bool operator==( fd_type fd )
@@ -43,3 +54,8 @@ inherited from struct kevent:
     uint64_t  ext[4];	     extensions
 */
 };
+#else
+struct s_pollfd: public pollfd {
+	inline bool operator==(fd_type fd1) { return fd == fd1; };
+};
+#endif

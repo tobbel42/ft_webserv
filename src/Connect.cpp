@@ -73,6 +73,7 @@ Connect::setServer( Server * server ) { p_server = server; }
 void
 Connect::set_status(int status_code) { m_status_code = status_code; }
 
+#ifdef KQUEUE
 bool
 Connect::readRequest( s_kevent kevent )
 {
@@ -90,13 +91,43 @@ Connect::readRequest( s_kevent kevent )
 
 	return m_req.append_read(buf);
 }
+#else
+bool
+Connect::readRequest(s_pollfd poll)
+{
+	std::vector<char> buf;
 
+	//Hacky, the read call writes into the internal vector array
+	//we resize the vector beforhand, so its 'knows' its correct size
+	buf.resize(READSIZE, '\0');
+	ssize_t read_len = read(poll.fd, &(*buf.begin()), READSIZE);
+
+	//TODO errhandling
+	if (read_len == -1 )
+		std::cerr << "ERROR: read" << std::endl;
+
+	buf.resize(read_len);
+
+	return m_req.append_read(buf);
+}
+#endif
+
+
+#ifdef KQUEUE
 void
 Connect::writeResponse( s_kevent kevent )
 {
 	m_res.generate();
 	m_res.send(kevent);
 }
+#else
+void
+Connect::writeResponse(s_pollfd poll)
+{
+	m_res.generate();
+	m_res.send(poll);
+}
+#endif
 
 void
 Connect::composeResponse( void )
