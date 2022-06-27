@@ -46,7 +46,7 @@ private:
 		std::string content;
 		std::string line;
 
-		in.open(this->_complete_filename);
+		in.open(this->_complete_filename.c_str());
 		if (in.is_open()) // else??
 		{
 			while (getline (in,line))

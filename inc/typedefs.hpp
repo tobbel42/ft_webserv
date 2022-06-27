@@ -5,16 +5,14 @@
 #include <string>
 #include <limits>
 
-#include <cstdint>
-
-#ifndef __APPLE__
+#ifdef __APPLE__
 	#define KQUEUE
 #endif
 
 #ifdef KQUEUE
-#include <sys/event.h>
+#include <event.h>
 #else
-#include <sys/poll.h>
+#include <poll.h>
 #endif
 
 #define HTTP_VERSION 1.1
@@ -26,6 +24,18 @@
 
 #ifndef nullptr
 #define nullptr NULL
+#endif
+#ifndef uint32_t
+typedef unsigned int uint32_t;
+#endif
+#ifndef uint64_t
+typedef unsigned long uint64_t;
+#endif
+#ifndef uint8_t
+typedef unsigned char uint8_t;
+#endif
+#ifndef UINT32_MAX
+#define UINT32_MAX 0xFFFFFFFF
 #endif
 
 typedef	int	fd_type;

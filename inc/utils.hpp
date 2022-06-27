@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ctime>
-#include <cstdint>
 #include <cctype>
 
 #include <string>

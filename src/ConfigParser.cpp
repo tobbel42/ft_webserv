@@ -35,7 +35,7 @@ ConfigParser::ConfigParser(ServerArr& servers, const char *filename):
 
 	if (!m_infile.is_open())
 		throw ConfigParser::InvalidConfig(m_line_number,
-			"couldnt open the config file", strerror(errno));
+			"couldnt open the config file", std::strerror(errno));
 }
 
 ConfigParser::~ConfigParser()
@@ -52,7 +52,7 @@ ConfigParser::assign_file(const char *filename)
 	m_infile.open(filename);
 	if (!m_infile.is_open())
 		throw ConfigParser::InvalidConfig(m_line_number,
-			"couldnt open the config file", strerror(errno));
+			"couldnt open the config file", std::strerror(errno));
 }
 
 void

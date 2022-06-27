@@ -3,6 +3,8 @@
 
 #include <map>
 #include <iostream>
+#include <algorithm>
+#include <cstring>
 #include "utils.hpp"
 
 enum e_req_state{

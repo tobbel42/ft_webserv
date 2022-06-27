@@ -1,8 +1,8 @@
 
 
 NAME = webserv
-CC = c++
-CFLAGS = -Wall -Wextra -std=c++98 # -Werror 
+CC = clang++
+CFLAGS = -Wall -Wextra -std=c++98 -Werror 
 RM = rm -rf
 
 INC = Engine.hpp\
