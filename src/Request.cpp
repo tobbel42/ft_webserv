@@ -80,16 +80,14 @@ Request::get_err_code() const { return m_err_code; }
 
 bool 
 Request::is_done() {
-	#ifdef VERBOSE
-	print_request();
-	#endif
 	if (m_err_code != 0)
-	{
 		return true;
-	}
 	else if (m_done && get_header_entry("host") == "")
 		m_err_code = 400;
-	std::cout << "ERRCODE: " << m_err_code << std::endl;
+	#ifdef VERBOSE
+	print_request();
+	PRINT("ErrorCode: " << m_err_code);
+	#endif
 	return m_done;
 }
 

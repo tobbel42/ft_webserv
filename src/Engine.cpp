@@ -87,26 +87,37 @@ Engine::init_sockets()
 	return true;
 }
 
+#ifdef KQUEUE
 bool
 Engine::listen_sockets()
 {
-	int		errFlag;
 	for (SockIter iter = m_sockets.begin(); iter != m_sockets.end(); ++iter)
 	{
-		errFlag = listen(iter->first, ENGINE_BACKLOG);
-		if (errFlag)
+		if (listen(iter->first, ENGINE_BACKLOG) == -1)
 		{
 			EPRINT("ERROR: listen failed");
 			return false;
 		}
-		#ifdef KQUEUE
-			set_kevent(iter->first, EVFILT_READ, EV_ADD);
-		#else
-			set_poll(iter->first, POLLIN);
-		#endif
+		set_kevent(iter->first, EVFILT_READ, EV_ADD);
 	}
 	return true;
 }
+#else
+bool
+Engine::listen_sockets()
+{
+	for (SockIter iter = m_sockets.begin(); iter != m_sockets.end(); ++iter)
+	{
+		if (listen(iter->first, ENGINE_BACKLOG == -1))
+		{
+			EPRINT("ERROR: listen failed");
+			return false;
+		}
+		set_poll(iter->first, POLLIN);
+	}
+	return true;
+}
+#endif
 
 void
 Engine::close_sockets()
@@ -144,6 +155,7 @@ Engine::set_poll(fd_type fd, short events) {
 #endif
 
 
+#ifdef KQUEUE
 void
 Engine::accept_connect(Socket & sock)
 {
@@ -160,12 +172,28 @@ Engine::accept_connect(Socket & sock)
 	m_connects.insert(std::pair<fd_type, Connect>(fd, newConnect));
 	m_timers.insert(std::make_pair(fd, std::time(nullptr)));
 
-	#ifdef KQUEUE
 	set_kevent(fd, EVFILT_READ, EV_ADD);
-	#else
-	set_poll(fd, POLLIN);
-	#endif
 }
+#else
+void
+Engine::accept_connect(Socket & sock)
+{
+	fd_type	fd = sock.acceptConnect();
+
+	if (fd == -1)
+	{
+		EPRINT("ERROR: failed to accept connection");
+		return ;
+	}
+
+	Connect	newConnect(fd, sock.getIp(), sock.getPort());
+
+	m_connects.insert(std::pair<fd_type, Connect>(fd, newConnect));
+	m_timers.insert(std::make_pair(fd, std::time(nullptr)));
+
+	set_poll(fd, POLLIN);
+}
+#endif
 
 Server*
 Engine::find_server(const Connect& cnct)
@@ -387,20 +415,53 @@ Engine::check_for_timeout() {
 }
 
 /*Debug-----------------------------------------------------------------------*/
+#ifdef KQUEUE
 void
 Engine::debug()
 {
-	#ifdef KQUEUE
 	std::cout << "\n\nEvents:" << std::endl;
 	for (KeventIter iter = m_events.begin(); iter != m_events.end(); ++iter)
 		std::cout << *iter << std::endl;
 	std::cout << "\n\nChanges:" << std::endl;
 	for (KeventIter iter = m_changes.begin(); iter != m_changes.end(); ++iter)
 		std::cout << *iter << std::endl;
-	#else
+}
+#else
+void
+Engine::debug()
+{
 	PRINT("\n\nPOLLS:");
 	for (PollIter iter = m_polls.begin(); iter != m_polls.end(); ++iter)
 		PRINT(*iter);
+}
+#endif
+
+
+void
+Engine::print_start_msg() {
+	int i = 96;
+	PRINT("\033[38;5;" << i 
+		<< "m  _       __     __   _____                \033[0m");
+	PRINT("\033[38;5;" << i
+		<< "m | |     / /__  / /_ / ___/___  ______   __\033[0m");
+	i += 6;
+	PRINT("\033[38;5;" << i
+		<< "m | | /| / / _ \\/ __ \\\\__ \\/ _ \\/ ___/ | / /\033[0m");
+	i += 6;
+	PRINT("\033[38;5;" << i
+		<< "m | |/ |/ /  __/ /_/ /__/ /  __/ /   | |/ / \033[0m");
+	i += 6;
+	PRINT("\033[38;5;" << i
+		<< "m |__/|__/\\___/_.___/____/\\___/_/    |___/  \033[0m");
+	i += 6;
+	PRINT("\n\033[38;5;"
+		<< i << "m by lhoerger && skienzle && tgrossma \033[0m\n");
+	#ifdef KQUEUE
+	PRINT("\n\033[38;5;"
+		<< i << "m powered by kqueue \033[0m\n");
+	#else
+	PRINT("\n\033[38;5;"
+		<< i << "m powered by poll \033[0m\n");
 	#endif
 }
 
@@ -408,10 +469,10 @@ Engine::debug()
 /*
 //Main loop of the Socket.
 */
+#ifdef KQUEUE
 bool
 Engine::launch()
 {
-	#ifdef KQUEUE
 	//init kqueue
 	m_kqueue = kqueue();
 	if (m_kqueue == -1)
@@ -419,28 +480,22 @@ Engine::launch()
 		EPRINT("ERROR: could not create kqueue");
 		return false;
 	}
-	#endif
-
 	//start to listen to Socket, add the Sockets to the kqueue
 	if (listen_sockets() == false)
 		return false;
 	
 	int	n_events = 0;
-	#ifdef KQUEUE
 	struct timespec timeout = {1, 0};
-	#endif
+
+	print_start_msg();
 
 	//the main loop
 	while (0b00101010)
 	{
-		#ifdef KQUEUE
 		n_events = kevent(m_kqueue,
 			&(*m_changes.begin()), m_changes.size(),
 			&(*m_events.begin()), m_events.size(),
 			&timeout);
-		#else
-		n_events = poll(&(*m_polls.begin()), m_polls.size(), 1000);
-		#endif
 
 		#ifdef VERBOSE
 		{
@@ -449,13 +504,40 @@ Engine::launch()
 		}
 		#endif
 
-		#ifdef KQUEUE
 		for	(int i = 0; i < n_events; ++i)
 		{
 			socket_event(m_events[i]);
 			connect_event(m_events[i]);
 		}
-		#else
+		check_for_timeout();
+	}
+	return true;
+	//closing of sockets is happening in the Engine destructor
+}
+#else
+bool
+Engine::launch()
+{
+	//start to listen to Socket, add the Sockets to the kqueue
+	if (listen_sockets() == false)
+		return false;
+	
+	int	n_events = 0;
+
+	print_start_msg();
+
+	//the main loop
+	while (0b00101010)
+	{
+		n_events = poll(&(*m_polls.begin()), m_polls.size(), 1000);
+
+		#ifdef VERBOSE
+		{
+			std::cout << "\nEvents: " << n_events << std::endl;
+			this->debug();
+		}
+		#endif
+
 		if (n_events > 0) {
 			for (size_t i = 0; i < m_polls.size(); ++i) {
 				if (m_polls[i].revents & 0x0008 ||
@@ -473,9 +555,9 @@ Engine::launch()
 				}
 			}
 		}
-		#endif
 		check_for_timeout();
 	}
 	return true;
 	//closing of sockets is happening in the Engine destructor
 }
+#endif

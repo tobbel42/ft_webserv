@@ -87,6 +87,8 @@ class Engine
 
 	void		debug();
 
+	void		print_start_msg();
+
 	/*Constructors------------------------------------------------------------*/
 	public:
 	Engine();
