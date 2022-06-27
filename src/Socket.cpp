@@ -15,7 +15,7 @@ Socket::Socket():
 	#endif
 }
 
-Socket::Socket(unsigned int ip, unsigned int port):
+Socket::Socket(uint32_t ip, uint32_t port):
 	m_ip(ip),
 	m_port(port),
 	m_address(),
@@ -61,7 +61,6 @@ Socket::operator=(const Socket& other)
 		m_port = other.m_port;
 		m_address = other.m_address;
 		m_sockfd = other.m_sockfd;
-		m_defaultServer = other.m_defaultServer;
 	}
 	return (*this);
 }
@@ -87,27 +86,13 @@ Socket::m_init()
 	
 }
 
-void
-Socket::setDefaultServer( Server *server )
-{
-	m_defaultServer = server;
-}
-
-Server *
-Socket::getServer( std::string hostname )
-{
-	//todo search m_Server for hostname
-
-	return (m_defaultServer); 
-}
-
 fd_type
 Socket::getSockFd( void ) const { return(m_sockfd); }
 
-unsigned int
+uint32_t
 Socket::getIp () const { return m_ip; }
 
-unsigned int
+uint32_t
 Socket::getPort () const { return m_port; }
 
 bool

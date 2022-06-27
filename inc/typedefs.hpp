@@ -11,12 +11,14 @@
 #define HTTP_VERSION 1.1
 #define DEFAULT_ERROR_PAGES "config/default_error_pages"
 #define READSIZE 8192 //we reading at max 8kb of data, might change
+#define CNCT_TIMEOUT 2 // in seconds
+#define ENGINE_BACKLOG 10
 
 #ifndef nullptr
 #define nullptr NULL
 #endif
 
-typedef	unsigned long	fd_type;
+typedef	int	fd_type;
 
 class Server;
 
@@ -28,7 +30,7 @@ struct	s_kevent: public kevent
 {
 	inline bool operator==( fd_type fd )
 	{
-		return ident == fd;
+		return static_cast<int>(ident) == fd;
 	}
 /*
 inherited from struct kevent:

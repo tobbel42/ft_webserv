@@ -37,7 +37,7 @@ Connect	&Connect::operator = ( const Connect &rhs )
 	return (*this);
 }
 
-Connect::Connect( fd_type fd, unsigned int ip, unsigned int port):
+Connect::Connect( fd_type fd, uint32_t ip, uint32_t port):
 	m_fd(fd),
 	m_ip(ip),
 	m_port(port),
@@ -52,10 +52,10 @@ Connect::Connect( fd_type fd, unsigned int ip, unsigned int port):
 Server *
 Connect::getServer( void ) const { return p_server; }
 
-unsigned int
+uint32_t
 Connect::getIp() const { return m_ip; }
 
-unsigned int
+uint32_t
 Connect::getPort() const { return m_port; }
 
 fd_type
@@ -96,7 +96,6 @@ Connect::writeResponse( s_kevent kevent )
 {
 	m_res.generate();
 	m_res.send(kevent);
-	// write(kevent.ident, resp_pair.first.c_str(), resp_pair.first.size());
 }
 
 void
