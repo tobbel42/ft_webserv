@@ -62,7 +62,7 @@ Request::get_target() const { return m_target; }
 const std::string &
 Request::get_host() const { return m_host; }
 
-unsigned int
+const std::string &
 Request::get_port() const { return m_port; }
 
 const std::string & 
