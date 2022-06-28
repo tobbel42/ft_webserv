@@ -82,16 +82,16 @@ get_http_time();
 /*
 @brief Converts the supplied string to an ip address
 */
-uint32_t
+unsigned int
 string_to_ip(const std::string& ip_string);
 
 /*
 @brief Converts the supplied ip address to std::string
 */
 std::string
-ip_to_string(uint32_t ip_addr);
+ip_to_string(unsigned int ip_addr);
 
-uint32_t
+unsigned int
 hex_str_to_i(const std::string &);
 
 StringArr

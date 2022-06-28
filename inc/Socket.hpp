@@ -23,7 +23,7 @@ class Socket
 {
 public:
 	Socket(const Socket& other);
-	Socket(uint32_t ip, uint32_t port);
+	Socket(unsigned int ip, unsigned int port);
 	~Socket();
 	Socket& operator=(const Socket& other);
 	
@@ -32,16 +32,16 @@ public:
 
 	bool	operator==( fd_type fd );
 
-	uint32_t getIp() const;
-	uint32_t getPort() const;
+	unsigned int getIp() const;
+	unsigned int getPort() const;
 	
 	bool m_init();
 	
 private:
 	Socket();
 
-	uint32_t				m_ip;
-	uint32_t				m_port;
+	unsigned int				m_ip;
+	unsigned int				m_port;
 	sockaddr_in 			m_address;
 	fd_type 				m_sockfd;
 	socklen_t				m_addLen;

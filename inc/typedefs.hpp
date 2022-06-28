@@ -6,11 +6,11 @@
 #include <limits>
 
 #ifdef __APPLE__
-	#define KQUEUE
+#define KQUEUE
 #endif
 
 #ifdef KQUEUE
-#include <event.h>
+#include <sys/event.h>
 #else
 #include <poll.h>
 #endif
@@ -24,18 +24,6 @@
 
 #ifndef nullptr
 #define nullptr NULL
-#endif
-#ifndef uint32_t
-typedef unsigned int uint32_t;
-#endif
-#ifndef uint64_t
-typedef unsigned long uint64_t;
-#endif
-#ifndef uint8_t
-typedef unsigned char uint8_t;
-#endif
-#ifndef UINT32_MAX
-#define UINT32_MAX 0xFFFFFFFF
 #endif
 
 typedef	int	fd_type;
@@ -61,7 +49,7 @@ inherited from struct kevent:
     u_int     fflags;	     filter flag value
     int64_t   data;		     filter data value 
     void      *udata;	     opaque user data identifier
-    uint64_t  ext[4];	     extensions
+    unsigned long  ext[4];	     extensions
 */
 };
 #else

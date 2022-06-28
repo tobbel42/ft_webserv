@@ -21,13 +21,13 @@ class Server
 
 		std::string	m_directory;
 
-		uint32_t m_ip;
-		uint32_t m_port;
+		unsigned int m_ip;
+		unsigned int m_port;
 
 		bool	m_defaultServer;
 
 		//ERRCODE + FIlEPATH
-		std::map<uint32_t, std::string> m_defaultErrorPages;
+		std::map<unsigned int, std::string> m_defaultErrorPages;
 
 		size_t	m_clientBodySize;
 

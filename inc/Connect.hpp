@@ -30,8 +30,8 @@ class Connect
 		typedef Response response_type;
 
 		fd_type		m_fd;
-		uint32_t	m_ip;
-		uint32_t	m_port;
+		unsigned int	m_ip;
+		unsigned int	m_port;
 		Server		*p_server;
 		e_action	m_action;
 		int			m_status_code;
@@ -43,7 +43,7 @@ class Connect
 		
 	public:
 
-		Connect( fd_type fd, uint32_t ip, uint32_t port);
+		Connect( fd_type fd, unsigned int ip, unsigned int port);
 		~Connect();
 		Connect( const Connect &copy );
 
@@ -51,8 +51,8 @@ class Connect
 
 		fd_type		getFd( void ) const;
 
-		uint32_t getIp() const;
-		uint32_t getPort() const;
+		unsigned int getIp() const;
+		unsigned int getPort() const;
 
 		fd_type		getSockFd( void ) const;
 		Server *	getServer( void ) const;
