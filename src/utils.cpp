@@ -101,7 +101,7 @@ ip_to_string(unsigned int ip_addr)
 
 unsigned int
 hex_str_to_i(const std::string & str) {
-	u_int32_t n;
+	unsigned int n;
 	std::stringstream ss;
 	ss << std::hex << str;
 	ss >> n;

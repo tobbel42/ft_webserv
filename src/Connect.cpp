@@ -139,7 +139,7 @@ Connect::composeResponse( void )
 		return;
 	}
 	std::string filename = m_req.get_target();
-	if (filename == "/") // und directory listing ist aus
+	if (filename == "/" || filename == "") // und directory listing ist aus
 		filename += p_server->index;
 
 	//TOO: letztes Argument mit directory listing bool ersetzen
