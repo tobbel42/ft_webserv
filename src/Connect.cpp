@@ -37,7 +37,7 @@ Connect	&Connect::operator = ( const Connect &rhs )
 	return (*this);
 }
 
-Connect::Connect( fd_type fd, uint32_t ip, uint32_t port):
+Connect::Connect( fd_type fd, unsigned int ip, unsigned int port):
 	m_fd(fd),
 	m_ip(ip),
 	m_port(port),
@@ -52,10 +52,10 @@ Connect::Connect( fd_type fd, uint32_t ip, uint32_t port):
 Server *
 Connect::getServer( void ) const { return p_server; }
 
-uint32_t
+unsigned int
 Connect::getIp() const { return m_ip; }
 
-uint32_t
+unsigned int
 Connect::getPort() const { return m_port; }
 
 fd_type
@@ -65,7 +65,7 @@ e_action
 Connect::getAction( void ) const { return m_action; }
 
 std::string
-Connect::get_hostname() const { return m_req.get_header_entry("Host"); }
+Connect::get_hostname() const { return m_req.get_host(); }
 
 void
 Connect::setServer( Server * server ) { p_server = server; }
@@ -143,7 +143,7 @@ Connect::composeResponse( void )
 		filename += p_server->index;
 
 	//TOO: letztes Argument mit directory listing bool ersetzen
-	MyFile f(filename, p_server->root, "http://" + m_req.get_header_entry("host") + filename, g_envp, true);
+	MyFile f(filename, p_server->root, "http://" + m_req.get_host() + filename, g_envp, true);
 	std::string file = f.read_file();
 
 	// the response should also have access to the file that was accessed

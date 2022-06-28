@@ -35,6 +35,7 @@ class Request {
 
 	bool check_invalid_char(const std::string &, char *, size_t);
 	bool is_done();
+	void set_host();
 	bool set_error(size_t);
 
 	/*RequestLineParsing------------------------------------------------------*/
@@ -74,9 +75,10 @@ class Request {
 
 	/*DataMemberVariabels-----------------------------------------------------*/
 
-	unsigned int	m_err_code;
+	unsigned int m_err_code;
 	std::string m_methode;
 	std::string m_target;
+	std::string m_host;
 	std::string m_http_ver;
 	std::map<std::string, std::string> m_header; 
 	std::vector<char> m_body;
@@ -95,8 +97,9 @@ class Request {
 
 	const std::string & get_methode() const;
 	const std::string & get_target() const;
+	const std::string & get_host() const;
 	const std::string & get_http_ver() const;
-	std::string 		get_header_entry(std::string) const;
+	std::pair<bool, std::string> get_header_entry(std::string) const;
 	const std::vector<char> & get_body() const;
 	unsigned int 			get_err_code() const;
 };

@@ -10,7 +10,7 @@ Server::Server():
 	error_pages(DEFAULT_ERROR_PAGES),
 	ip_address(),
 	ports(),
-	max_client_body_size(std::numeric_limits<uint32_t>::max()),
+	max_client_body_size(std::numeric_limits<unsigned int>::max()),
 	allowed_methods(),
 	locations(),
 	m_checks(7, false)
@@ -95,7 +95,7 @@ Server::set_error_pages(const std::string& word)
 }
 
 bool
-Server::set_ip_address(uint32_t ip)
+Server::set_ip_address(unsigned int ip)
 {
 	if (m_checks[IP_ADDRESS])
 		return false;
@@ -105,7 +105,7 @@ Server::set_ip_address(uint32_t ip)
 }
 
 bool
-Server::set_port(uint32_t port)
+Server::set_port(unsigned int port)
 {
 	ports.push_back(port);
 	return true;
@@ -126,7 +126,7 @@ Server::set_method(const std::string& method)
 }
 
 bool
-Server::set_max_client_body_size(uint32_t n)
+Server::set_max_client_body_size(unsigned int n)
 {
 	if (m_checks[MAX_CLIENT_BODY_SIZE])
 		return false;

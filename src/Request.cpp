@@ -39,6 +39,7 @@ Request::operator=( const Request & rhs ) {
 	m_err_code = rhs.m_err_code;
 	m_methode = rhs.m_methode;
 	m_target = rhs.m_target;
+	m_host =rhs.m_host;
 	m_http_ver = rhs.m_http_ver;
 	m_header = rhs.m_header;
 	m_body = rhs.m_body;
@@ -53,37 +54,49 @@ Request::get_methode() const { return m_methode; }
 const std::string & 
 Request::get_target() const { return m_target; }
 
+const std::string &
+Request::get_host() const { return m_host; }
+
 const std::string & 
 Request::get_http_ver() const { return m_http_ver; }
 
 //returns an empty string when field_name not found
-std::string 
+std::pair<bool, std::string>
 Request::get_header_entry(std::string field_name) const {
 	utils::str_tolower(field_name);
 	std::map<std::string,std::string>::const_iterator iter;
 	iter = m_header.find(field_name);
 
-	std::string field_value;
+	// std::string field_value;
 
-	if (iter != m_header.end())
-		field_value = iter->second;
-	return field_value;
+	// if (iter != m_header.end())
+	// 	field_value = iter->second;
+	return std::make_pair((iter != m_header.end()), iter->second);
 }
 
 const std::vector<char> &
 Request::get_body() const { return m_body; }
 
-uint32_t
+unsigned int
 Request::get_err_code() const { return m_err_code; }
 
 /*Utils-----------------------------------------------------------------------*/
+
+void
+Request::set_host() {
+	std::pair<bool, std::string> h = get_header_entry("host");
+	if (h.first == false)
+		m_err_code = 400;
+	else
+		m_host = h.second;
+}
 
 bool 
 Request::is_done() {
 	if (m_err_code != 0)
 		return true;
-	else if (m_done && get_header_entry("host") == "")
-		m_err_code = 400;
+	else if (m_done)
+		set_host();
 	#ifdef VERBOSE
 	print_request();
 	PRINT("ErrorCode: " << m_err_code);
@@ -160,9 +173,33 @@ Request::parse_target() {
 	}
 }
 
+bool
+Request::is_valid_http_ver() {
+	if (m_http_ver.substr(0, 5) != "HTTP/")
+		return false;
+	const char * ptr = m_http_ver.c_str() + 5;
+	if (!isdigit(*ptr))
+		return false;
+	while(isdigit(*ptr))
+		++ptr;
+	if (*ptr != '.')
+		return false;
+	++ptr;
+	if (!isdigit(*ptr))
+		return false;
+	while(isdigit(*ptr))
+		++ptr;
+	if (*ptr != '\0')\
+		return false;
+	return true;
+}
+
 //is stupid, maybe overhaul
 bool
 Request::is_valid_request_line() {
+
+	if (!is_valid_http_ver())
+		return false;
 
 	char c[4] = {'\t', '\r', '\n', ' '};
 
@@ -344,12 +381,11 @@ Request::parse_chunked_body() {
 
 bool
 Request::is_chunked() {
-	std::string value = get_header_entry("transfer-encoding");
-	//print_request();
-	if (value == "")
+	std::pair<bool, std::string> value = get_header_entry("transfer-encoding");
+	if (value.first == false)
 		return false;
 	
-	StringArr split = utils::str_split(value, ",");
+	StringArr split = utils::str_split(value.second, ",");
 	for (size_t i = 0; i < split.size(); ++i) {
 		if (split[i] == "chunked")
 			return true;
@@ -377,10 +413,10 @@ Request::append_read(std::vector<char> buf) {
 		//determining if a Body is present, if yes, determining BodyType
 		if (is_chunked())
 			m_state = CHUNKED_BODY;
-		else if (get_header_entry("content-length") != "")
+		else if (get_header_entry("content-length").first)
 		{
 			m_state = BODY;
-			std::string len = get_header_entry("content-length");
+			std::string len = get_header_entry("content-length").second;
 			m_content_len = std::strtoll(len.data(), NULL, 10);
 		}
 		else

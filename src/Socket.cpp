@@ -15,7 +15,7 @@ Socket::Socket():
 	#endif
 }
 
-Socket::Socket(uint32_t ip, uint32_t port):
+Socket::Socket(unsigned int ip, unsigned int port):
 	m_ip(ip),
 	m_port(port),
 	m_address(),
@@ -93,10 +93,10 @@ Socket::m_init()
 fd_type
 Socket::getSockFd( void ) const { return(m_sockfd); }
 
-uint32_t
+unsigned int
 Socket::getIp () const { return m_ip; }
 
-uint32_t
+unsigned int
 Socket::getPort () const { return m_port; }
 
 bool

@@ -25,6 +25,9 @@
 #ifndef nullptr
 #define nullptr NULL
 #endif
+#ifndef UINT32_MAX
+#define 0xFFFFFFFF
+#endif
 
 typedef	int	fd_type;
 
@@ -49,7 +52,7 @@ inherited from struct kevent:
     u_int     fflags;	     filter flag value
     int64_t   data;		     filter data value 
     void      *udata;	     opaque user data identifier
-    unsigned long  ext[4];	     extensions
+    uint_64  ext[4];	     extensions
 */
 };
 #else

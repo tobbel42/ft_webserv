@@ -259,7 +259,7 @@ ConfigParser::m_get_next_word_protected(bool is_on_same_line)
 	return word;
 }
 
-uint32_t
+unsigned int
 ConfigParser::m_check_int(const std::string& word)
 {
 	for (std::string::const_iterator it = word.begin(); it != word.end(); ++it)
@@ -269,27 +269,27 @@ ConfigParser::m_check_int(const std::string& word)
 				"invalid unsigned integer format", word.c_str());
 	}
 
-	uint64_t number = strtoul(word.c_str(), NULL, 10);
+	unsigned long number = strtoul(word.c_str(), NULL, 10);
 	if (number > UINT32_MAX)
 		throw ConfigParser::InvalidConfig(m_line_number, 
 			"number too big", word.c_str());
 	return number;
 }
 
-uint32_t
+unsigned int
 ConfigParser::m_check_ip_address()
 {
 	std::string word = m_get_next_word_protected();
 	size_t start = 0;
 	size_t end = 0;
 	int byte = 3;
-	uint32_t ip_addr = 0;
+	unsigned int ip_addr = 0;
 
 	while (end != std::string::npos)
 	{
 		end = word.find('.', start);
-		uint32_t ip_number = m_check_int(word.substr(start, end - start));
-		if (ip_number > std::numeric_limits<uint8_t>::max())
+		unsigned int ip_number = m_check_int(word.substr(start, end - start));
+		if (ip_number > std::numeric_limits<unsigned char>::max())
 			break;
 		ip_addr += ip_number << (byte * 8); // shift the ip-byte to the appropriate byte in the address
 		start = end + 1;
@@ -316,7 +316,7 @@ void
 ConfigParser::m_check_server_configs()
 {
 	typedef ServerArr::iterator				ServerIt;
-	typedef std::vector<uint32_t>::iterator	PortIt;
+	typedef std::vector<unsigned int>::iterator	PortIt;
 
 	if (m_servers.empty())
 		throw ConfigParser::InvalidConfig(m_line_number,

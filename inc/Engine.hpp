@@ -61,7 +61,7 @@ class Engine
 
 	/*InternalMemberFunctions-------------------------------------------------*/
 	#ifdef KQUEUE
-	void		set_kevent( fd_type fd, int16_t filter, uint16_t flag );
+	void		set_kevent( fd_type fd, short filter, unsigned short flag );
 	void		socket_event(s_kevent & kevent);
 	void		connect_event(s_kevent & kevent);
 	#else
