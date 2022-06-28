@@ -219,7 +219,6 @@ Engine::find_server(const Connect& cnct)
 					// look for a matching server_name
 					for (size_t k = 0; k < server.server_names.size(); ++k)
 					{
-						PRINT(cnct.get_hostname() << " " << server.server_names[k]);
 						if (cnct.get_hostname() == server.server_names[k])
 							return &server;
 					}
