@@ -30,8 +30,8 @@ class Connect
 		typedef Response response_type;
 
 		fd_type		m_fd;
-		unsigned int	m_ip;
-		unsigned int	m_port;
+		uint32_t	m_ip;
+		uint32_t	m_port;
 		Server		*p_server;
 		e_action	m_action;
 		int			m_status_code;
@@ -43,23 +43,23 @@ class Connect
 		
 	public:
 
-		Connect( fd_type fd, unsigned int ip, unsigned int port);
+		Connect(fd_type fd, uint32_t ip, uint32_t port);
 		~Connect();
-		Connect( const Connect &copy );
+		Connect(const Connect &copy);
 
-		Connect	&operator = ( const Connect &rhs );
+		Connect	&operator = (const Connect &rhs);
 
-		fd_type		getFd( void ) const;
+		fd_type		getFd() const;
 
-		unsigned int getIp() const;
-		unsigned int getPort() const;
+		uint32_t 	getIp() const;
+		uint32_t 	getPort() const;
 
-		fd_type		getSockFd( void ) const;
-		Server *	getServer( void ) const;
-		e_action	getAction( void ) const;
+		fd_type		getSockFd() const;
+		Server *	getServer() const;
+		e_action	getAction() const;
 		std::string	get_hostname() const;
 	
-		void		setServer( Server * server );
+		void		setServer(Server * server);
 		void		set_status(int status_code);
 		#ifdef KQUEUE
 		bool		readRequest(s_kevent & kevent);
@@ -68,7 +68,7 @@ class Connect
 		bool		readRequest(s_pollfd & poll);
 		void		writeResponse(s_pollfd & poll);
 		#endif
-		void		composeResponse( void );
+		void		composeResponse();
 		
 };
 

@@ -25,6 +25,7 @@ class Request {
 	/*Constructors------------------------------------------------------------*/
 
 	Request();
+	Request(uint32_t expectedPort);
 	~Request();
 	Request(const Request &);
 	Request & operator=(const Request &);
@@ -79,7 +80,9 @@ class Request {
 	std::string m_uri;
 
 	std::string m_host;
-	std::string m_port;
+
+	uint32_t	m_expectedPort;
+	uint32_t	m_port;
 	std::string m_target;
 	std::string m_query;
 
@@ -102,7 +105,7 @@ class Request {
 	const std::string & get_methode() const;
 	const std::string & get_target() const;
 	const std::string & get_host() const;
-	const std::string & get_port() const;
+	uint32_t get_port() const;
 	const std::string & get_query() const;
 	const std::string & get_http_ver() const;
 	std::pair<bool, std::string> get_header_entry(std::string) const;
@@ -112,8 +115,7 @@ class Request {
 	/*Setter------------------------------------------------------------------*/
 
 	//todo implement
-	void substituteDefaultTarget(const std::string &);
-	void substituteDefaultPort(const std::string &);
+	void substitute_default_target(const std::string &);
 
 };
 

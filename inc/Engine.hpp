@@ -15,7 +15,6 @@
 #include <utils.hpp>
 #include "typedefs.hpp"
 
-#include <poll.h>
 
 #ifdef KQUEUE
 std::ostream	&operator<<(std::ofstream & out, s_kevent const & in);
@@ -88,6 +87,10 @@ class Engine
 	void		debug();
 
 	void		print_start_msg();
+
+	/*ControllStuff-----------------------------------------------------------*/
+
+	bool		user_event();
 
 	/*Constructors------------------------------------------------------------*/
 	public:
