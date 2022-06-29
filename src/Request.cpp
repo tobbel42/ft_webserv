@@ -2,18 +2,33 @@
 
 /*Constructors----------------------------------------------------------------*/
 
-Request::Request( void ):
+Request::Request():
 m_offset(0),
 m_state(HEADER),
 m_done(0),
 m_content_len(0),
-m_err_code(0) {
+m_err_code(0),
+m_expectedPort(80)
+{
 	#ifdef VERBOSE
 		std::cout << "Request: Constructor called" << std::endl;
 	#endif
 }
 
-Request::Request( const Request & cpy ) {
+Request::Request(uint32_t expectedPort):
+m_offset(0),
+m_state(HEADER),
+m_done(0),
+m_content_len(0),
+m_err_code(0),
+m_expectedPort(expectedPort)
+{
+	#ifdef VERBOSE
+		std::cout << "Request: Constructor called" << std::endl;
+	#endif
+}
+
+Request::Request(const Request & cpy) {
 	#ifdef VERBOSE
 		std::cout << "Request: Copy Constructor called" << std::endl;
 	#endif
@@ -27,7 +42,7 @@ Request::~Request() {
 }
 
 Request & 
-Request::operator=( const Request & rhs ) {
+Request::operator=(const Request & rhs) {
 	#ifdef VERBOSE
 		std::cout << "Request: Assignation operator called" << std::endl;
 	#endif
@@ -41,6 +56,7 @@ Request::operator=( const Request & rhs ) {
 	m_uri = rhs.m_uri;
 
 	m_host = rhs.m_host;
+	m_expectedPort = rhs.m_expectedPort;
 	m_port = rhs.m_port;
 	m_target = rhs.m_target;
 	m_query = rhs.m_query;
@@ -62,7 +78,7 @@ Request::get_target() const { return m_target; }
 const std::string &
 Request::get_host() const { return m_host; }
 
-const std::string &
+uint32_t
 Request::get_port() const { return m_port; }
 
 const std::string & 
@@ -98,8 +114,6 @@ Request::set_host() {
 	else
 		parse_uri(hostField.second);
 	
-	PRINT("TEST" << utils::from_string<unsigned int>("") << "ERT");
-
 	#ifdef VERBOSE
 	PRINT("HOST: " << m_host);
 	PRINT("PORT: " << m_port);
@@ -171,7 +185,11 @@ Request::parse_uri(const std::string & host_field) {
 	if (port == "")
 		m_port = 80;
 	else
-		m_port = utils::from_string<int>(port);
+	{
+		m_port = utils::from_string<uint32_t>(port);
+		if (m_port != m_expectedPort)
+			m_err_code = 400;
+	}
 }
 
 void
@@ -513,5 +531,14 @@ Request::print_request() {
 	std::cout << "BODY" << std::endl;
 	for (size_t i = 0; i < m_body.size(); ++i) {
 		std::cout << m_body[i];
+	}
+}
+
+/*Setter----------------------------------------------------------------------*/
+
+void
+Request::substitute_default_target(const std::string & serverDefault) {
+	if (m_target == "" || m_target == "/") {
+		m_target = serverDefault;
 	}
 }

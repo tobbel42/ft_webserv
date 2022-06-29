@@ -159,7 +159,7 @@ public:
 	MyFile(std::string filename, std::string path, std::string current_url, char **envp, bool directory_listing)
 		: _complete_filename(path + filename), _current_url(current_url + "/"), _envp(envp), _directory_listing(directory_listing)
 	{
-		_errorcode = 0;
+		_errorcode = 200; //current model: ok by default, is set on error
 	}
 
 	int	get_error_code() const

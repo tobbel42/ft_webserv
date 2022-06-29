@@ -232,7 +232,6 @@ Engine::find_server(const Connect& cnct)
 void
 Engine::assign_server(Connect & cnct)
 {
-	PRINT(cnct.get_hostname());
 	Server* server = find_server(cnct);
 	if (server == nullptr)
 		cnct.set_status(404);
