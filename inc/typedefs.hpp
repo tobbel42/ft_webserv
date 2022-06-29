@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <limits>
+#include <stdint.h>
 
 #ifdef __APPLE__
 #define KQUEUE
@@ -26,7 +27,7 @@
 #define nullptr NULL
 #endif
 #ifndef UINT32_MAX
-#define 0xFFFFFFFF
+#define UINT32_MAX 0xFFFFFFFF
 #endif
 
 typedef	int	fd_type;

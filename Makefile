@@ -1,7 +1,7 @@
 
 
 NAME = webserv
-CC = clang++
+CC = c++
 CFLAGS = -Wall -Wextra -std=c++98 -Werror 
 RM = rm -rf
 
@@ -68,5 +68,9 @@ debug: re
 
 release: CFLAGS += -Ofast
 release: re
+
+docker:
+	docker build -t server_test .
+	docker run -ti -v $(PWD):/test server_test bash -c "cd test && bash"
 
 .PHONY: all clean fclean re bonus debug release
