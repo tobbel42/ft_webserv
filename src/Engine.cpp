@@ -442,29 +442,45 @@ void
 Engine::print_start_msg() {
 	int i = 96;
 	PRINT("\033[38;5;" << i 
-		<< "m  _       __     __   _____                \033[0m");
+		<< "m _       __     __   _____                \033[0m");
 	PRINT("\033[38;5;" << i
-		<< "m | |     / /__  / /_ / ___/___  ______   __\033[0m");
+		<< "m| |     / /__  / /_ / ___/___  ______   __\033[0m");
 	i += 6;
 	PRINT("\033[38;5;" << i
-		<< "m | | /| / / _ \\/ __ \\\\__ \\/ _ \\/ ___/ | / /\033[0m");
+		<< "m| | /| / / _ \\/ __ \\\\__ \\/ _ \\/ ___/ | / /\033[0m");
 	i += 6;
 	PRINT("\033[38;5;" << i
-		<< "m | |/ |/ /  __/ /_/ /__/ /  __/ /   | |/ / \033[0m");
+		<< "m| |/ |/ /  __/ /_/ /__/ /  __/ /   | |/ / \033[0m");
 	i += 6;
 	PRINT("\033[38;5;" << i
-		<< "m |__/|__/\\___/_.___/____/\\___/_/    |___/  \033[0m");
+		<< "m|__/|__/\\___/_.___/____/\\___/_/    |___/  \033[0m");
 	i += 6;
 	PRINT("\n\033[38;5;"
-		<< i << "m by lhoerger && skienzle && tgrossma \033[0m\n");
+		<< i << "mby lhoerger && skienzle && tgrossma \033[0m\n");
 	#ifdef KQUEUE
 	PRINT("\n\033[38;5;"
-		<< i << "m powered by kqueue \033[0m\n");
+		<< i << "mpowered by kqueue \033[0m\n");
 	#else
 	PRINT("\n\033[38;5;"
-		<< i << "m powered by poll \033[0m\n");
+		<< i << "mpowered by poll \033[0m\n");
 	#endif
+
+	PRINT("\n\033[38;5;" << i << "mControls:\n"
+		<< " exit -> exit the server \033[0m");
+	PRINT("\n");
 }
+
+/*ControllStuff---------------------------------------------------------------*/
+
+bool
+Engine::user_event() {
+	std::string user_input;
+	std::getline(std::cin, user_input);
+	if (user_input == "exit")
+		return false;
+	return true;
+}
+
 
 /*UserInterface---------------------------------------------------------------*/
 /*
@@ -487,11 +503,13 @@ Engine::launch()
 	
 	int	n_events = 0;
 	struct timespec timeout = {1, 0};
+	bool flag = true;
 
 	print_start_msg();
 
+	set_kevent(0, EVFILT_READ, EV_ADD);
 	//the main loop
-	while (0b00101010)
+	while (flag)
 	{
 		n_events = kevent(m_kqueue,
 			&(*m_changes.begin()), m_changes.size(),
@@ -507,6 +525,8 @@ Engine::launch()
 
 		for	(int i = 0; i < n_events; ++i)
 		{
+			if (m_events[i].ident == 0 )
+				flag = user_event();
 			socket_event(m_events[i]);
 			connect_event(m_events[i]);
 		}
@@ -527,8 +547,12 @@ Engine::launch()
 
 	print_start_msg();
 
+	set_poll(0, POLLIN);
+
+	bool flag = true;
+
 	//the main loop
-	while (0b00101010)
+	while (flag)
 	{
 		n_events = poll(&(*m_polls.begin()), m_polls.size(), 1000);
 
@@ -551,6 +575,8 @@ Engine::launch()
 					m_timers.erase(m_polls[i].fd);
 				}
 				else if (m_polls[i].revents == m_polls[i].events) {
+					if (m_polls[i].fd == 0)
+						flag = user_event();
 					socket_event(m_polls[i]);
 					connect_event(m_polls[i]);
 				}
