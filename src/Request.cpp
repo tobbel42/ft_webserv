@@ -90,8 +90,10 @@ Request::get_header_entry(std::string field_name) const {
 	utils::str_tolower(field_name);
 	std::map<std::string,std::string>::const_iterator iter;
 	iter = m_header.find(field_name);
-
-	return std::make_pair((iter != m_header.end()), iter->second);
+	if (iter != m_header.end())
+		return std::make_pair(true, iter->second);
+	else
+		return std::make_pair(false, "");
 }
 
 const std::vector<char> &
@@ -472,7 +474,6 @@ bool
 Request::append_read(std::vector<char> buf) {
 
 	m_buffer.insert(m_buffer.end(), buf.begin(), buf.end());
-
 	if (m_state == HEADER)
 	{
 		//parsing of the header
@@ -480,10 +481,10 @@ Request::append_read(std::vector<char> buf) {
 			return is_done();
 		if (parse_header() == false)
 			return is_done();
-
 		//determining if a Body is present, if yes, determining BodyType
-		if (is_chunked())
+		if (is_chunked()){
 			m_state = CHUNKED_BODY;
+		}
 		else if (get_header_entry("content-length").first)
 		{
 			m_state = BODY;
@@ -493,7 +494,6 @@ Request::append_read(std::vector<char> buf) {
 		else
 			m_done = true;
 	}
-
 	//Handling of BodyParsing
 	if (m_state == BODY){
 		m_done = parse_body();
@@ -510,7 +510,6 @@ Request::append_read(std::vector<char> buf) {
 	#ifdef VERBOSE
 	print_request();
 	#endif
-
 
 	return is_done();
 }

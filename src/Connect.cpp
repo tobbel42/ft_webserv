@@ -1,6 +1,6 @@
 #include "Connect.hpp"
 
-Connect::Connect( void ):
+Connect::Connect():
 p_server(NULL),
 m_action(READ),
 m_req(80)
@@ -10,7 +10,7 @@ m_req(80)
 	#endif
 }
 
-Connect::~Connect( void )
+Connect::~Connect()
 {
 	#ifdef VERBOSE
 		std::cout << "Connect: Destructor called" << std::endl;
@@ -45,7 +45,7 @@ Connect::Connect(fd_type fd, uint32_t ip, uint32_t port):
 	m_fd(fd),
 	m_ip(ip),
 	m_port(port),
-	p_server(NULL),
+	p_server(nullptr),
 	m_action(READ),
 	m_req(port)
 {
@@ -64,10 +64,10 @@ unsigned int
 Connect::getPort() const { return m_port; }
 
 fd_type
-Connect::getFd( void ) const { return m_fd; }
+Connect::getFd() const { return m_fd; }
 
 e_action
-Connect::getAction( void ) const { return m_action; }
+Connect::getAction() const { return m_action; }
 
 std::string
 Connect::get_hostname() const { return m_req.get_host(); }
@@ -112,7 +112,6 @@ Connect::readRequest(s_pollfd & poll)
 		std::cerr << "ERROR: read" << std::endl;
 
 	buf.resize(read_len);
-
 	return m_req.append_read(buf);
 }
 #endif
@@ -135,7 +134,7 @@ Connect::writeResponse(s_pollfd & poll)
 #endif
 
 void
-Connect::composeResponse( void )
+Connect::composeResponse()
 {
 	if (p_server == nullptr)
 	{

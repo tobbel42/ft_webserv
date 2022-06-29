@@ -6,7 +6,7 @@
 #include <limits>
 #include <stdint.h>
 
-#ifndef __APPLE__
+#ifdef __APPLE__
 #define KQUEUE
 #endif
 

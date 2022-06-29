@@ -343,7 +343,6 @@ Engine::connect_event(s_pollfd & poll)
 	#endif
 
 	//eyeCandy
-
 	Connect	& cnct = iter->second;
 
 	//connection can have multible states
@@ -352,19 +351,16 @@ Engine::connect_event(s_pollfd & poll)
 	if (cnct.getAction() == READ)
 	{
 		m_timers[cnct.getFd()] = std::time(nullptr);
-
 		if (cnct.readRequest(poll))
 		{
 			poll.events = POLLOUT;
 
 			//remove the fd from the timerlist
 			m_timers.erase(cnct.getFd());
-
 			//assign a server, if not yet given
 			//(search for Hostname in Socket servers/ default server)
 			if (cnct.getServer() == NULL)
 				assign_server(cnct);
-
 			//formulate the request (result or error)
 			cnct.composeResponse();
 
@@ -549,7 +545,6 @@ Engine::launch()
 	set_poll(0, POLLIN);
 
 	bool flag = true;
-
 	//the main loop
 	while (flag)
 	{
