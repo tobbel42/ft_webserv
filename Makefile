@@ -69,8 +69,12 @@ debug: re
 release: CFLAGS += -Ofast
 release: re
 
+#run make docker
+#in the container run ./webserv config/default_docker.conf
+#the server is reachabel by your public ip (run ifconfig) on port 4242
 docker:
 	docker build -t server_test .
-	docker run -ti -v $(PWD):/test server_test bash -c "cd test && bash"
+	docker run -p 4242:4242 -ti -v $(PWD):/test server_test bash -c \
+	"cd test && make re && bash"
 
-.PHONY: all clean fclean re bonus debug release
+.PHONY: all clean fclean re bonus debug release docker
