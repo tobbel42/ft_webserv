@@ -25,10 +25,10 @@ public: // methods
 	bool set_root(const std::string& word);
 	bool set_index(const std::string& word);
 	bool set_error_pages(const std::string& word);
-	bool set_ip_address(unsigned int ip);
-	bool set_port(unsigned int port);
+	bool set_ip_address(uint32_t ip);
+	bool set_port(uint32_t port);
 	bool set_method(const std::string& method);
-	bool set_max_client_body_size(unsigned int n);
+	bool set_max_client_body_size(uint32_t n);
 
 	const char* check_attributes() const;
 
@@ -43,9 +43,9 @@ public: // attributes
 	std::string				root;
 	std::string				index;
 	std::string				error_pages;
-	unsigned int				ip_address;
-	std::vector<unsigned int>	ports;
-	unsigned int				max_client_body_size;
+	uint32_t				ip_address;
+	std::vector<uint32_t>	ports;
+	uint32_t				max_client_body_size;
 	StringArr				allowed_methods;
 
 	class Location;

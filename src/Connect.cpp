@@ -57,10 +57,10 @@ Connect::Connect(fd_type fd, uint32_t ip, uint32_t port):
 Server *
 Connect::getServer() const { return p_server; }
 
-unsigned int
+uint32_t
 Connect::getIp() const { return m_ip; }
 
-unsigned int
+uint32_t
 Connect::getPort() const { return m_port; }
 
 fd_type

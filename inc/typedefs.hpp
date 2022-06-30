@@ -41,7 +41,7 @@ typedef std::vector<char>			ByteArr;
 #ifdef KQUEUE
 struct	s_kevent: public kevent
 {
-	inline bool operator==( fd_type fd )
+	inline bool operator==(fd_type fd)
 	{
 		return static_cast<int>(ident) == fd;
 	}

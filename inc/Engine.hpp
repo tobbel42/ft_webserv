@@ -33,7 +33,7 @@ class Engine
 
 	/*MemberVariabels---------------------------------------------------------*/
 	#ifdef KQUEUE
-	int								m_kqueue;
+	fd_type							m_kqueue;
 	std::vector<s_kevent>			m_changes;
 	std::vector<s_kevent>			m_events;
 	#else
@@ -60,7 +60,7 @@ class Engine
 
 	/*InternalMemberFunctions-------------------------------------------------*/
 	#ifdef KQUEUE
-	void		set_kevent( fd_type fd, short filter, unsigned short flag );
+	void		set_kevent(fd_type fd, int16_t filter, uint16_t flag );
 	void		socket_event(s_kevent & kevent);
 	void		connect_event(s_kevent & kevent);
 	#else

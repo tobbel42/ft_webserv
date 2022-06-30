@@ -75,7 +75,7 @@ class Request {
 
 	/*DataMemberVariabels-----------------------------------------------------*/
 
-	unsigned int m_err_code;
+	uint32_t	m_err_code;
 	std::string m_methode;
 	std::string m_uri;
 
@@ -110,7 +110,7 @@ class Request {
 	const std::string & get_http_ver() const;
 	std::pair<bool, std::string> get_header_entry(std::string) const;
 	const std::vector<char> & get_body() const;
-	unsigned int 			get_err_code() const;
+	uint32_t get_err_code() const;
 
 	/*Setter------------------------------------------------------------------*/
 

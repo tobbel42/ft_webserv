@@ -76,7 +76,7 @@ get_http_time()
 	return std::string(buffer);
 }
 
-unsigned int
+uint32_t
 string_to_ip(const std::string& ip_string)
 {
 	return inet_addr(ip_string.c_str());
@@ -84,9 +84,9 @@ string_to_ip(const std::string& ip_string)
 
 
 std::string
-ip_to_string(unsigned int ip_addr)
+ip_to_string(uint32_t ip_addr)
 {
-	unsigned int ip_octet[4];
+	uint32_t ip_octet[4];
 	std::stringstream ip_string;
 
 	ip_octet[0] = ip_addr & 0x000000ff;
@@ -99,9 +99,9 @@ ip_to_string(unsigned int ip_addr)
 	return ip_string.str();
 }
 
-unsigned int
+uint32_t
 hex_str_to_i(const std::string & str) {
-	unsigned int n;
+	uint32_t n;
 	std::stringstream ss;
 	ss << std::hex << str;
 	ss >> n;

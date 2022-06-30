@@ -135,7 +135,7 @@ Engine::close_connects()
 
 #ifdef KQUEUE
 void
-Engine::set_kevent( fd_type fd, short filter, unsigned short flag)
+Engine::set_kevent( fd_type fd, int16_t filter, uint16_t flag)
 {
 	s_kevent	event;
 
@@ -208,7 +208,7 @@ Engine::find_server(const Connect& cnct)
 		{
 			for (size_t j = 0; j < server.ports.size(); ++j)
 			{
-				unsigned int port = server.ports[j];
+				uint32_t port = server.ports[j];
 
 				if (port == cnct.getPort())
 				{

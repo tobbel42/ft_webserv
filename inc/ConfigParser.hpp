@@ -50,8 +50,8 @@ private: // methods
 	std::string						m_read_location(Server::Location& location);
 
 	void		m_check_server_configs();
-	unsigned int	m_check_int(const std::string& word);
-	unsigned int	m_check_ip_address();
+	uint32_t	m_check_int(const std::string& word);
+	uint32_t	m_check_ip_address();
 
 
 private: // subclass
