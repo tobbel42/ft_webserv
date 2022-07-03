@@ -69,6 +69,7 @@ debug: re
 release: CFLAGS += -Ofast
 release: re
 
+
 docker:
 	docker build -t server_test .
 	docker run -p 4242:4242 -ti -v $(PWD):/test server_test bash -c \
