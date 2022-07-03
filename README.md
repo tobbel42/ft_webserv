@@ -5,7 +5,9 @@
 first make sure you have docker installed and running on your system
 
 then execute
+```
 	make docker
+```
 or if you need sudo on your system
 	make sdocker
 
