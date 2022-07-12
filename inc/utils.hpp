@@ -112,6 +112,15 @@ read_file(std::istream& file, const char* nl);
 std::string
 arr_to_csv(const StringArr& arr, const char* sep);
 
+/*
+@brief searches for the extension of a file
+
+@return the extension of the file or an empty string
+	if there is no extension
+*/
+std::string
+get_file_ext(const std::string& filename);
+
 } // namespace utils
 
 

@@ -23,8 +23,8 @@ private:
 		element = _directory_path + "/" + element; // Achtung Hardgecoded
 		if(stat(element.c_str(), &result) == 0)
 		{
-			char time[50];
-			strftime(time, 50, "%Y-%m-%d %H:%M:%S", localtime(&result.st_mtime));
+			char time[500];
+			strftime(time, sizeof(time), "%Y-%m-%d %H:%M:%S", localtime(&result.st_mtime));
 			std::string mod_date(time);
 			return "<td>" + mod_date + "</td> </tr>";
 		}
@@ -71,13 +71,15 @@ private:
 		}
 		else
 		{
-			perror ("opendir");
+			perror("opendir");
 			return "";
 		}
 	}
 
 public:
-	MyDirectory(std::string directory_path, std::string current_url) : _directory_path(directory_path), _current_url(current_url)
+	MyDirectory(const std::string& directory_path, const std::string& current_url):
+		_directory_path(directory_path),
+		_current_url(current_url)
 	{
 		#ifdef VERBOSE
 		std::cout << "current url: " << _current_url << std::endl;

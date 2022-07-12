@@ -31,6 +31,7 @@ public: // methods
 	void			set_server(Server* server);
 	void			set_status_code(int status_code);
 	void			set_body(const std::string& body);
+	void			set_filename(const std::string& filename);
 	std::string		get_payload() const;
 	size_t			get_body_size() const;
 
@@ -56,8 +57,9 @@ private: // methods
 
 	void m_init_header();
 
+	const char*	m_get_reason_phrase() const;
+
 private: // typedefs
-	typedef void (Response::*method_ptr)();
 
 	typedef std::map<std::string, const char*>::iterator	MimeIter;
 	typedef std::map<int, const char*>::iterator			StatusIter;
@@ -71,6 +73,7 @@ private: // attributes
 	std::string							m_header;
 	std::string							m_body;
 	std::string							m_payload;
+	std::string							m_filename;
 
 
 private: // statics

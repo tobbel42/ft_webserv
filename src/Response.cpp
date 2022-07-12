@@ -26,7 +26,8 @@ Response::Response(int status_code, const std::string& body, Server* server, Req
 	m_status_code(status_code),
 	m_header(),
 	m_body(body),
-	m_payload()
+	m_payload(),
+	m_filename()
 {}
 
 Response::~Response() {
@@ -54,27 +55,17 @@ Response & Response::operator=( const Response & rhs ) {
 void
 Response::m_init_header()
 {
-	typedef std::map<int, const char*>::iterator Iter;
-
 	// status line:
 	//	HTTP/[version] [status code] [reason phrase]
 	m_header = "HTTP/";
 	m_header += utils::to_string(HTTP_VERSION);
 	m_header += ' ';
 
-	Iter status_code = s_status_codes.find(m_status_code);
-	if (status_code != s_status_codes.end())
-	{
-		m_header += utils::to_string(m_status_code);
-		m_header += ' ';
-		m_header += status_code->second;
-	}
-	else
-	{
-		m_header += utils::to_string(404);
-		m_header += ' ';
-		m_header += s_status_codes[404];
-	}
+
+	m_header += utils::to_string(m_status_code);
+	m_header += ' ';
+	m_header += m_get_reason_phrase();
+
 	m_header += "\r\n";
 
 	// general header:
@@ -87,13 +78,11 @@ Response::m_init_header()
 const char*
 Response::s_get_mime_type(const std::string& filename)
 {
-	// find the last dot in the filename
-	size_t pos = filename.find_last_of('.');
-	if (pos == std::string::npos)
-		return DEFAULT_MIME_TYPE;
-	std::string file_extension = filename.substr(pos + 1);
+	std::string extension = utils::get_file_ext(filename);
+	if (extension.empty())
+		return "text/html"; // for directory listing
 
-	MimeIter mime_type = s_mime_types.find(file_extension);
+	MimeIter mime_type = s_mime_types.find(extension);
 	if (mime_type == s_mime_types.end()) // file extension is not in the list
 		return DEFAULT_MIME_TYPE;
 
@@ -109,6 +98,9 @@ Response::set_status_code(int status_code) { m_status_code = status_code; }
 
 void
 Response::set_body(const std::string& body) { m_body = body; }
+
+void
+Response::set_filename(const std::string& filename) { m_filename = filename; }
 
 
 std::string
@@ -136,6 +128,7 @@ Response::send(const s_kevent& kevent)
 		write(kevent.ident, m_payload.c_str(), m_payload.size());
 }
 #else
+
 void
 Response::send(const s_pollfd& poll)
 {
@@ -201,6 +194,8 @@ Response::m_success()
 
 	m_add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
 	m_add_to_head("Content-Length", utils::to_string(m_body.size()));
+	m_add_to_head("Content-Location", m_filename);
+	m_add_to_head("Content-Type", s_get_mime_type(m_filename));
 
 	// std::string header_entry = p_request->getHeaderEntry("Content-Location");
 	// if (!header_entry.empty())
@@ -222,6 +217,7 @@ Response::m_success()
 	default:
 		break;
 	}
+	
 }
 
 void
@@ -260,14 +256,16 @@ Response::m_error()
 		file.open(filename.c_str());
 		if (!file.is_open())
 		{
-			// if everything goes wrong just send 500
-			m_status_code = 500;
+			// if no file can be found generate the status manually
 
 			m_init_header();
+
+			std::string reason = m_get_reason_phrase();
 			m_body = "<html>\r\n<head>"
-						"<title>internal server error</title></head>\r\n"
-						"<body><h1>errorcode 500: internal server error</h1>"
-					"</body></html>\r\n";
+						"<title>" + reason +  "</title></head>\r\n"
+						"<body><h1>errorcode " + utils::to_string(m_status_code) +
+						": " + reason + "</h1> </body></html>\r\n";
+			
 			m_add_to_head("Content-Length", utils::to_string(m_body.size()));
 			return;
 		}
@@ -323,6 +321,18 @@ Response::m_add_to_payload(const std::string& to_add)
 {
 	m_payload += to_add;
 	m_payload += "\r\n";
+}
+
+const char*
+Response::m_get_reason_phrase() const
+{
+	typedef std::map<int, const char*>::iterator Iter;
+
+	Iter status_code = s_status_codes.find(m_status_code);
+	if (status_code != s_status_codes.end())
+		return status_code->second;
+	else
+		return s_status_codes[404];
 }
 
 

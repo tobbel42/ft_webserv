@@ -72,15 +72,18 @@ ConfigParser::run()
 				"server blocks must be followed by {");
 
 		server_ret = m_read_server();
-		if (server_ret.first != "}")
-			throw ConfigParser::InvalidConfig(m_line_number,
-				"invalid server identifier", server_ret.first.c_str());
+		std::string& token = server_ret.first;
+		Server& server = server_ret.second;
 
-		const char *error_msg = server_ret.second.check_attributes();
+		if (token != "}")
+			throw ConfigParser::InvalidConfig(m_line_number,
+				"invalid server identifier", token.c_str());
+
+		const char *error_msg = server.check_attributes();
 		if (error_msg != nullptr)
 			throw ConfigParser::InvalidConfig(m_line_number, error_msg);
 
-		m_servers.push_back(server_ret.second);
+		m_servers.push_back(server);
 	}
 
 	m_check_server_configs();
@@ -150,6 +153,7 @@ ConfigParser::m_read_server()
 		else if (word == "location")
 		{
 			Server::Location location;
+
 			location.location = m_get_next_word_protected();
 			if (location.location == "{")
 				throw ConfigParser::InvalidConfig(m_line_number,

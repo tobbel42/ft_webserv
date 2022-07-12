@@ -148,17 +148,19 @@ Connect::composeResponse()
 	//TOO: letztes Argument mit directory listing bool ersetzen
 	//TODO we now have host, port, taregt and query in the requestthey need to be passed into the MyFile
 	//maybe rename Myfile
-	MyFile f(filename, p_server->root, "http://" + m_req.get_host() + filename, g_envp, true);
+	MyFile f(p_server->root + filename, "http://" + m_req.get_host() + ":" + utils::to_string(m_req.get_port()) + filename, g_envp, true);
 	std::string file = f.read_file();
 
 	// the response should also have access to the file that was accessed
 	// to determine the MINE type of the body
 	m_res.set_server(p_server);
+	m_res.set_filename(p_server->root + filename);
 
 	//here we need a Myfile methode which returns on interanl error
 	//->no error
 	//->404
 	//->500 on exec fail
+	// m_res.set_status_code(400);
 	m_res.set_status_code(f.get_error_code());
 	if (f.get_error_code() == 200)
 		m_res.set_body(file + "\r\n");

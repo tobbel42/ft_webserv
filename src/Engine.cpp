@@ -435,7 +435,8 @@ Engine::debug()
 
 void
 Engine::print_start_msg() {
-	int i = 96;
+	srand(std::time(NULL));
+	int i = rand() % 255;
 	PRINT("\033[38;5;" << i 
 		<< "m _       __     __   _____                \033[0m");
 	PRINT("\033[38;5;" << i
