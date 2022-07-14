@@ -38,6 +38,16 @@ typedef std::vector<std::string>	StringArr;
 typedef std::vector<Server>			ServerArr;
 typedef std::vector<char>			ByteArr;
 
+
+enum e_FileType
+{
+	HTML,
+	PHP,
+	PYTHON,
+	DIRECTORY,
+	OTHER
+};
+
 #ifdef KQUEUE
 struct	s_kevent: public kevent
 {

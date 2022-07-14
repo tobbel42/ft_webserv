@@ -79,8 +79,9 @@ const char*
 Response::s_get_mime_type(const std::string& filename)
 {
 	std::string extension = utils::get_file_ext(filename);
-	if (extension.empty())
-		return "text/html"; // for directory listing
+	if (extension.empty() ||						// directory listing and
+		extension == "py" || extension == "php")	// CGI needs to be excluded
+		return "text/html";
 
 	MimeIter mime_type = s_mime_types.find(extension);
 	if (mime_type == s_mime_types.end()) // file extension is not in the list
@@ -120,6 +121,7 @@ Response::send(const s_kevent& kevent)
 		else
 		{
 			set_status_code(413); // request too large
+			m_payload.clear();
 			generate();
 			write(kevent.ident, m_payload.c_str(), m_payload.size());
 		}
