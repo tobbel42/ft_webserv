@@ -69,14 +69,8 @@ debug: re
 release: CFLAGS += -Ofast
 release: re
 
-
 docker:
-	docker build -t server_test .
-	docker run -p 4242:4242 -ti -v $(PWD):/test server_test bash -c \
-	"cd test && make re && ./webserv config/default_docker.conf"
-sdocker:
-	sudo docker build -t server_test .
-	sudo docker run -p 4242:4242 -ti -v $(PWD):/test server_test bash -c \
-	"cd test && make re && ./webserv config/default_docker.conf"
+	docker build -t webserver .
+	docker run -p4242:4242 -ti webserver
 
 .PHONY: all clean fclean re bonus debug release docker
