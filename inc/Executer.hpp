@@ -13,12 +13,15 @@
 #include "Server.hpp"
 #include "Request.hpp"
 
+#include "../MyDirectory.hpp"
+
 class Executer
 {
 public: // methods
 	Executer(const Executer& other);
-	Executer(Server* server, char** envp, const Request& req);
-	Executer(Server* server, char** envp, const Request& req, const std::string& filename);
+	Executer(const Server* server, char** envp, const Request& req);
+	Executer(const Server* server, char** envp, const Request& req,
+				const std::string& filename);
 
 	~Executer();
 
@@ -29,6 +32,8 @@ public: // methods
 
 	std::string get_content() const { return m_content; }
 
+	int get_status_code() const { return m_status_code; }
+
 
 	void run();
 
@@ -36,17 +41,22 @@ public: // methods
 
 	e_FileType get_file_type() const;
 
-	Server::Location* find_location() const;
+	const Server::Location* find_location() const;
 private: // methods
 	Executer();
 
 	Executer& operator=(const Executer& other);
 
+	void run_server();
+	void run_location(const Server::Location* p_loc);
+
+	void run_directory_listing();
+
 	void read_from_file();
 
 	void replace_dir(const Server::Location* loc);
 
-	static std::string find_dir(const std::string& name);
+	std::string find_dir(const std::string& name) const;
 
 	static bool is_dir(const std::string& name);
 
@@ -54,7 +64,7 @@ private: // methods
 
 
 private: // attributes
-	Server*			p_server;
+	const Server*	p_server;
 	char**			p_env;
 	int				m_status_code;
 	const Request&	m_req;

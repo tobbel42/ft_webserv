@@ -142,10 +142,13 @@ Connect::composeResponse()
 		m_action = WRITE;
 		return;
 	}
+
+
+	#if 0
+
 	m_req.substitute_default_target(p_server->index);
 	std::string filename = m_req.get_target();
 
-	PRINT(filename);
 
 	//TOO: letztes Argument mit directory listing bool ersetzen
 	//TODO we now have host, port, taregt and query in the requestthey need to be passed into the MyFile
@@ -166,5 +169,23 @@ Connect::composeResponse()
 	m_res.set_status_code(f.get_error_code());
 	if (f.get_error_code() == 200)
 		m_res.set_body(file + "\r\n");
+
+	#else
+
+	Executer exec(p_server, g_envp, m_req);
+
+	exec.run();
+
+	m_res.set_server(p_server);
+	m_res.set_status_code(exec.get_status_code());
+	if (exec.get_status_code() == 200)
+		m_res.set_body(exec.get_content());
+
+
+
+
+
+	#endif
+	
 	m_action = WRITE;
 }

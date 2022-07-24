@@ -11,17 +11,17 @@ Executer::Executer(const Executer& other):
 	// m_url(other.m_url)
 {}
 
-Executer::Executer(Server* server, char** envp, const Request& req):
+Executer::Executer(const Server* server, char** envp, const Request& req):
 	p_server(server),
 	p_env(envp),
 	m_status_code(200),
 	m_req(req),
 	m_content(),
-	m_filename(req.get_target() + "/")
+	m_filename(req.get_target())
 {}
 
-Executer::Executer(Server* server, char** envp, const Request& req,
-				const std::string& filename):
+Executer::Executer(const Server* server, char** envp, const Request& req,
+					const std::string& filename):
 	p_server(server),
 	p_env(envp),
 	m_status_code(200),
@@ -40,26 +40,77 @@ Executer::get_full_url() const
 {
 	return "http://" + m_req.get_host() + ":" +
 			utils::to_string(m_req.get_port()) +
-			m_req.get_target();
+			m_filename;
 }
 
 void
 Executer::run()
 {
-	Server::Location* location = find_location();
-	if (location == nullptr)
+	if (p_server == nullptr)
 	{
-		EPRINT("no viable location found");
+		EPRINT("no viable server found");
 		m_status_code = 404;
 		return;
 	}
-	m_filename.replace(0, location->location.size(), location->root);
+
+	const Server::Location* location = find_location();
+	if (location == nullptr)
+	{
+		run_server();
+	}
+	else
+	{
+		
+
+		run_location(location);
+	}
+}
+
+void
+Executer::run_server()
+{
+	m_filename = p_server->root + m_filename;
 	e_FileType file_type = get_file_type();
+	if (file_type == DIRECTORY)
+	{
+		m_filename += p_server->index;
+		file_type = OTHER;
+	}
+	PRINT("in server:\n" << m_filename << " file type = " << file_type);
 	switch (file_type)
 	{
 		case PHP:
 		case PYTHON:
-			if (cgi_is_allowed(location->allowed_scripts, file_type))
+		case DIRECTORY:
+			m_status_code = 403; // cgi and directory listing
+			break; // are forbidden in server blocks
+		case OTHER:
+			read_from_file();
+			break;
+		default:
+			break;
+	}
+}
+
+void
+Executer::run_location(const Server::Location* p_loc)
+{
+	m_filename.replace(0, p_loc->location.size(), p_loc->root);
+	m_filename = p_server->root + m_filename;
+
+	e_FileType file_type = get_file_type();
+	if (file_type == DIRECTORY && !p_loc->directory_listing_enabled)
+	{
+		m_filename += p_loc->index;
+		file_type = OTHER;
+	}
+	PRINT("in location:\n" << m_filename << " file type = " << file_type);
+
+	switch (file_type)
+	{
+		case PHP:
+		case PYTHON:
+			if (cgi_is_allowed(p_loc->allowed_scripts, file_type))
 			{
 				// execute cgi
 
@@ -71,16 +122,7 @@ Executer::run()
 			}
 			break;
 		case DIRECTORY:
-			if (location->directory_listing_enabled)
-			{
-				// run directory listing
-
-			}
-			else
-			{
-				m_status_code = 403; // request forbidden
-				// m_content = directory listing not allowed here
-			}
+			run_directory_listing();
 			break;
 		case OTHER:
 			read_from_file();
@@ -89,7 +131,6 @@ Executer::run()
 		default:
 			break;
 	}
-
 }
 
 void
@@ -102,6 +143,13 @@ Executer::read_from_file()
 	else
 		m_status_code = 404;
 
+}
+
+void
+Executer::run_directory_listing()
+{
+	MyDirectory dir(m_filename, get_full_url());
+	m_content = dir.list_content();
 }
 
 e_FileType
@@ -118,20 +166,25 @@ Executer::get_file_type() const
 		return OTHER;
 }
 
-Server::Location*
+const Server::Location*
 Executer::find_location() const
 {
-
 	if (p_server == nullptr)
 		return nullptr;
+	const Server::Location* ret = nullptr;
+	PRINT("filename = " << m_filename);
 	std::string directory = find_dir(m_filename);
 	for (size_t i = 0; i < p_server->locations.size(); ++i)
 	{
-		Server::Location* loc = &p_server->locations[i];
+		const Server::Location* loc = &p_server->locations[i];
+		PRINT("location = " << loc->location << " directory = " << directory);
 		if (directory.compare(0, loc->location.size(), loc->location) == 0)
-			return loc;
+		{
+			if (ret == nullptr || loc->location.size() > ret->location.size())
+				ret = loc;
+		}
 	}
-	return nullptr;
+	return ret;
 }
 
 
@@ -145,10 +198,15 @@ Executer::replace_dir(const Server::Location* loc)
 }
 
 std::string
-Executer::find_dir(const std::string& name)
+Executer::find_dir(const std::string& name) const
 {
-	if (is_dir(name))
-		return name;
+	if (name.empty())
+		return "/";
+	else if (is_dir(p_server->root + name))
+	{
+		PRINT("is a directory");
+		return name + "/";
+	}
 	else
 	{
 		size_t pos = name.find_last_of('/');
@@ -163,8 +221,16 @@ Executer::is_dir(const std::string& name)
 {
 	struct stat dir;
 
+	PRINT("path = " << name);
+
 	if (stat(name.c_str(), &dir) == 0)
-		return dir.st_mode & S_IFDIR; // checks whether the DIR bit is set
+	{
+		if ((dir.st_mode & S_IFDIR) != 0)
+			return true;
+		else
+			return false;
+		// return (dir.st_mode & S_IFDIR) != 0 ? true : false; // checks whether the DIR bit is set
+	}
 	else
 		return false;
 }
@@ -172,7 +238,8 @@ Executer::is_dir(const std::string& name)
 bool
 Executer::cgi_is_allowed(const StringArr& scripts, e_FileType type)
 {
-	for (StringArr::const_iterator it = scripts.begin(); it != scripts.end(); ++it)
+	for (StringArr::const_iterator it = scripts.begin();
+		it != scripts.end(); ++it)
 	{
 		if ((type == PYTHON && *it == "python") ||
 			(type == PHP && *it == "php"))
