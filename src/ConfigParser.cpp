@@ -154,8 +154,7 @@ ConfigParser::m_read_server()
 		{
 			Server::Location location;
 
-			location.location = m_get_next_word_protected();
-			if (location.location == "{")
+			if (!location.set_prefix(m_get_next_word_protected()))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"location blocks must define the directory they operate in");
 

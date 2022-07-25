@@ -178,4 +178,13 @@ get_file_ext(const std::string& filename)
 	return filename.substr(pos + 1);
 }
 
+std::string
+compr_slash(std::string path)
+{
+	size_t pos = 0;
+	while ((pos = path.find("//")) != std::string::npos)
+		path.erase(pos, 1);
+	return path;
+}
+
 } // namespace utils

@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "typedefs.hpp"
+#include "utils.hpp"
 
 
 class Server
@@ -63,7 +64,7 @@ public: // subclass
 
 		Location& operator=(const Location& other);
 
-
+		bool set_prefix(const std::string& word);
 		bool set_root(const std::string& word);
 		bool set_index(const std::string& word);
 		bool set_script(const std::string& script);
@@ -73,7 +74,7 @@ public: // subclass
 
 
 	public: // attributes
-		std::string		location;
+		std::string		prefix;
 		std::string		root;
 		std::string		index;
 		StringArr		allowed_scripts;

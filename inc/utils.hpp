@@ -121,6 +121,14 @@ arr_to_csv(const StringArr& arr, const char* sep);
 std::string
 get_file_ext(const std::string& filename);
 
+/*
+@brief concentrates multiple slashes into one
+		Example: //var////www/ becomes /var/www/
+
+*/
+std::string
+compr_slash(std::string path);
+
 } // namespace utils
 
 

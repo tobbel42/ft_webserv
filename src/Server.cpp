@@ -70,7 +70,7 @@ Server::set_root(const std::string& word)
 	if (m_checks[ROOT])
 		return false;
 	m_checks[ROOT] = true;
-	root = word;
+	root = utils::compr_slash(word);
 	return true;
 }
 
@@ -80,7 +80,7 @@ Server::set_index(const std::string& word)
 	if (m_checks[INDEX])
 		return false;
 	m_checks[INDEX] = true;
-	index = word;
+	index = utils::compr_slash(word);
 	return true;
 }
 
@@ -90,7 +90,7 @@ Server::set_error_pages(const std::string& word)
 	if (m_checks[ERROR_PAGES])
 		return false;
 	m_checks[ERROR_PAGES] = true;
-	error_pages = word;
+	error_pages = utils::compr_slash(word);
 	return true;
 }
 
@@ -208,12 +208,21 @@ Server::Location::operator=(const Location& other)
 }
 
 bool
+Server::Location::set_prefix(const std::string& word)
+{
+	if (word == "{")
+		return false;
+	location = utils::compr_slash(word);
+	return true;
+}
+
+bool
 Server::Location::set_root(const std::string& word)
 {
 	if (m_checks[ROOT])
 		return false;
 	m_checks[ROOT] = true;
-	root = word;
+	root = utils::compr_slash(word);
 	return true;
 }
 
@@ -223,7 +232,7 @@ Server::Location::set_index(const std::string& word)
 	if (m_checks[INDEX])
 		return false;
 	m_checks[INDEX] = true;
-	index = word;
+	index = utils::compr_slash(word);
 	return true;
 }
 

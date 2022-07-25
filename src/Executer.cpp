@@ -69,13 +69,15 @@ Executer::run()
 void
 Executer::run_server()
 {
-	m_filename = p_server->root + m_filename;
+	m_filename = utils::compr_slash(p_server->root + m_filename);
 	e_FileType file_type = get_file_type();
+
 	if (file_type == DIRECTORY)
 	{
-		m_filename += p_server->index;
+		m_filename = utils::compr_slash(m_filename + p_server->index);
 		file_type = OTHER;
 	}
+
 	PRINT("in server:\n" << m_filename << " file type = " << file_type);
 	switch (file_type)
 	{
@@ -95,15 +97,17 @@ Executer::run_server()
 void
 Executer::run_location(const Server::Location* p_loc)
 {
-	m_filename.replace(0, p_loc->location.size(), p_loc->root);
-	m_filename = p_server->root + m_filename;
-
+	// redirect the locations
+	m_filename.replace(0, p_loc->prefix.size(), p_loc->root);
+	m_filename = utils::compr_slash(p_server->root + m_filename);
 	e_FileType file_type = get_file_type();
+
 	if (file_type == DIRECTORY && !p_loc->directory_listing_enabled)
 	{
-		m_filename += p_loc->index;
+		m_filename = utils::compr_slash(m_filename + p_loc->index);
 		file_type = OTHER;
 	}
+	
 	PRINT("in location:\n" << m_filename << " file type = " << file_type);
 
 	switch (file_type)
@@ -173,14 +177,15 @@ Executer::find_location() const
 		return nullptr;
 	const Server::Location* ret = nullptr;
 	PRINT("filename = " << m_filename);
-	std::string directory = find_dir(m_filename);
+	std::string directory = utils::compr_slash(find_dir(m_filename));
+
 	for (size_t i = 0; i < p_server->locations.size(); ++i)
 	{
 		const Server::Location* loc = &p_server->locations[i];
-		PRINT("location = " << loc->location << " directory = " << directory);
-		if (directory.compare(0, loc->location.size(), loc->location) == 0)
+		PRINT("location = " << loc->prefix << " directory = " << directory);
+		if (directory.compare(0, loc->prefix.size(), loc->prefix) == 0)
 		{
-			if (ret == nullptr || loc->location.size() > ret->location.size())
+			if (ret == nullptr || loc->prefix.size() > ret->prefix.size())
 				ret = loc;
 		}
 	}
@@ -225,11 +230,11 @@ Executer::is_dir(const std::string& name)
 
 	if (stat(name.c_str(), &dir) == 0)
 	{
-		if ((dir.st_mode & S_IFDIR) != 0)
-			return true;
-		else
-			return false;
-		// return (dir.st_mode & S_IFDIR) != 0 ? true : false; // checks whether the DIR bit is set
+		// if ((dir.st_mode & S_IFDIR) != 0)
+		// 	return true;
+		// else
+		// 	return false;
+		return dir.st_mode & S_IFDIR; // checks whether the DIR bit is set
 	}
 	else
 		return false;
