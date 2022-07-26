@@ -20,6 +20,8 @@ char ** g_envp;
 
 int main(int argc, char **argv, char **envp)
 {
+	// CGI cgi("testServerDir/test/pyt.py", envp);
+	// std::cout << "content: " << cgi.run(PYTHON, "something really cool") << std::endl;
 	g_envp = envp;
 	if (argc > 2)
 	{

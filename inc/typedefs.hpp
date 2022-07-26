@@ -69,5 +69,11 @@ inherited from struct kevent:
 #else
 struct s_pollfd: public pollfd {
 	inline bool operator==(fd_type fd1) { return fd == fd1; };
+/*
+inherited from struct pollfd"
+         int    fd;       file descriptor
+         short  events;   events to look for
+         short  revents;  events returned
+*/
 };
 #endif

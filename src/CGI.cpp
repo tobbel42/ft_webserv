@@ -73,19 +73,14 @@ CGI::prep_files(FileWrap& infile, FileWrap& outfile, const std::string& input)
 
 	if (!input.empty())
 	{
-		// if (fwrite(input.c_str(), sizeof(std::string::value_type)/* = char */,
-		// 			input.size(), infile) != input.size())
-		// {
-		// 	m_status_code = 500;
-		// 	perror("cgi fwrite infile");
-		// 	return false;
-		// }
-		write(fileno(infile), input.c_str(), input.size());
+		if (fwrite(input.c_str(), sizeof(std::string::value_type)/* = char */,
+					input.size(), infile) != input.size())
+		{
+			m_status_code = 500;
+			perror("cgi fwrite infile");
+			return false;
+		}
 		rewind(infile);
-		// char buf[1001];
-		// buf[1000] = '\0';
-		// fread(buf, sizeof(*buf), sizeof(buf) - 1, infile);
-		// PRINT(buf);
 	}
 	return true;
 }
@@ -122,6 +117,7 @@ CGI::exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[])
 			perror("cgi wait");
 			return false;
 		}
+		// temporarily disabled
 		// if (WEXITSTATUS(stat_loc) != 0)
 		// {
 		// 	EPRINT("exit status was not 0" << WEXITSTATUS(stat_loc));
