@@ -13,7 +13,8 @@ INC = Engine.hpp\
 	Request.hpp\
 	Response.hpp\
 	ConfigParser.hpp \
-	Executer.hpp
+	Executer.hpp \
+	CGI.hpp
 IDIR = inc
 INC_FULL = $(addprefix $(IDIR)/, $(INC))
 
@@ -31,7 +32,8 @@ SRC = main.cpp\
 	Connect.cpp\
 	get_next_line.cpp\
 	get_next_line_utils.cpp \
-	Executer.cpp
+	Executer.cpp \
+	CGI.cpp
 
 
 

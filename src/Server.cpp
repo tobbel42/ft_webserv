@@ -171,11 +171,11 @@ std::ostream& operator<<(std::ostream& out, const Server& rhs)
 }
 
 
-
+//-------------------------------------------------------------------------
 //		Location
 
 Server::Location::Location():
-	location(),
+	prefix(),
 	root("/"),
 	index("index.html"),
 	allowed_scripts(),
@@ -184,7 +184,7 @@ Server::Location::Location():
 {}
 
 Server::Location::Location(const Location& other):
-	location(other.location),
+	prefix(other.prefix),
 	root(other.root),
 	index(other.index),
 	allowed_scripts(other.allowed_scripts),
@@ -197,7 +197,7 @@ Server::Location::operator=(const Location& other)
 {
 	if (this != &other)
 	{
-		location = other.location;
+		prefix = other.prefix;
 		root = other.root;
 		index = other.index;
 		allowed_scripts = other.allowed_scripts;
@@ -212,7 +212,7 @@ Server::Location::set_prefix(const std::string& word)
 {
 	if (word == "{")
 		return false;
-	location = utils::compr_slash(word);
+	prefix = utils::compr_slash(word);
 	return true;
 }
 
@@ -278,7 +278,7 @@ Server::Location::check_attributes() const
 
 std::ostream& operator<<(std::ostream& out, const Server::Location& rhs)
 {
-	out << "location: " << rhs.location << "\nroot: " << rhs.root
+	out << "location: " << rhs.prefix << "\nroot: " << rhs.root
 		<< "\nindex: " << rhs.index << std::endl;
 	out << "\nallowed scripts:" << std::endl;
 	for (size_t i = 0; i < rhs.allowed_scripts.size(); ++i)
