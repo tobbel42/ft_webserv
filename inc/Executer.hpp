@@ -12,6 +12,7 @@
 #include "utils.hpp"
 #include "Server.hpp"
 #include "Request.hpp"
+#include "CGI.hpp"
 
 #include "../MyDirectory.hpp"
 
@@ -50,8 +51,8 @@ private: // methods
 	void run_server();
 	void run_location(const Server::Location* p_loc);
 
+	void run_cgi(e_FileType file_type);
 	void run_directory_listing();
-
 	void read_from_file();
 
 	void replace_dir(const Server::Location* loc);

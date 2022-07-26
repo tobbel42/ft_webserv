@@ -115,10 +115,7 @@ Executer::run_location(const Server::Location* p_loc)
 		case PHP:
 		case PYTHON:
 			if (cgi_is_allowed(p_loc->allowed_scripts, file_type))
-			{
-				// execute cgi
-
-			}
+				run_cgi(file_type);
 			else
 			{
 				m_status_code = 403;
@@ -154,6 +151,20 @@ Executer::run_directory_listing()
 {
 	MyDirectory dir(m_filename, get_full_url());
 	m_content = dir.list_content();
+	// TODO: pass the status code of the directory listing
+	// m_status_code = dir.get_status_code();
+}
+
+void
+Executer::run_cgi(e_FileType file_type)
+{
+	CGI cgi(m_filename, p_env);
+	const ByteArr& req_body = m_req.get_body();
+	std::string input(req_body.begin(), req_body.end());
+
+
+	m_content = cgi.run(file_type, input);
+	m_status_code = cgi.get_status_code();
 }
 
 e_FileType

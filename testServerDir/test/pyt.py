@@ -7,6 +7,11 @@
 #    return 'Web App with Python Flask!'
 
 
+import fileinput
+
+for line in fileinput.input():
+	print(line)
+
 print '<html>'
 print '<head>'
 print '<title>Hello World - First CGI Program</title>'

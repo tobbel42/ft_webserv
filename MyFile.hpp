@@ -1,10 +1,11 @@
 #ifndef MYFILE_HPP
 #define MYFILE_HPP
 
-
+#if 0
 #define PHP 1
 #define PYTHON 2
 #define HTML 3
+#endif
 #define FOLDER 4
 
 

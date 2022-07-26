@@ -57,6 +57,5 @@ int main(int argc, char **argv, char **envp)
 		std::cerr << e.what() << '\n';
 		return 1;
 	}
-	
 	return EXIT_SUCCESS;
 }
