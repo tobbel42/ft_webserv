@@ -40,7 +40,7 @@ Executer::get_full_url() const
 {
 	//m_filename is modified to represent the file structure/path of the server
 	//m_req.get_target() holds the filepath of the webserver
-	return "http://" + m_req.get_host() + ":" +
+	return  m_req.get_host() + ":" +
 			utils::to_string(m_req.get_port()) +
 			m_req.get_target();
 	// return "http://" + m_req.get_host() + ":" +
@@ -156,10 +156,17 @@ Executer::read_from_file()
 void
 Executer::run_directory_listing()
 {
+	#if 0
 	MyDirectory dir(m_filename, get_full_url());
 	m_content = dir.list_content();
 	// TODO: pass the status code of the directory listing
 	// m_status_code = dir.get_status_code();
+	#else
+	DirectoryListing dir_list(m_filename, get_full_url());
+
+	m_content = dir_list.run();
+	m_status_code = dir_list.get_status_code();
+	#endif
 }
 
 void

@@ -7,6 +7,7 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
+#include <iostream>
 
 #include "typedefs.hpp"
 
