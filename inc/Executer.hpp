@@ -13,6 +13,7 @@
 #include "Server.hpp"
 #include "Request.hpp"
 #include "CGI.hpp"
+#include "DirectoryListing.hpp"
 
 #include "../MyDirectory.hpp"
 
