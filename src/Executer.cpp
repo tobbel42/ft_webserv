@@ -165,7 +165,7 @@ Executer::run_directory_listing()
 void
 Executer::run_cgi(e_FileType file_type)
 {
-	CGI cgi(m_filename, p_env);
+	CGI cgi(m_filename, m_req, p_env);
 	const ByteArr& req_body = m_req.get_body();
 	std::string input(req_body.begin(), req_body.end());
 

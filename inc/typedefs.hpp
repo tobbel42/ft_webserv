@@ -30,6 +30,9 @@
 #define UINT32_MAX 0xFFFFFFFF
 #endif
 
+#define PHP_PATH "/usr/bin/php"
+#define PYTHON_PATH "/usr/bin/python"
+
 typedef	int	fd_type;
 
 class Server;

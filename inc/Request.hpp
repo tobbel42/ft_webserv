@@ -50,6 +50,7 @@ class Request {
 	bool is_valid_http_ver();
 
 	void parse_uri(const std::string &);
+
 	/*RequestHeaderParsing----------------------------------------------------*/
 
 	void get_next_header_line(std::string &);
@@ -111,6 +112,7 @@ class Request {
 	std::pair<bool, std::string> get_header_entry(std::string) const;
 	const std::vector<char> & get_body() const;
 	uint32_t get_err_code() const;
+	const std::map<std::string, std::string> & get_header() const;
 
 	/*Setter------------------------------------------------------------------*/
 

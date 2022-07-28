@@ -14,6 +14,20 @@ str_tolower(std::string & s)
 		s[i] = tolower(s[i]);
 }
 
+std::string
+cgi_str_toupper(const std::string & s)
+{
+	std::string s2;
+	for (size_t i = 0; i < s.size(); ++i)
+	{
+		if (s[i] == '-')
+			s2.push_back('_');
+		else
+			s2.push_back(toupper(s[i]));
+	}
+	return s2;
+}
+
 bool isCRLF(const std::string & s, size_t pos) {
 	if (pos + 2 > s.size())
 		return false;

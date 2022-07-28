@@ -4,13 +4,16 @@
 CGI::CGI(const CGI& other):
 	m_filename(other.m_filename),
 	m_content(other.m_content),
+	m_req(other.m_req),
+	m_env(other.m_env),
 	p_env(other.p_env),
 	m_status_code(other.m_status_code)
 {}
 
-CGI::CGI(const std::string& filename, char** envp):
+CGI::CGI(const std::string& filename, const Request & req, char** envp):
 	m_filename(filename),
 	m_content(),
+	m_req(req),
 	p_env(envp),
 	m_status_code(200)
 {}
@@ -24,10 +27,40 @@ CGI::operator=(const CGI& other)
 	{
 		m_filename = other.m_filename;
 		m_content = other.m_content;
+		m_req = other.m_req;
+		m_env = other.m_env;
 		p_env = other.p_env;
 		m_status_code = other.m_status_code;
 	}
 	return *this;
+}
+
+bool
+CGI::prep_env() //toDo prep some env
+{
+	if (m_req.get_header_entry("Content-length").first)
+		m_env["CONTENT_LENGTH"] = m_req.get_header_entry("Content-length").second;
+	if (m_req.get_header_entry("Content-type").first)
+		m_env["CONTENT_TYPE"] = m_req.get_header_entry("Content-type").second;
+	m_env["GATEWAY_INTERFACE"] = "CGI/1.1";
+
+	m_env["QUERY_STRING"] = m_req.get_query();
+	m_env["REQUEST_METHODE"] = m_req.get_methode();
+
+	m_env["SERVER_NAME"] = "HMM";
+	m_env["SERVER_PORT"] =  utils::to_string(m_req.get_port());
+	m_env["SERVER_PROTOCOL"] = "HTTP/1.1";
+	//m_env["AUTH_TYPE"] = "";
+	// m_env[""]
+
+	m_env["SAFEDIR"] = "testServerDir/test/uploads/";
+	m_env["PATH_INFO"] = m_filename;
+
+	for (std::map<std::string, std::string>::const_iterator iter = m_req.get_header().begin();
+		iter != m_req.get_header().end(); ++iter) {
+		m_env["HTTP_" + utils::cgi_str_toupper((*iter).first)] = (*iter).second;
+	}
+	return true;
 }
 
 std::string
@@ -39,13 +72,16 @@ CGI::run(e_FileType file_type, const std::string& input)
 	if (!prep_files(infile, outfile, input))
 		return std::string();
 
+	if (!prep_env())
+		return std::string();
+
 	switch (file_type)
 	{
 		case PHP:
-			argv[0] = (char*)"/usr/bin/php";
+			argv[0] = (char *)(PHP_PATH); //cpp is killing me ;_;
 			break;
 		case PYTHON:
-			argv[0] = (char*)"/usr/bin/python";
+			argv[0] = (char *)(PYTHON_PATH);
 			break;
 		default:
 			m_status_code = 501; // not implemented
@@ -90,6 +126,30 @@ CGI::prep_files(FileWrap& infile, FileWrap& outfile, const std::string& input)
 	return true;
 }
 
+char **
+CGI::map_to_env() //todo protect
+{
+	char ** env = (char **)calloc(m_env.size() + 1, sizeof(char *));
+	
+	char * ptr;
+
+	int i = 0;
+	for (std::map<std::string, std::string>::iterator iter = m_env.begin();
+		iter != m_env.end(); ++iter, ++i)
+	{
+		ptr = (char *)calloc((*iter).first.size() + (*iter).second.size() + 2, sizeof(char));
+		if (!ptr)
+			exit(EXIT_FAILURE);
+		strncpy(ptr, (*iter).first.c_str(), (*iter).first.size());
+		ptr[(*iter).first.size()] = '=';
+		strcpy(ptr + (*iter).first.size() + 1, (*iter).second.c_str());
+		env[i] = ptr;
+ 	}
+	env[i] = nullptr;
+	return env;
+}
+
+
 bool
 CGI::exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[])
 {
@@ -108,7 +168,8 @@ CGI::exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[])
 			perror("cgi dup2");
 			std::exit(errno);
 		}
-		execve(argv[0], argv, p_env);
+		char ** envs = map_to_env();
+		execve(argv[0], argv, envs);
 		perror("cgi execve");
 		std::exit(errno);
 	}
@@ -141,6 +202,10 @@ CGI::read_output(FileWrap& outfile)
 	rewind(outfile); // == fseek(outfile, 0, SEEK_SET)
 	while (fgets(buf, sizeof(buf), outfile) != nullptr)
 		output += buf;
+
+	//todo process CGI Header
+	if (output.find("\n\n") != std::string::npos)
+	output = output.substr(output.find("\n\n"));
 
 	if (ferror(outfile))
 	{

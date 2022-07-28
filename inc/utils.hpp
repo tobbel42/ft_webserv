@@ -43,6 +43,8 @@ bool isCRLF(const std::vector<char> &, size_t pos);
 */
 void
 str_tolower(std::string & s);
+std::string
+cgi_str_toupper(const std::string & s);
 
 /*
 @brief Converts the supplied value to a std::string. 

@@ -103,7 +103,10 @@ unsigned int
 Request::get_err_code() const { return m_err_code; }
 
 const std::string &
-Request::get_query() const { return m_query; } 
+Request::get_query() const { return m_query; }
+
+const std::map<std::string, std::string> &
+Request::get_header() const { return m_header; }
 
 /*Utils-----------------------------------------------------------------------*/
 

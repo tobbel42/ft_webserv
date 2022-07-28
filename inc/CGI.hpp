@@ -7,15 +7,19 @@
 #include <cstdio>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <map>
+#include <vector>
+#include <cstdlib>
 
 #include "typedefs.hpp"
 #include "utils.hpp"
+#include "Request.hpp"
 
 class CGI
 {
 public: // methods
 	CGI(const CGI& other);
-	CGI(const std::string& filename, char** envp);
+	CGI(const std::string& filename, const Request & req, char** envp);
 
 	~CGI();
 
@@ -32,6 +36,8 @@ private: // methods
 
 	class FileWrap;
 
+	bool prep_env();
+	char ** map_to_env();
 	bool prep_files(FileWrap& infile, FileWrap& outfile, const std::string& input);
 	bool exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[]);
 	std::string read_output(FileWrap& outfile);
@@ -69,6 +75,10 @@ private: // subclass
 private: // attributes
 	std::string	m_filename;
 	std::string	m_content;
+	Request m_req;
+
+	std::map<std::string, std::string> m_env;
+
 	char**		p_env;
 	int			m_status_code;
 
