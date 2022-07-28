@@ -36,12 +36,15 @@ private:
 	std::string generate_table_row(std::string element)
 	{
 		std::string content;
-		
+
+		PRINT("URL: " << _current_url);
+		PRINT("ELEMENT: " << element);
+
 		if (element == ".." || element == ".")
 			return "";
 		content = content + 
 			"<tr> \
-				<td> <a href =\"" + _current_url + element + "\">" + element + "</a> </td>";
+				<td> <a href =\"" + _current_url + "/" + element + "\">" + element + "</a> </td>";
 		content = content + get_mod_date(element);
 		return (content);
 	}
@@ -82,6 +85,10 @@ public:
 		_directory_path(directory_path),
 		_current_url(current_url)
 	{
+		//if we access a dir both /dirname or /dirname/ are valid targets
+		//so we have to normalize the input
+		if (_current_url.back() == '/')
+			_current_url.erase(_current_url.length() - 1);
 		#ifdef VERBOSE
 		std::cout << "current url: " << _current_url << std::endl;
 		#endif

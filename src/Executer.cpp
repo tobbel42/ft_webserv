@@ -38,9 +38,14 @@ Executer::~Executer() {}
 std::string
 Executer::get_full_url() const
 {
+	//m_filename is modified to represent the file structure/path of the server
+	//m_req.get_target() holds the filepath of the webserver
 	return "http://" + m_req.get_host() + ":" +
 			utils::to_string(m_req.get_port()) +
-			m_filename;
+			m_req.get_target();
+	// return "http://" + m_req.get_host() + ":" +
+	// 		utils::to_string(m_req.get_port()) + "/" +
+	// 		m_filename;
 }
 
 void
@@ -52,6 +57,8 @@ Executer::run()
 		m_status_code = 404;
 		return;
 	}
+
+	PRINT("EXEC FILENAME" << m_filename);
 
 	const Server::Location* location = find_location();
 	if (location == nullptr)
