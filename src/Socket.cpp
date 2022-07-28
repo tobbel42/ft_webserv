@@ -75,6 +75,11 @@ Socket::m_init()
 		return false;
 	}
 
+	/*this should prevent bindfailures after closing the webserver with CTRL-C*/
+	int on = 1;
+	setsockopt(m_sockfd, SOL_SOCKET,  SO_REUSEADDR, (char *)&on, sizeof(on));
+
+
 	#ifdef VERBOSE
 	PRINT("ip:" << utils::ip_to_string(m_ip) << ", port: " << m_port);
 	#endif
