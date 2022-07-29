@@ -19,13 +19,14 @@ class CGI
 {
 public: // methods
 	CGI(const CGI& other);
-	CGI(const std::string& filename, const Request & req, char** envp);
+	CGI(const std::string& filename, const Request & req);
 
 	~CGI();
 
 	CGI& operator=(const CGI& other);
 
 	int get_status_code() const { return m_status_code; }
+	const std::map<std::string, std::string> & get_cgi_header();
 	const std::string& get_content() const { return m_content; }
 
 
@@ -41,7 +42,7 @@ private: // methods
 	bool prep_files(FileWrap& infile, FileWrap& outfile, const std::string& input);
 	bool exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[]);
 	std::string read_output(FileWrap& outfile);
-	std::string get_abs_path();
+	void parse_header(std::string & output);
 
 private: // subclass
 	/*
@@ -79,8 +80,7 @@ private: // attributes
 	Request m_req;
 
 	std::map<std::string, std::string> m_env;
-
-	char**		p_env;
+	std::map<std::string, std::string> m_cgi_header;
 	int			m_status_code;
 
 };

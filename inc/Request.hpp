@@ -77,7 +77,7 @@ class Request {
 	/*DataMemberVariabels-----------------------------------------------------*/
 
 	uint32_t	m_err_code;
-	std::string m_methode;
+	std::string m_method;
 	std::string m_uri;
 
 	std::string m_host;
@@ -103,7 +103,7 @@ class Request {
 
 	/*Getter------------------------------------------------------------------*/
 
-	const std::string & get_methode() const;
+	const std::string & get_method() const;
 	const std::string & get_target() const;
 	const std::string & get_host() const;
 	uint32_t get_port() const;

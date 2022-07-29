@@ -3,9 +3,24 @@
 #include <arpa/inet.h>
 
 #include <iostream>
+#include <unistd.h>
 
 namespace utils {
 
+std::string
+get_abs_path(const std::string & filename)
+{
+	std::string str;
+	char * pwd = getcwd(NULL, 0);
+	if (pwd)
+	{
+		str = pwd;
+		free(pwd);
+	}
+	str += "/";
+	str += filename;
+	return str;
+}
 
 void
 str_tolower(std::string & s)

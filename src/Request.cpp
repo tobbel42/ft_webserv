@@ -52,7 +52,7 @@ Request::operator=(const Request & rhs) {
 	m_done = rhs.m_done;
 	m_content_len = rhs.m_content_len;
 	m_err_code = rhs.m_err_code;
-	m_methode = rhs.m_methode;
+	m_method = rhs.m_method;
 	m_uri = rhs.m_uri;
 
 	m_host = rhs.m_host;
@@ -70,7 +70,7 @@ Request::operator=(const Request & rhs) {
 /*Getter----------------------------------------------------------------------*/
 
 const std::string & 
-Request::get_methode() const { return m_methode; }
+Request::get_method() const { return m_method; }
 
 const std::string & 
 Request::get_target() const { return m_target; }
@@ -224,7 +224,7 @@ Request::parse_request_line(const std::string & line){
 	pos = line.find(' ');
 	if (pos == std::string::npos)
 		return false;
-	m_methode = line.substr(0, pos);
+	m_method = line.substr(0, pos);
 	pos1 = pos + 1;
 	pos = line.find(' ', pos1);
 	if (pos == std::string::npos)
@@ -279,7 +279,7 @@ Request::is_valid_request_line() {
 
 	char c[4] = {'\t', '\r', '\n', ' '};
 
-	if (check_invalid_char(m_methode, c, 4))
+	if (check_invalid_char(m_method, c, 4))
 		return false;
 	if (check_invalid_char(m_uri, c, 4))
 		return false;
@@ -521,7 +521,7 @@ Request::append_read(std::vector<char> buf) {
 
 void
 Request::print_request() {
-	std::cout << m_methode << "##" << std::endl;
+	std::cout << m_method << "##" << std::endl;
 	std::cout << m_uri << "##" << std::endl;
 	std::cout << m_http_ver << "##" << std::endl;
 	std::cout << "HEADER" << "##" << std::endl;
