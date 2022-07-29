@@ -119,20 +119,21 @@ Response::get_body_size() const { return m_body.size(); }
 void
 Response::send(const s_kevent& kevent)
 {
+	int i;
 	if (p_server != nullptr)
 	{
 		if (p_server->max_client_body_size > m_body.size())
-			write(kevent.ident, m_payload.c_str(), m_payload.size());
+			i = write(kevent.ident, m_payload.c_str(), m_payload.size());
 		else
 		{
 			set_status_code(413); // request too large
 			m_payload.clear();
 			generate();
-			write(kevent.ident, m_payload.c_str(), m_payload.size());
+			i = write(kevent.ident, m_payload.c_str(), m_payload.size());
 		}
 	}
 	else
-		write(kevent.ident, m_payload.c_str(), m_payload.size());
+		i = write(kevent.ident, m_payload.c_str(), m_payload.size());
 }
 #else
 
@@ -178,8 +179,7 @@ Response::generate()
 	}
 	m_add_to_head("Server", "lil l and the beachboys 1.0");
 	m_add_to_payload(m_header);
-	m_payload += "\r\n";
-	m_add_to_payload(m_body);
+	m_payload += m_body;
 	return std::make_pair(m_payload, m_body.size());
 }
 

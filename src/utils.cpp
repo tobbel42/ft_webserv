@@ -172,15 +172,37 @@ read_file(std::istream& file, const char* nl)
 	std::string contents;
 	std::string line;
 
-	do
+	PRINT("HELLO");
+
+	while (!file.eof())
 	{
 		std::getline(file, line);
 		contents.append(line);
-		contents.append(nl);
-	} while (file);
-
+		if (!file.eof())
+			contents.append(nl);
+	}
+	PRINT(contents.size());
+	//contents = contents.substr(0, contents.size() - 1);
 	return contents;
 }
+
+// std::string
+// read_file(std::istream& file, const char* nl)
+// {
+// 	std::string contents;
+// 	std::string line;
+
+// 	do
+// 	{
+// 		std::getline(file, line);
+// 		contents.append(line);
+// 		contents.append(nl);
+// 	} while (file);
+
+// 	contents = contents.substr(0, contents.size() - 1);
+
+// 	return contents;
+// }
 
 std::string
 arr_to_csv(const StringArr& arr, const char* sep)

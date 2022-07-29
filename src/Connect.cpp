@@ -185,6 +185,7 @@ Connect::composeResponse()
 
 	m_res.set_server(p_server);
 	m_res.set_location(p_location);
+	m_res.set_filename(exec.get_filename());
 	m_res.set_status_code(exec.get_status_code());
 	if (exec.get_status_code() == 200)
 		m_res.set_body(exec.get_content());

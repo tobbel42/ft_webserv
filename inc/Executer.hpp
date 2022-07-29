@@ -32,6 +32,7 @@ public: // methods
 
 	int get_status_code() const { return m_status_code; }
 
+	std::string get_filename() const { return m_filename; }
 
 	void run();
 
