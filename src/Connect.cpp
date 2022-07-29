@@ -34,6 +34,7 @@ Connect	&Connect::operator = (const Connect &rhs)
 	m_ip = rhs.getIp();
 	m_port = rhs.getPort();
 	p_server = rhs.getServer();
+	p_location = rhs.get_location();
 	m_action = rhs.getAction();
 	m_status_code = rhs.m_status_code;
 	m_req = rhs.m_req;
@@ -54,8 +55,11 @@ Connect::Connect(fd_type fd, uint32_t ip, uint32_t port):
 	#endif
 }
 
-Server *
+const Server *
 Connect::getServer() const { return p_server; }
+
+const Server::Location*
+Connect::get_location() const { return p_location; }
 
 uint32_t
 Connect::getIp() const { return m_ip; }
@@ -73,7 +77,10 @@ std::string
 Connect::get_hostname() const { return m_req.get_host(); }
 
 void
-Connect::setServer( Server * server ) { p_server = server; }
+Connect::setServer(const Server * server ) { p_server = server; }
+
+void
+Connect::set_location(const Server::Location* location) { p_location = location; }
 
 void
 Connect::set_status(int status_code) { m_status_code = status_code; }
@@ -136,6 +143,7 @@ Connect::writeResponse(s_pollfd & poll)
 void
 Connect::composeResponse()
 {
+	#if 0
 	if (p_server == nullptr)
 	{
 		m_res.set_status_code(404);
@@ -144,7 +152,6 @@ Connect::composeResponse()
 	}
 
 
-	#if 0
 
 	m_req.substitute_default_target(p_server->index);
 	std::string filename = m_req.get_target();
@@ -172,11 +179,12 @@ Connect::composeResponse()
 
 	#else
 
-	Executer exec(p_server, g_envp, m_req);
+	Executer exec(p_server, p_location, g_envp, m_req);
 
 	exec.run();
 
 	m_res.set_server(p_server);
+	m_res.set_location(p_location);
 	m_res.set_status_code(exec.get_status_code());
 	if (exec.get_status_code() == 200)
 		m_res.set_body(exec.get_content());
@@ -188,4 +196,48 @@ Connect::composeResponse()
 	#endif
 	
 	m_action = WRITE;
+}
+
+void
+Connect::find_location()
+{
+	p_location = nullptr;
+
+	if (p_server == nullptr)
+		return;
+
+	const std::string& filename = m_req.get_target();
+	std::string directory = utils::compr_slash(find_dir(filename));
+
+	for (size_t i = 0; i < p_server->locations.size(); ++i)
+	{
+		const Server::Location* loc = &p_server->locations[i];
+
+		// look for the prefix that matches the requested dir the most
+		if (directory.compare(0, loc->prefix.size(), loc->prefix) == 0)
+		{
+			if (p_location == nullptr ||
+				loc->prefix.size() > p_location->prefix.size())
+				p_location = loc;
+		}
+	}
+}
+
+std::string
+Connect::find_dir(const std::string& name) const
+{
+	if (name.empty())
+		return "/";
+	else if (utils::is_dir(p_server->root + name))
+	{
+		PRINT("is a directory");
+		return name + "/";
+	}
+	else
+	{
+		size_t pos = name.find_last_of('/');
+		if (pos == std::string::npos)
+			return "/"; // is this appropriate?
+		return name.substr(0, pos);
+	}
 }

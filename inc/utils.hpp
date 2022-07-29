@@ -2,6 +2,7 @@
 
 #include <ctime>
 #include <cctype>
+#include <sys/stat.h>
 
 #include <string>
 #include <vector>
@@ -123,12 +124,18 @@ std::string
 get_file_ext(const std::string& filename);
 
 /*
-@brief concentrates multiple slashes into one
+@brief concentrates multiple slashes into one 
 		Example: //var////www/ becomes /var/www/
-
 */
 std::string
 compr_slash(std::string path);
+
+
+/*
+@brief determines whether the specified name is a directory
+*/
+bool
+is_dir(const std::string& name);
 
 } // namespace utils
 

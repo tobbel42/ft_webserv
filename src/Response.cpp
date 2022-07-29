@@ -20,8 +20,9 @@ Response::Response( const Response & cpy ) {
 	*this = cpy;
 }
 
-Response::Response(int status_code, const std::string& body, Server* server, Request* request):
+Response::Response(int status_code, const std::string& body, const Server* server, Request* request):
 	p_server(server),
+	p_loc(),
 	p_request(request),
 	m_status_code(status_code),
 	m_header(),
@@ -43,6 +44,7 @@ Response & Response::operator=( const Response & rhs ) {
 	if (this != &rhs)
 	{
 		p_server = rhs.p_server;
+		p_loc = rhs.p_loc;
 		p_request = rhs.p_request;
 		m_status_code = rhs.m_status_code;
 		m_header = rhs.m_header;
@@ -92,7 +94,10 @@ Response::s_get_mime_type(const std::string& filename)
 
 
 void
-Response::set_server(Server* server) { p_server = server; }
+Response::set_server(const Server* server) { p_server = server; }
+
+void
+Response::set_location(const Server::Location* location) { p_loc = location; }
 
 void
 Response::set_status_code(int status_code) { m_status_code = status_code; }
@@ -194,17 +199,14 @@ Response::m_success()
 {
 	m_init_header();
 
-	m_add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
+	if (p_loc != nullptr)
+		m_add_to_head("Allow", utils::arr_to_csv(p_loc->allowed_methods, ", "));
+	else if (p_server != nullptr)
+		m_add_to_head("Allow", "GET");
 	m_add_to_head("Content-Length", utils::to_string(m_body.size()));
 	m_add_to_head("Content-Location", m_filename);
 	m_add_to_head("Content-Type", s_get_mime_type(m_filename));
 
-	// std::string header_entry = p_request->getHeaderEntry("Content-Location");
-	// if (!header_entry.empty())
-	// {
-	// 	m_add_to_head("Content-Type", s_get_mime_type(header_entry));
-	// 	m_add_to_head("Content-Location", header_entry);
-	// }
 	switch (m_status_code)
 	{
 	case 200:
@@ -281,8 +283,10 @@ Response::m_error()
 
 	m_body = utils::read_file(file, "\r\n");
 	
-	if (p_server != nullptr)
-		m_add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
+	if (p_loc != nullptr)
+		m_add_to_head("Allow", utils::arr_to_csv(p_loc->allowed_methods, ", "));
+	else if (p_server != nullptr)
+		m_add_to_head("Allow", "GET");
 	m_add_to_head("Content-Length", utils::to_string(m_body.size()));
 	m_add_to_head("Content-Location", filename);
 	m_add_to_head("Content-Type", s_get_mime_type(filename));

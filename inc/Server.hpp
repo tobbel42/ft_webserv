@@ -28,7 +28,6 @@ public: // methods
 	bool set_error_pages(const std::string& word);
 	bool set_ip_address(uint32_t ip);
 	bool set_port(uint32_t port);
-	bool set_method(const std::string& method);
 	bool set_max_client_body_size(uint32_t n);
 
 	const char* check_attributes() const;
@@ -47,7 +46,6 @@ public: // attributes
 	uint32_t				ip_address;
 	std::vector<uint32_t>	ports;
 	uint32_t				max_client_body_size;
-	StringArr				allowed_methods;
 
 	class Location;
 	std::vector<Location>	locations;
@@ -68,6 +66,7 @@ public: // subclass
 		bool set_root(const std::string& word);
 		bool set_index(const std::string& word);
 		bool set_script(const std::string& script);
+		bool set_method(const std::string& method);
 		const char* set_directory_listing(const std::string& state);
 
 		const char* check_attributes() const;
@@ -78,6 +77,7 @@ public: // subclass
 		std::string		root;
 		std::string		index;
 		StringArr		allowed_scripts;
+		StringArr		allowed_methods;
 		bool			directory_listing_enabled;
 
 
