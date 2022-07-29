@@ -79,7 +79,7 @@ Executer::run_server()
 	m_filename = utils::compr_slash(p_server->root + m_filename);
 	e_FileType file_type = get_file_type();
 
-	if (m_req.get_methode() != "GET")
+	if (m_req.get_method() != "GET")
 	{
 		m_status_code = 405; // only get-requests are allowed in the server
 		return;
@@ -115,7 +115,7 @@ Executer::run_location()
 	m_filename = utils::compr_slash(p_server->root + m_filename);
 	e_FileType file_type = get_file_type();
 
-	if (!method_is_allowed(p_loc->allowed_methods, m_req.get_methode()))
+	if (!method_is_allowed(p_loc->allowed_methods, m_req.get_method()))
 	{
 		m_status_code = 405; // method not allowed
 		return;
@@ -178,7 +178,7 @@ Executer::run_directory_listing()
 void
 Executer::run_cgi(e_FileType file_type)
 {
-	CGI cgi(m_filename, m_req, p_env);
+	CGI cgi(m_filename, m_req);
 	const ByteArr& req_body = m_req.get_body();
 	std::string input(req_body.begin(), req_body.end());
 

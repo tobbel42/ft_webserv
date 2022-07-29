@@ -23,7 +23,7 @@ except:
 	message = 'No file was uploaded'
 
 print("""\
-Content-Type: text/html\n\n
+Content-Type: text/html\r\n\r\n
 <html>
 <body>
    <p>%s</p>
