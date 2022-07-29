@@ -32,8 +32,6 @@ SRC = main.cpp\
 	utils.cpp\
 	ConfigParser.cpp \
 	Connect.cpp\
-	get_next_line.cpp\
-	get_next_line_utils.cpp \
 	Executer.cpp \
 	CGI.cpp \
 	DirectoryListing.cpp
