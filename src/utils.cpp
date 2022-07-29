@@ -201,4 +201,15 @@ compr_slash(std::string path)
 	return path;
 }
 
+bool
+is_dir(const std::string& name)
+{
+	struct stat dir;
+
+	if (stat(name.c_str(), &dir) == 0)
+		return dir.st_mode & S_IFDIR; // checks whether the DIR bit is set
+	else
+		return false;
+}
+
 } // namespace utils

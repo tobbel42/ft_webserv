@@ -3,6 +3,7 @@
 
 Executer::Executer(const Executer& other):
 	p_server(other.p_server),
+	p_loc(other.p_loc),
 	p_env(other.p_env),
 	m_status_code(other.m_status_code),
 	m_req(other.m_req),
@@ -11,8 +12,10 @@ Executer::Executer(const Executer& other):
 	// m_url(other.m_url)
 {}
 
-Executer::Executer(const Server* server, char** envp, const Request& req):
+Executer::Executer(const Server* server, const Server::Location* location,
+					char** envp, const Request& req):
 	p_server(server),
+	p_loc(location),
 	p_env(envp),
 	m_status_code(200),
 	m_req(req),
@@ -20,9 +23,11 @@ Executer::Executer(const Server* server, char** envp, const Request& req):
 	m_filename(req.get_target())
 {}
 
-Executer::Executer(const Server* server, char** envp, const Request& req,
+Executer::Executer(const Server* server, const Server::Location* location,
+					char** envp, const Request& req,
 					const std::string& filename):
 	p_server(server),
+	p_loc(location),
 	p_env(envp),
 	m_status_code(200),
 	m_req(req),
@@ -51,25 +56,20 @@ Executer::get_full_url() const
 void
 Executer::run()
 {
+	PRINT("EXEC FILENAME" << m_filename);
 	if (p_server == nullptr)
 	{
 		EPRINT("no viable server found");
 		m_status_code = 404;
 		return;
 	}
-
-	PRINT("EXEC FILENAME" << m_filename);
-
-	const Server::Location* location = find_location();
-	if (location == nullptr)
+	else if (p_loc == nullptr)
 	{
 		run_server();
 	}
 	else
 	{
-		
-
-		run_location(location);
+		run_location();
 	}
 }
 
@@ -79,9 +79,15 @@ Executer::run_server()
 	m_filename = utils::compr_slash(p_server->root + m_filename);
 	e_FileType file_type = get_file_type();
 
-	if (file_type == DIRECTORY)
+	if (m_req.get_methode() != "GET")
 	{
-		m_filename = utils::compr_slash(m_filename + p_server->index);
+		m_status_code = 405; // only get-requests are allowed in the server
+		return;
+	}
+
+	if (file_type == DIRECTORY && p_server->root == m_req.get_target())
+	{
+		m_filename = utils::compr_slash(m_filename + "/" + p_server->index);
 		file_type = OTHER;
 	}
 
@@ -102,16 +108,23 @@ Executer::run_server()
 }
 
 void
-Executer::run_location(const Server::Location* p_loc)
+Executer::run_location()
 {
 	// redirect the locations
 	m_filename.replace(0, p_loc->prefix.size(), p_loc->root);
 	m_filename = utils::compr_slash(p_server->root + m_filename);
 	e_FileType file_type = get_file_type();
 
-	if (file_type == DIRECTORY && !p_loc->directory_listing_enabled)
+	if (!method_is_allowed(p_loc->allowed_methods, m_req.get_methode()))
 	{
-		m_filename = utils::compr_slash(m_filename + p_loc->index);
+		m_status_code = 405; // method not allowed
+		return;
+	}
+
+	if (file_type == DIRECTORY && !p_loc->directory_listing_enabled &&
+		p_loc->prefix == m_req.get_target()) // only append the root for exact matches
+	{
+		m_filename = utils::compr_slash(m_filename + "/" + p_loc->index);
 		file_type = OTHER;
 	}
 	
@@ -156,17 +169,10 @@ Executer::read_from_file()
 void
 Executer::run_directory_listing()
 {
-	#if 0
-	MyDirectory dir(m_filename, get_full_url());
-	m_content = dir.list_content();
-	// TODO: pass the status code of the directory listing
-	// m_status_code = dir.get_status_code();
-	#else
 	DirectoryListing dir_list(m_filename, get_full_url());
 
 	m_content = dir_list.run();
 	m_status_code = dir_list.get_status_code();
-	#endif
 }
 
 void
@@ -176,7 +182,6 @@ Executer::run_cgi(e_FileType file_type)
 	const ByteArr& req_body = m_req.get_body();
 	std::string input(req_body.begin(), req_body.end());
 
-
 	m_content = cgi.run(file_type, input);
 	m_status_code = cgi.get_status_code();
 }
@@ -184,7 +189,7 @@ Executer::run_cgi(e_FileType file_type)
 e_FileType
 Executer::get_file_type() const
 {
-	if (is_dir(m_filename))
+	if (utils::is_dir(m_filename))
 		return DIRECTORY;
 	std::string extension = utils::get_file_ext(m_filename);
 	if (extension == "py")
@@ -193,76 +198,6 @@ Executer::get_file_type() const
 		return PHP;
 	else
 		return OTHER;
-}
-
-const Server::Location*
-Executer::find_location() const
-{
-	if (p_server == nullptr)
-		return nullptr;
-	const Server::Location* ret = nullptr;
-	PRINT("filename = " << m_filename);
-	std::string directory = utils::compr_slash(find_dir(m_filename));
-
-	for (size_t i = 0; i < p_server->locations.size(); ++i)
-	{
-		const Server::Location* loc = &p_server->locations[i];
-		PRINT("location = " << loc->prefix << " directory = " << directory);
-		if (directory.compare(0, loc->prefix.size(), loc->prefix) == 0)
-		{
-			if (ret == nullptr || loc->prefix.size() > ret->prefix.size())
-				ret = loc;
-		}
-	}
-	return ret;
-}
-
-
-void
-Executer::replace_dir(const Server::Location* loc)
-{
-	if (loc == nullptr)
-		return;
-	// std::string filename = m_filename.substr(loc->location.size());
-	// m_filename = (loc->root + filename);
-}
-
-std::string
-Executer::find_dir(const std::string& name) const
-{
-	if (name.empty())
-		return "/";
-	else if (is_dir(p_server->root + name))
-	{
-		PRINT("is a directory");
-		return name + "/";
-	}
-	else
-	{
-		size_t pos = name.find_last_of('/');
-		if (pos == std::string::npos)
-			return "/"; // is this appropriate?
-		return name.substr(0, pos);
-	}
-}
-
-bool
-Executer::is_dir(const std::string& name)
-{
-	struct stat dir;
-
-	PRINT("path = " << name);
-
-	if (stat(name.c_str(), &dir) == 0)
-	{
-		// if ((dir.st_mode & S_IFDIR) != 0)
-		// 	return true;
-		// else
-		// 	return false;
-		return dir.st_mode & S_IFDIR; // checks whether the DIR bit is set
-	}
-	else
-		return false;
 }
 
 bool
@@ -276,4 +211,12 @@ Executer::cgi_is_allowed(const StringArr& scripts, e_FileType type)
 			return true;
 	}
 	return false;
+}
+
+bool
+Executer::method_is_allowed(const StringArr& methods,
+							const std::string& requested_method)
+{
+	return std::find(methods.begin(), methods.end(), requested_method)
+			!= methods.end();
 }

@@ -68,9 +68,7 @@ DirectoryListing::generate_table_row(const std::string& entry_name) const
 		"<tr>"
 			"<td>"
 				"<a "
-					"href =\""
-						+ full_path +
-					"\">"
+					"href =\"" + full_path + "\">"
 					+ entry_name +
 				"</a>"
 			"</td>"
