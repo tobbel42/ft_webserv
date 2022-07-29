@@ -229,6 +229,7 @@ Engine::find_server(const Connect& cnct)
 	return default_server;
 }
 
+
 void
 Engine::assign_server(Connect & cnct)
 {
@@ -236,7 +237,10 @@ Engine::assign_server(Connect & cnct)
 	if (server == nullptr)
 		cnct.set_status(404);
 	else
+	{
 		cnct.setServer(server);
+		cnct.find_location();
+	}
 }
 
 #ifdef KQUEUE
@@ -301,8 +305,12 @@ Engine::connect_event(s_kevent & kevent)
 
 			//assign a server, if not yet given
 			//(search for Hostname in Socket servers/ default server)
-			if (cnct.getServer() == NULL)
+			if (cnct.getServer() == nullptr)
 				assign_server(cnct);
+
+			// look for a location block with a matching prefix string 
+			// in the server
+			cnct.find_location();
 
 			//formulate the request (result or error)
 			cnct.composeResponse();
@@ -435,7 +443,8 @@ Engine::debug()
 
 void
 Engine::print_start_msg() {
-	int i = 96;
+	srand(std::time(NULL));
+	int i = rand() % 255;
 	PRINT("\033[38;5;" << i 
 		<< "m _       __     __   _____                \033[0m");
 	PRINT("\033[38;5;" << i

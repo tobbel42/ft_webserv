@@ -11,14 +11,12 @@ Server::Server():
 	ip_address(),
 	ports(),
 	max_client_body_size(std::numeric_limits<uint32_t>::max()),
-	allowed_methods(),
 	locations(),
 	m_checks(7, false)
 {
 	// reserving memory beforehand to avoid copies
 	server_names.reserve(3);
 	ports.reserve(5);
-	allowed_methods.reserve(3);
 	locations.reserve(3);
 }
 
@@ -30,7 +28,6 @@ Server::Server(const Server& other):
 	ip_address(other.ip_address),
 	ports(other.ports),
 	max_client_body_size(other.max_client_body_size),
-	allowed_methods(other.allowed_methods),
 	locations(other.locations),
 	m_checks(other.m_checks)
 {}
@@ -47,7 +44,6 @@ Server::operator=(const Server& other)
 		ip_address = other.ip_address;
 		ports = other.ports;
 		max_client_body_size = other.max_client_body_size;
-		allowed_methods = other.allowed_methods;
 		locations = other.locations;
 		m_checks = other.m_checks;
 	}
@@ -70,7 +66,7 @@ Server::set_root(const std::string& word)
 	if (m_checks[ROOT])
 		return false;
 	m_checks[ROOT] = true;
-	root = word;
+	root = utils::compr_slash(word);
 	return true;
 }
 
@@ -80,7 +76,7 @@ Server::set_index(const std::string& word)
 	if (m_checks[INDEX])
 		return false;
 	m_checks[INDEX] = true;
-	index = word;
+	index = utils::compr_slash(word);
 	return true;
 }
 
@@ -90,7 +86,7 @@ Server::set_error_pages(const std::string& word)
 	if (m_checks[ERROR_PAGES])
 		return false;
 	m_checks[ERROR_PAGES] = true;
-	error_pages = word;
+	error_pages = utils::compr_slash(word);
 	return true;
 }
 
@@ -109,20 +105,6 @@ Server::set_port(uint32_t port)
 {
 	ports.push_back(port);
 	return true;
-}
-
-bool
-Server::set_method(const std::string& method)
-{
-	if (method == "GET" || method == "POST" || method == "DELETE")
-	{
-		if (std::find(allowed_methods.begin(), allowed_methods.end(), method)
-			== allowed_methods.end())
-			allowed_methods.push_back(method);
-		return true;
-	}
-	else
-		return false;
 }
 
 bool
@@ -161,9 +143,6 @@ std::ostream& operator<<(std::ostream& out, const Server& rhs)
 		<< rhs.max_client_body_size << "\nports:" << std::endl;
 	for (size_t i = 0; i < rhs.ports.size(); ++i)
 		out << rhs.ports[i] << ", ";
-	out << "\nallowed methods: ";
-	for (size_t i = 0; i < rhs.allowed_methods.size(); ++i)
-		out << rhs.allowed_methods[i] << ", ";
 	out << std::endl;
 	for (size_t i = 0; i < rhs.locations.size(); ++i)
 		out << rhs.locations[i] << std::endl;
@@ -171,23 +150,28 @@ std::ostream& operator<<(std::ostream& out, const Server& rhs)
 }
 
 
-
+//-------------------------------------------------------------------------
 //		Location
 
 Server::Location::Location():
-	location(),
+	prefix(),
 	root("/"),
 	index("index.html"),
 	allowed_scripts(),
+	allowed_methods(),
 	directory_listing_enabled(false),
 	m_checks(5, false)
-{}
+{
+	allowed_scripts.reserve(2);
+	allowed_methods.reserve(3);
+}
 
 Server::Location::Location(const Location& other):
-	location(other.location),
+	prefix(other.prefix),
 	root(other.root),
 	index(other.index),
 	allowed_scripts(other.allowed_scripts),
+	allowed_methods(other.allowed_methods),
 	directory_listing_enabled(other.directory_listing_enabled),
 	m_checks(other.m_checks)
 {}
@@ -197,14 +181,24 @@ Server::Location::operator=(const Location& other)
 {
 	if (this != &other)
 	{
-		location = other.location;
+		prefix = other.prefix;
 		root = other.root;
 		index = other.index;
 		allowed_scripts = other.allowed_scripts;
+		allowed_methods = other.allowed_methods;
 		directory_listing_enabled = other.directory_listing_enabled;
 		m_checks = other.m_checks;
 	}
 	return *this;
+}
+
+bool
+Server::Location::set_prefix(const std::string& word)
+{
+	if (word == "{")
+		return false;
+	prefix = utils::compr_slash(word);
+	return true;
 }
 
 bool
@@ -213,7 +207,7 @@ Server::Location::set_root(const std::string& word)
 	if (m_checks[ROOT])
 		return false;
 	m_checks[ROOT] = true;
-	root = word;
+	root = utils::compr_slash(word);
 	return true;
 }
 
@@ -223,7 +217,7 @@ Server::Location::set_index(const std::string& word)
 	if (m_checks[INDEX])
 		return false;
 	m_checks[INDEX] = true;
-	index = word;
+	index = utils::compr_slash(word);
 	return true;
 }
 
@@ -235,6 +229,20 @@ Server::Location::set_script(const std::string& script)
 		if (std::find(allowed_scripts.begin(), allowed_scripts.end(), script)
 			== allowed_scripts.end())
 			allowed_scripts.push_back(script);
+		return true;
+	}
+	else
+		return false;
+}
+
+bool
+Server::Location::set_method(const std::string& method)
+{
+	if (method == "GET" || method == "POST" || method == "DELETE")
+	{
+		if (std::find(allowed_methods.begin(), allowed_methods.end(), method)
+			== allowed_methods.end())
+			allowed_methods.push_back(method);
 		return true;
 	}
 	else
@@ -269,10 +277,13 @@ Server::Location::check_attributes() const
 
 std::ostream& operator<<(std::ostream& out, const Server::Location& rhs)
 {
-	out << "location: " << rhs.location << "\nroot: " << rhs.root
+	out << "location: " << rhs.prefix << "\nroot: " << rhs.root
 		<< "\nindex: " << rhs.index << std::endl;
 	out << "\nallowed scripts:" << std::endl;
 	for (size_t i = 0; i < rhs.allowed_scripts.size(); ++i)
 		out << rhs.allowed_scripts[i] << ", ";
+	out << "\nallowed methods: ";
+	for (size_t i = 0; i < rhs.allowed_methods.size(); ++i)
+		out << rhs.allowed_methods[i] << ", ";
 	return out;
 }

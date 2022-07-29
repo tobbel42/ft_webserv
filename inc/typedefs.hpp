@@ -18,7 +18,7 @@
 
 #define HTTP_VERSION 1.1
 #define DEFAULT_ERROR_PAGES "config/default_error_pages"
-#define READSIZE 8192 //we reading at max 8kb of data, might change
+#define READSIZE 68192 //we reading at max 8kb of data, might change
 #define CNCT_TIMEOUT 2 // in seconds
 #define ENGINE_BACKLOG 10
 
@@ -30,6 +30,11 @@
 #define UINT32_MAX 0xFFFFFFFF
 #endif
 
+#define PHP_PATH "/usr/bin/php"
+#if 1
+#define PYTHON_PATH "/usr/bin/python"
+#endif
+// #define PYTHON_PATH "./IntraTesterDirectory/cgi_tester"
 typedef	int	fd_type;
 
 class Server;
@@ -37,6 +42,16 @@ class Server;
 typedef std::vector<std::string>	StringArr;
 typedef std::vector<Server>			ServerArr;
 typedef std::vector<char>			ByteArr;
+
+
+enum e_FileType
+{
+	HTML,
+	PHP,
+	PYTHON,
+	DIRECTORY,
+	OTHER
+};
 
 #ifdef KQUEUE
 struct	s_kevent: public kevent
@@ -59,5 +74,11 @@ inherited from struct kevent:
 #else
 struct s_pollfd: public pollfd {
 	inline bool operator==(fd_type fd1) { return fd == fd1; };
+/*
+inherited from struct pollfd"
+         int    fd;       file descriptor
+         short  events;   events to look for
+         short  revents;  events returned
+*/
 };
 #endif

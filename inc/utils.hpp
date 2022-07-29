@@ -2,11 +2,13 @@
 
 #include <ctime>
 #include <cctype>
+#include <sys/stat.h>
 
 #include <string>
 #include <vector>
 #include <sstream>
 #include <fstream>
+#include <iostream>
 
 #include "typedefs.hpp"
 
@@ -43,6 +45,8 @@ bool isCRLF(const std::vector<char> &, size_t pos);
 */
 void
 str_tolower(std::string & s);
+std::string
+cgi_str_toupper(const std::string & s);
 
 /*
 @brief Converts the supplied value to a std::string. 
@@ -111,6 +115,29 @@ read_file(std::istream& file, const char* nl);
 */
 std::string
 arr_to_csv(const StringArr& arr, const char* sep);
+
+/*
+@brief searches for the extension of a file
+
+@return the extension of the file or an empty string
+	if there is no extension
+*/
+std::string
+get_file_ext(const std::string& filename);
+
+/*
+@brief concentrates multiple slashes into one 
+		Example: //var////www/ becomes /var/www/
+*/
+std::string
+compr_slash(std::string path);
+
+
+/*
+@brief determines whether the specified name is a directory
+*/
+bool
+is_dir(const std::string& name);
 
 } // namespace utils
 

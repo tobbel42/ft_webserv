@@ -12,7 +12,11 @@ INC = Engine.hpp\
 	Server.hpp\
 	Request.hpp\
 	Response.hpp\
-	ConfigParser.hpp
+	ConfigParser.hpp \
+	Executer.hpp \
+	CGI.hpp \
+	DirectoryListing.hpp
+
 IDIR = inc
 INC_FULL = $(addprefix $(IDIR)/, $(INC))
 
@@ -29,7 +33,10 @@ SRC = main.cpp\
 	ConfigParser.cpp \
 	Connect.cpp\
 	get_next_line.cpp\
-	get_next_line_utils.cpp
+	get_next_line_utils.cpp \
+	Executer.cpp \
+	CGI.cpp \
+	DirectoryListing.cpp
 
 
 
@@ -56,6 +63,7 @@ clean:
 	$(RM) $(ODIR)
 
 fclean: clean
+	$(RM) ./testServerDir/test/uploads/*
 	$(RM) $(NAME)
 
 re: fclean all

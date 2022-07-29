@@ -14,6 +14,20 @@ str_tolower(std::string & s)
 		s[i] = tolower(s[i]);
 }
 
+std::string
+cgi_str_toupper(const std::string & s)
+{
+	std::string s2;
+	for (size_t i = 0; i < s.size(); ++i)
+	{
+		if (s[i] == '-')
+			s2.push_back('_');
+		else
+			s2.push_back(toupper(s[i]));
+	}
+	return s2;
+}
+
 bool isCRLF(const std::string & s, size_t pos) {
 	if (pos + 2 > s.size())
 		return false;
@@ -167,6 +181,35 @@ arr_to_csv(const StringArr& arr, const char* sep)
 			result += sep;
 	}
 	return result;
+}
+
+std::string
+get_file_ext(const std::string& filename)
+{
+	size_t pos = filename.find_last_of('.');
+	if (pos == std::string::npos)
+		return std::string();
+	return filename.substr(pos + 1);
+}
+
+std::string
+compr_slash(std::string path)
+{
+	size_t pos = 0;
+	while ((pos = path.find("//")) != std::string::npos)
+		path.erase(pos, 1);
+	return path;
+}
+
+bool
+is_dir(const std::string& name)
+{
+	struct stat dir;
+
+	if (stat(name.c_str(), &dir) == 0)
+		return dir.st_mode & S_IFDIR; // checks whether the DIR bit is set
+	else
+		return false;
 }
 
 } // namespace utils

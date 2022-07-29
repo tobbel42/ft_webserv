@@ -72,15 +72,18 @@ ConfigParser::run()
 				"server blocks must be followed by {");
 
 		server_ret = m_read_server();
-		if (server_ret.first != "}")
-			throw ConfigParser::InvalidConfig(m_line_number,
-				"invalid server identifier", server_ret.first.c_str());
+		std::string& token = server_ret.first;
+		Server& server = server_ret.second;
 
-		const char *error_msg = server_ret.second.check_attributes();
+		if (token != "}")
+			throw ConfigParser::InvalidConfig(m_line_number,
+				"invalid server identifier", token.c_str());
+
+		const char *error_msg = server.check_attributes();
 		if (error_msg != nullptr)
 			throw ConfigParser::InvalidConfig(m_line_number, error_msg);
 
-		m_servers.push_back(server_ret.second);
+		m_servers.push_back(server);
 	}
 
 	m_check_server_configs();
@@ -133,25 +136,11 @@ ConfigParser::m_read_server()
 		}
 		else if (word == "port")
 			server.set_port(m_check_int(m_get_next_word_protected()));
-		else if (word == "allowed_methods")
-		{
-			while (m_line_stream >> word)
-			{
-				if (word.empty() || word[0] == '#')
-				{
-					m_line_stream.str(std::string());
-					break;
-				}
-				if (!server.set_method(word))
-					throw ConfigParser::InvalidConfig(m_line_number,
-						"invalid http-method identifier", word.c_str());
-			}
-		}
 		else if (word == "location")
 		{
 			Server::Location location;
-			location.location = m_get_next_word_protected();
-			if (location.location == "{")
+
+			if (!location.set_prefix(m_get_next_word_protected()))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"location blocks must define the directory they operate in");
 
@@ -207,6 +196,20 @@ ConfigParser::m_read_location(Server::Location& location)
 				if (!location.set_script(word))
 					throw ConfigParser::InvalidConfig(m_line_number,
 						"invalid script type", word.c_str());
+			}
+		}
+		else if (word == "allowed_methods")
+		{
+			while (m_line_stream >> word)
+			{
+				if (word.empty() || word[0] == '#')
+				{
+					m_line_stream.str(std::string());
+					break;
+				}
+				if (!location.set_method(word))
+					throw ConfigParser::InvalidConfig(m_line_number,
+						"invalid http-method type", word.c_str());
 			}
 		}
 		else if (word == "directory_listing")
@@ -296,7 +299,8 @@ ConfigParser::m_check_ip_address()
 		--byte;
 	}
 	if (byte != -1)
-		throw ConfigParser::InvalidConfig(m_line_number, "invalid ip address format", word.c_str());
+		throw ConfigParser::InvalidConfig(m_line_number,
+			"invalid ip address format", word.c_str());
 	return ip_addr;
 }
 
@@ -322,16 +326,21 @@ ConfigParser::m_check_server_configs()
 		throw ConfigParser::InvalidConfig(m_line_number,
 			"at least one server block must be specified");
 
+	// loop through all the servers
 	for (ServerIt server_it = m_servers.begin();
 		server_it != m_servers.end(); ++server_it)
 	{
+		// and check each subsequent server
 		for (ServerIt it = server_it + 1; it != m_servers.end(); ++it)
 		{
+			// for duplicate ip-addresses
 			if (server_it->ip_address == it->ip_address)
 			{
+				// and ports
 				for (PortIt port_it = server_it->ports.begin();
 					port_it != server_it->ports.end(); ++port_it)
 				{
+					// if there is a match we throw an error
 					if (std::find(it->ports.begin(), it->ports.end(), *port_it)
 						!= it->ports.end())
 							throw ConfigParser::InvalidConfig(m_line_number,
@@ -343,9 +352,11 @@ ConfigParser::m_check_server_configs()
 				}
 			}
 
+			// and all server names
 			for (StringArr::iterator server_name_it = server_it->server_names.begin();
 				server_name_it != server_it->server_names.end(); ++server_name_it)
 			{
+				// for duplicates aswell
 				const std::string& name = *server_name_it;
 				if (std::find(it->server_names.begin(), it->server_names.end(), name)
 					!= it->server_names.end())
@@ -357,7 +368,8 @@ ConfigParser::m_check_server_configs()
 	}
 }
 
-
+//-------------------------------------------------------------------------
+//		InvalidConfig
 
 ConfigParser::InvalidConfig::InvalidConfig(size_t line, const char *msg,
 											const char *details):

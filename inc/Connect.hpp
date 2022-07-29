@@ -14,6 +14,8 @@
 #include "typedefs.hpp"
 #include "../MyFile.hpp"
 
+#include "Executer.hpp"
+
 enum	e_action { READ, WRITE };
 
 struct s_kevent;
@@ -32,7 +34,8 @@ class Connect
 		fd_type		m_fd;
 		uint32_t	m_ip;
 		uint32_t	m_port;
-		Server		*p_server;
+		const Server		*p_server;
+		const Server::Location* p_location;
 		e_action	m_action;
 		int			m_status_code;
 		request_type		m_req;
@@ -55,12 +58,15 @@ class Connect
 		uint32_t 	getPort() const;
 
 		fd_type		getSockFd() const;
-		Server *	getServer() const;
+		const Server *	getServer() const;
+		const Server::Location* get_location() const;
 		e_action	getAction() const;
 		std::string	get_hostname() const;
 	
-		void		setServer(Server * server);
+		void		setServer(const Server * server);
+		void		set_location(const Server::Location* location);
 		void		set_status(int status_code);
+		void		find_location();
 		#ifdef KQUEUE
 		bool		readRequest(s_kevent & kevent);
 		void		writeResponse(s_kevent & kevent);
@@ -69,7 +75,9 @@ class Connect
 		void		writeResponse(s_pollfd & poll);
 		#endif
 		void		composeResponse();
-		
+
+private:
+	std::string find_dir(const std::string& name) const;
 };
 
 #endif

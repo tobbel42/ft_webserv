@@ -2,3 +2,4 @@
 webserv
 .vscode
 test.cpp
+./testServerDir/test/uploads/*
