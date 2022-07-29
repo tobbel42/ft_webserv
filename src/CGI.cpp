@@ -60,13 +60,11 @@ CGI::prep_env() //toDo prep some env
 	m_env["GATEWAY_INTERFACE"] = "CGI/1.1";
 
 	m_env["QUERY_STRING"] = m_req.get_query();
-	m_env["REQUEST_METHODE"] = m_req.get_methode();
+	m_env["REQUEST_METHOD"] = m_req.get_methode();
 
 	m_env["SERVER_NAME"] = "HMM";
 	m_env["SERVER_PORT"] =  utils::to_string(m_req.get_port());
-	m_env["SERVER_PROTOCOL"] = "HTTP/1.1";
-
-	m_env["SAFEDIR"] = "testServerDir/test/uploads/";
+	m_env["SERVER_PROTOCOL"] = "HTTP/" + utils::to_string(HTTP_VERSION);
 
 	m_env["PATH_INFO"] = get_abs_path();
 	m_env["PATH_TRANSLATED"] = get_abs_path();
