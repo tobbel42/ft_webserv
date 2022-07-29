@@ -62,7 +62,7 @@ CGI::prep_env() //toDo prep some env
 	m_env["QUERY_STRING"] = m_req.get_query();
 	m_env["REQUEST_METHOD"] = m_req.get_methode();
 
-	m_env["SERVER_NAME"] = "HMM";
+	m_env["SERVER_NAME"] = "lil l and the beachboys 1.0";
 	m_env["SERVER_PORT"] =  utils::to_string(m_req.get_port());
 	m_env["SERVER_PROTOCOL"] = "HTTP/" + utils::to_string(HTTP_VERSION);
 
@@ -212,9 +212,12 @@ CGI::read_output(FileWrap& outfile)
 	while (fgets(buf, sizeof(buf), outfile) != nullptr)
 		output += buf;
 
+
 	//todo process CGI Header
 	if (output.find("\n\n") != std::string::npos)
-	output = output.substr(output.find("\n\n"));
+		output = output.substr(output.find("\n\n"));
+
+
 
 	if (ferror(outfile))
 	{
