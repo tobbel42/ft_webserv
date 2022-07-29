@@ -276,9 +276,10 @@ Server::Location::set_script(const std::pair<std::string,std::string>& script)
 	}
 	else // relative path
 	{
+		// std::string full_binary = script.second;
 		std::string full_binary = utils::get_abs_path(binary);
 		scripts.insert(std::make_pair(script.first, full_binary));
-		return access(full_binary.c_str(), X_OK);
+		return access(full_binary.c_str(), X_OK) == 0;
 	}
 }
 

@@ -218,33 +218,8 @@ ConfigParser::m_read_location(Server::Location& location)
 			if (!location.set_script(pr))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"invalid script name or binary",
-					(pr.first + " : " + pr.second).c_str());
-			// while (m_line_stream >> word)
-			// {
-			// 	if (word.empty() || word[0] == '#')
-			// 	{
-			// 		m_line_stream.str(std::string());
-			// 		break;
-			// 	}
-			// 	if (!location.set_script(word))
-			// 		throw ConfigParser::InvalidConfig(m_line_number,
-			// 			"invalid script type", word.c_str());
-			// }
+					(pr.first += " -> " + pr.second).c_str());
 		}
-		// else if (word == "script_executable")
-		// {
-		// 	while (m_line_stream >> word)
-		// 	{
-		// 		if (word.empty() || word[0] == '#')
-		// 		{
-		// 			m_line_stream.str(std::string());
-		// 			break;
-		// 		}
-		// 		if (!location.set_cgi_path(word))
-		// 			throw ConfigParser::InvalidConfig(m_line_number,
-		// 				"not a valid executable", word.c_str());
-		// 	}
-		// }
 		else if (word == "max_client_body_size")
 		{
 			if (!location.set_max_client_body_size(m_check_int(m_get_next_word_protected())))
@@ -364,9 +339,9 @@ ConfigParser::parse_key_value()
 			first = word;
 			break;
 		case 1:
-			if (word != ":")
+			if (word != "=")
 				throw ConfigParser::InvalidConfig(m_line_number,
-					"key : value pairs must be separated by a :");
+					"key-value pairs must be separated by a =");
 			break;
 		case 2:
 			second = word;
