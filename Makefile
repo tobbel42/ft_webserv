@@ -63,6 +63,7 @@ clean:
 	$(RM) $(ODIR)
 
 fclean: clean
+	$(RM) ./testServerDir/test/uploads/*
 	$(RM) $(NAME)
 
 re: fclean all

@@ -35,6 +35,21 @@ CGI::operator=(const CGI& other)
 	return *this;
 }
 
+std::string
+CGI::get_abs_path()
+{
+	std::string str;
+	char * pwd = getcwd(NULL, 0);
+	if (pwd)
+	{
+		str = pwd;
+		free(pwd);
+	}
+	str += "/";
+	str += m_filename;
+	return str;
+}
+
 bool
 CGI::prep_env() //toDo prep some env
 {
@@ -50,11 +65,11 @@ CGI::prep_env() //toDo prep some env
 	m_env["SERVER_NAME"] = "HMM";
 	m_env["SERVER_PORT"] =  utils::to_string(m_req.get_port());
 	m_env["SERVER_PROTOCOL"] = "HTTP/1.1";
-	//m_env["AUTH_TYPE"] = "";
-	// m_env[""]
 
 	m_env["SAFEDIR"] = "testServerDir/test/uploads/";
-	m_env["PATH_INFO"] = m_filename;
+
+	m_env["PATH_INFO"] = get_abs_path();
+	m_env["PATH_TRANSLATED"] = get_abs_path();
 
 	for (std::map<std::string, std::string>::const_iterator iter = m_req.get_header().begin();
 		iter != m_req.get_header().end(); ++iter) {
@@ -137,7 +152,7 @@ CGI::map_to_env() //todo protect
 			exit(EXIT_FAILURE);
 		strncpy(ptr, (*iter).first.c_str(), (*iter).first.size());
 		ptr[(*iter).first.size()] = '=';
-		strcpy(ptr + (*iter).first.size() + 1, (*iter).second.c_str());
+		strncpy(ptr + (*iter).first.size() + 1, (*iter).second.c_str(), (*iter).second.size());
 		env[i] = ptr;
  	}
 	env[i] = nullptr;
