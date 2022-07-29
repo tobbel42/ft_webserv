@@ -1,8 +1,8 @@
 #include "utils.hpp"
 
 #include <arpa/inet.h>
+#include <unistd.h>
 
-#include <iostream>
 
 namespace utils {
 
@@ -88,6 +88,21 @@ get_http_time()
 	tm current_time = *gmtime(&unix_time);
 	strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M%S %Z", &current_time);
 	return std::string(buffer);
+}
+
+std::string
+get_abs_path(const std::string& filename)
+{
+	std::string str;
+	char * pwd = getcwd(NULL, 0);
+	if (pwd)
+	{
+		str = pwd;
+		free(pwd);
+	}
+	str += "/";
+	str += filename;
+	return str;
 }
 
 uint32_t

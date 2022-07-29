@@ -35,21 +35,6 @@ CGI::operator=(const CGI& other)
 	return *this;
 }
 
-std::string
-CGI::get_abs_path()
-{
-	std::string str;
-	char * pwd = getcwd(NULL, 0);
-	if (pwd)
-	{
-		str = pwd;
-		free(pwd);
-	}
-	str += "/";
-	str += m_filename;
-	return str;
-}
-
 bool
 CGI::prep_env() //toDo prep some env
 {
@@ -66,8 +51,8 @@ CGI::prep_env() //toDo prep some env
 	m_env["SERVER_PORT"] =  utils::to_string(m_req.get_port());
 	m_env["SERVER_PROTOCOL"] = "HTTP/" + utils::to_string(HTTP_VERSION);
 
-	m_env["PATH_INFO"] = get_abs_path();
-	m_env["PATH_TRANSLATED"] = get_abs_path();
+	m_env["PATH_INFO"] = utils::get_abs_path(m_filename);
+	m_env["PATH_TRANSLATED"] = utils::get_abs_path(m_filename);
 
 	for (std::map<std::string, std::string>::const_iterator iter = m_req.get_header().begin();
 		iter != m_req.get_header().end(); ++iter) {

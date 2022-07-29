@@ -41,7 +41,6 @@ private: // methods
 	bool prep_files(FileWrap& infile, FileWrap& outfile, const std::string& input);
 	bool exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[]);
 	std::string read_output(FileWrap& outfile);
-	std::string get_abs_path();
 
 private: // subclass
 	/*

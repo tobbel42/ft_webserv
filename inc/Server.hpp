@@ -1,7 +1,10 @@
 #pragma once
 
+#include <unistd.h>
+
 #include <string>
 #include <vector>
+#include <map>
 #include <algorithm>
 #include <limits>
 #include <utility>
@@ -28,6 +31,7 @@ public: // methods
 	bool set_error_pages(const std::string& word);
 	bool set_ip_address(uint32_t ip);
 	bool set_port(uint32_t port);
+	bool set_method(const std::string& method);
 	bool set_max_client_body_size(uint32_t n);
 
 	const char* check_attributes() const;
@@ -45,6 +49,7 @@ public: // attributes
 	std::string				error_pages;
 	uint32_t				ip_address;
 	std::vector<uint32_t>	ports;
+	StringArr				allowed_methods;
 	uint32_t				max_client_body_size;
 
 	class Location;
@@ -65,8 +70,10 @@ public: // subclass
 		bool set_prefix(const std::string& word);
 		bool set_root(const std::string& word);
 		bool set_index(const std::string& word);
-		bool set_script(const std::string& script);
 		bool set_method(const std::string& method);
+		bool set_script(const std::pair<std::string,std::string>& script);
+		bool set_cgi_path(const std::string& path);
+		bool set_max_client_body_size(uint32_t n);
 		const char* set_directory_listing(const std::string& state);
 
 		const char* check_attributes() const;
@@ -76,9 +83,14 @@ public: // subclass
 		std::string		prefix;
 		std::string		root;
 		std::string		index;
-		StringArr		allowed_scripts;
 		StringArr		allowed_methods;
+		StringArr		allowed_scripts;
+		StringArr		cgi_paths;
+		uint32_t		max_client_body_size;
 		bool			directory_listing_enabled;
+
+		// key = script identifier, value = script executable
+		std::map<std::string,std::string> scripts;
 
 
 	private: // attributes
@@ -91,6 +103,7 @@ public: // subclass
 			INDEX,
 			ALLOWED_METHODS,
 			ALLOWED_SCRIPTS,
+			MAX_CLIENT_BODY_SIZE,
 			DIRECTORY_LISTING
 		};
 	};

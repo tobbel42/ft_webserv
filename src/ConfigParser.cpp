@@ -136,6 +136,20 @@ ConfigParser::m_read_server()
 		}
 		else if (word == "port")
 			server.set_port(m_check_int(m_get_next_word_protected()));
+		else if (word == "allowed_methods")
+		{
+			while (m_line_stream >> word)
+			{
+				if (word.empty() || word[0] == '#')
+				{
+					m_line_stream.str(std::string());
+					break;
+				}
+				if (!server.set_method(word))
+					throw ConfigParser::InvalidConfig(m_line_number,
+						"invalid http-method type", word.c_str());
+			}
+		}
 		else if (word == "location")
 		{
 			Server::Location location;
@@ -184,20 +198,6 @@ ConfigParser::m_read_location(Server::Location& location)
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"only one index page shall be specified for each location");
 		}
-		else if (word == "allowed_scripts")
-		{
-			while (m_line_stream >> word)
-			{
-				if (word.empty() || word[0] == '#')
-				{
-					m_line_stream.str(std::string());
-					break;
-				}
-				if (!location.set_script(word))
-					throw ConfigParser::InvalidConfig(m_line_number,
-						"invalid script type", word.c_str());
-			}
-		}
 		else if (word == "allowed_methods")
 		{
 			while (m_line_stream >> word)
@@ -211,6 +211,45 @@ ConfigParser::m_read_location(Server::Location& location)
 					throw ConfigParser::InvalidConfig(m_line_number,
 						"invalid http-method type", word.c_str());
 			}
+		}
+		else if (word == "allowed_scripts")
+		{
+			std::pair<std::string,std::string> pr = parse_key_value();
+			if (!location.set_script(pr))
+				throw ConfigParser::InvalidConfig(m_line_number,
+					"invalid script name or binary",
+					(pr.first + " : " + pr.second).c_str());
+			// while (m_line_stream >> word)
+			// {
+			// 	if (word.empty() || word[0] == '#')
+			// 	{
+			// 		m_line_stream.str(std::string());
+			// 		break;
+			// 	}
+			// 	if (!location.set_script(word))
+			// 		throw ConfigParser::InvalidConfig(m_line_number,
+			// 			"invalid script type", word.c_str());
+			// }
+		}
+		// else if (word == "script_executable")
+		// {
+		// 	while (m_line_stream >> word)
+		// 	{
+		// 		if (word.empty() || word[0] == '#')
+		// 		{
+		// 			m_line_stream.str(std::string());
+		// 			break;
+		// 		}
+		// 		if (!location.set_cgi_path(word))
+		// 			throw ConfigParser::InvalidConfig(m_line_number,
+		// 				"not a valid executable", word.c_str());
+		// 	}
+		// }
+		else if (word == "max_client_body_size")
+		{
+			if (!location.set_max_client_body_size(m_check_int(m_get_next_word_protected())))
+				throw ConfigParser::InvalidConfig(m_line_number,
+					"only one client body size shall be specified for each server");
 		}
 		else if (word == "directory_listing")
 		{
@@ -302,6 +341,44 @@ ConfigParser::m_check_ip_address()
 		throw ConfigParser::InvalidConfig(m_line_number,
 			"invalid ip address format", word.c_str());
 	return ip_addr;
+}
+
+std::pair<std::string,std::string>
+ConfigParser::parse_key_value()
+{
+	std::string word;
+	std::string first, second;
+	size_t i = 0;
+
+	for (; m_line_stream >> word; ++i)
+	{
+		if (word.empty() || word[0] == '#')
+		{
+			m_line_stream.str(std::string());
+			break;
+		}
+
+		switch (i)
+		{
+		case 0:
+			first = word;
+			break;
+		case 1:
+			if (word != ":")
+				throw ConfigParser::InvalidConfig(m_line_number,
+					"key : value pairs must be separated by a :");
+			break;
+		case 2:
+			second = word;
+		default:
+			break;
+		}
+	}
+	if (i != 3)
+		throw ConfigParser::InvalidConfig(m_line_number,
+			"invalid layout for a pair");
+
+	return std::make_pair(first, second);
 }
 
 /*
