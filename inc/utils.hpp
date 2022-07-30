@@ -17,8 +17,6 @@
 #define EPRINT(msg) (std::cerr << msg << std::endl)
 
 
-extern char** g_envp; // remember to erase this filth!!
-
 namespace utils {
 
 bool
