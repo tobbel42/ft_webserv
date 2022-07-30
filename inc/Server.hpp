@@ -72,7 +72,6 @@ public: // subclass
 		bool set_index(const std::string& word);
 		bool set_method(const std::string& method);
 		bool set_script(const std::pair<std::string,std::string>& script);
-		bool set_cgi_path(const std::string& path);
 		bool set_max_client_body_size(uint32_t n);
 		const char* set_directory_listing(const std::string& state);
 
@@ -84,13 +83,11 @@ public: // subclass
 		std::string		root;
 		std::string		index;
 		StringArr		allowed_methods;
-		StringArr		allowed_scripts;
-		StringArr		cgi_paths;
+		// key = script identifier, value = script executable
+		std::map<std::string,std::string> scripts;
 		uint32_t		max_client_body_size;
 		bool			directory_listing_enabled;
 
-		// key = script identifier, value = script executable
-		std::map<std::string,std::string> scripts;
 
 
 	private: // attributes

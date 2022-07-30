@@ -345,6 +345,7 @@ ConfigParser::parse_key_value()
 			break;
 		case 2:
 			second = word;
+			break;
 		default:
 			break;
 		}
@@ -393,14 +394,13 @@ ConfigParser::m_check_server_configs()
 					port_it != server_it->ports.end(); ++port_it)
 				{
 					// if there is a match we throw an error
-					if (std::find(it->ports.begin(), it->ports.end(), *port_it)
-						!= it->ports.end())
-							throw ConfigParser::InvalidConfig(m_line_number,
-								"duplicate ip:port combination",
-								std::string(
-									utils::ip_to_string(server_it->ip_address) +
-									":" + utils::to_string(*port_it)
-								).c_str());
+					if (utils::is_element_of(it->ports, *port_it))
+						throw ConfigParser::InvalidConfig(m_line_number,
+							"duplicate ip:port combination",
+							std::string(
+								utils::ip_to_string(server_it->ip_address) +
+								":" + utils::to_string(*port_it)
+							).c_str());
 				}
 			}
 
@@ -410,8 +410,7 @@ ConfigParser::m_check_server_configs()
 			{
 				// for duplicates aswell
 				const std::string& name = *server_name_it;
-				if (std::find(it->server_names.begin(), it->server_names.end(), name)
-					!= it->server_names.end())
+				if (utils::is_element_of(it->server_names, name))
 						throw ConfigParser::InvalidConfig(m_line_number,
 							"duplicated server names are not allowed",
 							name.c_str());

@@ -520,12 +520,12 @@ Engine::launch()
 			&(*m_events.begin()), m_events.size(),
 			&timeout);
 
-		#ifdef VERBOSE
-		{
-			std::cout << "\nEvents: " << n_events << std::endl;
-			this->debug();
-		}
-		#endif
+		// #ifdef VERBOSE
+		// {
+		// 	std::cout << "\nEvents: " << n_events << std::endl;
+		// 	this->debug();
+		// }
+		// #endif
 
 		for	(int i = 0; i < n_events; ++i)
 		{

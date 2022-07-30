@@ -19,7 +19,7 @@ class CGI
 {
 public: // methods
 	CGI(const CGI& other);
-	CGI(const std::string& filename, const Request & req, char** envp);
+	CGI(const std::string& filename, const Request & req);
 
 	~CGI();
 
@@ -29,7 +29,8 @@ public: // methods
 	const std::string& get_content() const { return m_content; }
 
 
-	std::string run(e_FileType file_type, const std::string& input);
+	std::string run(e_FileType file_type, const std::string& input,
+					const std::string& executable);
 
 private: // methods
 	CGI();
@@ -75,11 +76,10 @@ private: // subclass
 private: // attributes
 	std::string	m_filename;
 	std::string	m_content;
-	Request m_req;
+	const Request& m_req;
 
 	std::map<std::string, std::string> m_env;
 
-	char**		p_env;
 	int			m_status_code;
 
 };

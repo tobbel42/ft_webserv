@@ -4,19 +4,16 @@
 Executer::Executer(const Executer& other):
 	p_server(other.p_server),
 	p_loc(other.p_loc),
-	p_env(other.p_env),
 	m_status_code(other.m_status_code),
 	m_req(other.m_req),
 	m_content(other.m_content),
 	m_filename(other.m_filename)
-	// m_url(other.m_url)
 {}
 
 Executer::Executer(const Server* server, const Server::Location* location,
-					char** envp, const Request& req):
+					const Request& req):
 	p_server(server),
 	p_loc(location),
-	p_env(envp),
 	m_status_code(200),
 	m_req(req),
 	m_content(),
@@ -24,17 +21,13 @@ Executer::Executer(const Server* server, const Server::Location* location,
 {}
 
 Executer::Executer(const Server* server, const Server::Location* location,
-					char** envp, const Request& req,
-					const std::string& filename):
+					const Request& req, const std::string& filename):
 	p_server(server),
 	p_loc(location),
-	p_env(envp),
 	m_status_code(200),
 	m_req(req),
 	m_content(),
 	m_filename(filename)
-	// m_url(url)
-
 {}
 
 
@@ -48,9 +41,6 @@ Executer::get_full_url() const
 	return  m_req.get_host() + ":" +
 			utils::to_string(m_req.get_port()) +
 			m_req.get_target();
-	// return "http://" + m_req.get_host() + ":" +
-	// 		utils::to_string(m_req.get_port()) + "/" +
-	// 		m_filename;
 }
 
 void
@@ -79,9 +69,9 @@ Executer::run_server()
 	m_filename = utils::compr_slash(p_server->root + m_filename);
 	e_FileType file_type = get_file_type();
 
-	if (m_req.get_methode() != "GET")
+	if (!utils::is_element_of(p_server->allowed_methods, m_req.get_methode()))
 	{
-		m_status_code = 405; // only get-requests are allowed in the server
+		m_status_code = 405; // method not allowed
 		return;
 	}
 
@@ -112,10 +102,11 @@ Executer::run_location()
 {
 	// redirect the locations
 	m_filename.replace(0, p_loc->prefix.size(), p_loc->root);
+
 	m_filename = utils::compr_slash(p_server->root + m_filename);
 	e_FileType file_type = get_file_type();
 
-	if (!method_is_allowed(p_loc->allowed_methods, m_req.get_methode()))
+	if (!utils::is_element_of(p_loc->allowed_methods, m_req.get_methode()))
 	{
 		m_status_code = 405; // method not allowed
 		return;
@@ -128,13 +119,13 @@ Executer::run_location()
 		file_type = OTHER;
 	}
 	
-	PRINT("in location:\n" << m_filename << " file type = " << file_type);
+	PRINT("in location: " << p_loc->root << '\n' << m_filename << " file type = " << file_type);
 
 	switch (file_type)
 	{
 		case PHP:
 		case PYTHON:
-			if (cgi_is_allowed(p_loc->allowed_scripts, file_type))
+			if (cgi_is_allowed(p_loc->scripts, file_type))
 				run_cgi(file_type);
 			else
 			{
@@ -178,11 +169,30 @@ Executer::run_directory_listing()
 void
 Executer::run_cgi(e_FileType file_type)
 {
-	CGI cgi(m_filename, m_req, p_env);
+	CGI cgi(m_filename, m_req);
 	const ByteArr& req_body = m_req.get_body();
 	std::string input(req_body.begin(), req_body.end());
 
-	m_content = cgi.run(file_type, input);
+	typedef std::map<std::string,std::string>::const_iterator MapIt;
+	std::string executable;
+	if (file_type == PYTHON)
+	{
+		MapIt it = p_loc->scripts.find("python");
+		if (it != p_loc->scripts.end())
+			executable = it->second;
+		else
+			executable = PYTHON_PATH;
+	}
+	else if (file_type == PHP)
+	{
+		MapIt it = p_loc->scripts.find("php");
+		if (it != p_loc->scripts.end())
+			executable = it->second;
+		else
+			executable = PHP_PATH;
+	}
+
+	m_content = cgi.run(file_type, input, executable);
 	m_status_code = cgi.get_status_code();
 }
 
@@ -201,22 +211,16 @@ Executer::get_file_type() const
 }
 
 bool
-Executer::cgi_is_allowed(const StringArr& scripts, e_FileType type)
+Executer::cgi_is_allowed(const std::map<std::string,std::string>& scripts,
+						e_FileType type)
 {
-	for (StringArr::const_iterator it = scripts.begin();
-		it != scripts.end(); ++it)
+	typedef std::map<std::string,std::string>::const_iterator	MapIt;
+
+	for (MapIt it = scripts.begin(); it != scripts.end(); ++it)
 	{
-		if ((type == PYTHON && *it == "python") ||
-			(type == PHP && *it == "php"))
+		if ((type == PYTHON && it->first == "python") ||
+			(type == PHP && it->first == "php"))
 			return true;
 	}
 	return false;
-}
-
-bool
-Executer::method_is_allowed(const StringArr& methods,
-							const std::string& requested_method)
-{
-	return std::find(methods.begin(), methods.end(), requested_method)
-			!= methods.end();
 }

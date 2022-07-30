@@ -115,7 +115,7 @@ bool
 Server::set_method(const std::string& method)
 {
 	if (method == "GET" || method == "PUT" || method == "POST"||
-		method == "DELETE")
+		method == "DELETE"|| method == "HEAD")
 	{
 		if (!utils::is_element_of(allowed_methods, method))
 			allowed_methods.push_back(method);
@@ -178,16 +178,12 @@ Server::Location::Location():
 	prefix(),
 	root("/"),
 	index("index.html"),
-	allowed_methods(),
-	allowed_scripts(),
-	cgi_paths(),
+	scripts(),
 	max_client_body_size(UINT32_MAX),
 	directory_listing_enabled(false),
 	m_checks(6, false)
 {
 	allowed_methods.reserve(3);
-	allowed_scripts.reserve(2);
-	cgi_paths.reserve(2);
 }
 
 Server::Location::Location(const Location& other):
@@ -195,8 +191,7 @@ Server::Location::Location(const Location& other):
 	root(other.root),
 	index(other.index),
 	allowed_methods(other.allowed_methods),
-	allowed_scripts(other.allowed_scripts),
-	cgi_paths(other.cgi_paths),
+	scripts(other.scripts),
 	max_client_body_size(other.max_client_body_size),
 	directory_listing_enabled(other.directory_listing_enabled),
 	m_checks(other.m_checks)
@@ -211,8 +206,7 @@ Server::Location::operator=(const Location& other)
 		root = other.root;
 		index = other.index;
 		allowed_methods = other.allowed_methods;
-		allowed_scripts = other.allowed_scripts;
-		cgi_paths = other.cgi_paths;
+		scripts = other.scripts;
 		max_client_body_size = other.max_client_body_size;
 		directory_listing_enabled = other.directory_listing_enabled;
 		m_checks = other.m_checks;
@@ -253,7 +247,7 @@ bool
 Server::Location::set_method(const std::string& method)
 {
 	if (method == "GET" || method == "PUT" || method == "POST"
-		|| method == "DELETE")
+		|| method == "DELETE" || method == "HEAD")
 	{
 		if (!utils::is_element_of(allowed_methods, method))
 			allowed_methods.push_back(method);
@@ -266,8 +260,9 @@ Server::Location::set_method(const std::string& method)
 bool
 Server::Location::set_script(const std::pair<std::string,std::string>& script)
 {
-	if (script.first != "python" && script.first != "php")
+	if (script.first != "php" && script.first != "python")
 		return false;
+	PRINT("set script: " << script.first << ", " << script.second);
 	const std::string& binary = script.second;
 	if (binary[0] == '/' || binary[0] == '.') // absolute path
 	{
@@ -276,28 +271,9 @@ Server::Location::set_script(const std::pair<std::string,std::string>& script)
 	}
 	else // relative path
 	{
-		// std::string full_binary = script.second;
 		std::string full_binary = utils::get_abs_path(binary);
 		scripts.insert(std::make_pair(script.first, full_binary));
 		return access(full_binary.c_str(), X_OK) == 0;
-	}
-}
-
-bool
-Server::Location::set_cgi_path(const std::string& path)
-{
-	if (path[0] == '/' || path[0] == '.') // absolute paths
-	{
-		if (!utils::is_element_of(cgi_paths, path))
-			cgi_paths.push_back(path);
-		return access(path.c_str(), X_OK) == 0;
-	}
-	else // relative paths
-	{
-		std::string full_path = utils::get_abs_path(path);
-		if (!utils::is_element_of(cgi_paths, full_path))
-			cgi_paths.push_back(full_path);
-		return access(full_path.c_str(), X_OK) == 0;
 	}
 }
 
@@ -333,21 +309,22 @@ Server::Location::check_attributes() const
 		return "every location must have a root directory";
 	else if (!m_checks[INDEX])
 		return "every location must have a index file";
-	else if (allowed_scripts.size() != cgi_paths.size())
-		return "every script type must have a executable";
 	else
 		return nullptr;
 }
 
 std::ostream& operator<<(std::ostream& out, const Server::Location& rhs)
 {
-	out << "location: " << rhs.prefix << "\nroot: " << rhs.root
+	out << "prefix: " << rhs.prefix << "\nroot: " << rhs.root
 		<< "\nindex: " << rhs.index << std::endl;
-	out << "\nallowed scripts:" << std::endl;
-	for (size_t i = 0; i < rhs.allowed_scripts.size(); ++i)
-		out << rhs.allowed_scripts[i] << ", ";
 	out << "\nallowed methods: ";
 	for (size_t i = 0; i < rhs.allowed_methods.size(); ++i)
 		out << rhs.allowed_methods[i] << ", ";
+	out << "\nscripts:" << std::endl;
+	for (std::map<std::string,std::string>::const_iterator it = rhs.scripts.begin();
+		it != rhs.scripts.end(); ++it)
+		out << it->first << " = " << it->second << '\n';
+	out << "\nmax client body size: " << rhs.max_client_body_size
+		<< "\ndirectory listing: " << rhs.directory_listing_enabled;
 	return out;
 }
