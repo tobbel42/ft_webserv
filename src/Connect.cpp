@@ -238,6 +238,6 @@ Connect::find_dir(const std::string& name) const
 		size_t pos = name.find_last_of('/');
 		if (pos == std::string::npos)
 			return "/"; // is this appropriate?
-		return name.substr(0, pos);
+		return name.substr(0, pos + 1);;
 	}
 }
