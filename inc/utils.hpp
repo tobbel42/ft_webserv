@@ -38,6 +38,7 @@ bool isLWS(const std::vector<char> &, size_t pos);
 bool isWS(const std::vector<char> &, size_t pos);
 bool isCRLF(const std::vector<char> &, size_t pos);
 
+std::string get_abs_path(const std::string & filename);
 
 /*
 @brief Converts the supplied string to uppercase

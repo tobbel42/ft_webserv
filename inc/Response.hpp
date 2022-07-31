@@ -47,18 +47,18 @@ public: // methods
 
 private: // methods
 
-	void m_switching_protocols();
-	void m_success();
-	void m_redirect();
-	void m_error();
+	void switching_protocols();
+	void success();
+	void redirect();
+	void error();
 
-	void m_add_to_head(const std::string& key, const std::string& value);
+	void add_to_head(const std::string& key, const std::string& value);
 
-	void m_add_to_payload(const std::string& to_add);
+	void add_to_payload(const std::string& to_add);
 
-	void m_init_header();
+	void init_header(const std::string& header_lines = std::string());
 
-	const char*	m_get_reason_phrase() const;
+	const char*	get_reason_phrase() const;
 
 private: // typedefs
 
@@ -80,10 +80,10 @@ private: // attributes
 
 private: // statics
 
-	static const char*	s_get_mime_type(const std::string& filename);
+	static const char*	get_mime_type(const std::string& filename);
 
-	static std::map<int, const char*>			s_init_status_codes();
-	static std::map<std::string, const char*>	s_init_mime_types();
+	static std::map<int, const char*>			init_status_codes();
+	static std::map<std::string, const char*>	init_mime_types();
 	static std::map<int, const char*>			s_status_codes;
 	static std::map<std::string, const char*>	s_mime_types;
 };

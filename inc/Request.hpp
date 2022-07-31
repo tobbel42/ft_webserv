@@ -8,6 +8,7 @@
 #include "utils.hpp"
 
 enum e_req_state{
+	REQUEST_LINE,
 	HEADER,
 	BODY,
 	CHUNKED_BODY
@@ -53,7 +54,7 @@ class Request {
 
 	/*RequestHeaderParsing----------------------------------------------------*/
 
-	void get_next_header_line(std::string &);
+	bool get_next_header_line(std::string &);
 	bool parse_header();
 	size_t remove_leading_LWS(const std::string &, size_t);
 	size_t remove_trailing_LWS(const std::string &);
@@ -77,7 +78,7 @@ class Request {
 	/*DataMemberVariabels-----------------------------------------------------*/
 
 	uint32_t	m_err_code;
-	std::string m_methode;
+	std::string m_method;
 	std::string m_uri;
 
 	std::string m_host;
@@ -103,7 +104,7 @@ class Request {
 
 	/*Getter------------------------------------------------------------------*/
 
-	const std::string & get_methode() const;
+	const std::string & get_method() const;
 	const std::string & get_target() const;
 	const std::string & get_host() const;
 	uint32_t get_port() const;

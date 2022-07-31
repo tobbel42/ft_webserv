@@ -3,9 +3,25 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+#include <iostream>
+#include <unistd.h>
 
 namespace utils {
 
+std::string
+get_abs_path(const std::string & filename)
+{
+	std::string str;
+	char * pwd = getcwd(NULL, 0);
+	if (pwd)
+	{
+		str = pwd;
+		free(pwd);
+	}
+	str += "/";
+	str += filename;
+	return str;
+}
 
 void
 str_tolower(std::string & s)
@@ -90,20 +106,6 @@ get_http_time()
 	return std::string(buffer);
 }
 
-std::string
-get_abs_path(const std::string& filename)
-{
-	std::string str;
-	char * pwd = getcwd(NULL, 0);
-	if (pwd)
-	{
-		str = pwd;
-		free(pwd);
-	}
-	str += "/";
-	str += filename;
-	return str;
-}
 
 uint32_t
 string_to_ip(const std::string& ip_string)
@@ -169,18 +171,35 @@ str_split(const std::string &s, const std::string & del) {
 std::string
 read_file(std::istream& file, const char* nl)
 {
-	std::string contents;
-	std::string line;
+	std::string contents, line;
 
-	do
+	while (!file.eof())
 	{
 		std::getline(file, line);
 		contents.append(line);
-		contents.append(nl);
-	} while (file);
-
+		if (!file.eof())
+			contents.append(nl);
+	}
 	return contents;
 }
+
+// std::string
+// read_file(std::istream& file, const char* nl)
+// {
+// 	std::string contents;
+// 	std::string line;
+
+// 	do
+// 	{
+// 		std::getline(file, line);
+// 		contents.append(line);
+// 		contents.append(nl);
+// 	} while (file);
+
+// 	contents = contents.substr(0, contents.size() - 1);
+
+// 	return contents;
+// }
 
 std::string
 arr_to_csv(const StringArr& arr, const char* sep)

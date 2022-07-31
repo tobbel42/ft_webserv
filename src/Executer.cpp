@@ -69,7 +69,7 @@ Executer::run_server()
 	m_filename = utils::compr_slash(p_server->root + m_filename);
 	e_FileType file_type = get_file_type();
 
-	if (!utils::is_element_of(p_server->allowed_methods, m_req.get_methode()))
+	if (!utils::is_element_of(p_server->allowed_methods, m_req.get_method()))
 	{
 		m_status_code = 405; // method not allowed
 		return;
@@ -97,6 +97,17 @@ Executer::run_server()
 	}
 }
 
+bool
+Executer::resource_exist()
+{
+	int status = access(m_filename.c_str(), F_OK);
+
+	if (status == 0)
+		return true;
+	PRINT(strerror(errno));
+	return false;
+}
+
 void
 Executer::run_location()
 {
@@ -104,14 +115,17 @@ Executer::run_location()
 	m_filename.replace(0, p_loc->prefix.size(), p_loc->root);
 
 	m_filename = utils::compr_slash(p_server->root + m_filename);
+
+	//identify Filetype
 	e_FileType file_type = get_file_type();
 
-	if (!utils::is_element_of(p_loc->allowed_methods, m_req.get_methode()))
+	if (!utils::is_element_of(p_loc->allowed_methods, m_req.get_method()))
 	{
 		m_status_code = 405; // method not allowed
 		return;
 	}
 
+	//Apply local index 
 	if (file_type == DIRECTORY && !p_loc->directory_listing_enabled &&
 		p_loc->prefix == m_req.get_target()) // only append the root for exact matches
 	{
@@ -121,28 +135,86 @@ Executer::run_location()
 	
 	PRINT("in location: " << p_loc->root << '\n' << m_filename << " file type = " << file_type);
 
-	switch (file_type)
-	{
-		case PHP:
-		case PYTHON:
-			if (cgi_is_allowed(p_loc->scripts, file_type))
-				run_cgi(file_type);
-			else
-			{
-				m_status_code = 403;
-				// m_content = cgi not possible here
-			}
-			break;
-		case DIRECTORY:
-			run_directory_listing();
-			break;
-		case OTHER:
-			read_from_file();
-			break;
 
-		default:
-			break;
+
+	//Action based on Filetype
+	//GET BLOCK
+
+
+	if (m_req.get_method() == "GET")
+	{
+		if (resource_exist()) 
+		{
+			switch (file_type)
+			{
+			case PHP:
+			case PYTHON:
+				if (cgi_is_allowed(p_loc->scripts, file_type))
+					run_cgi(file_type);
+				else
+				{
+					m_status_code = 403;
+					// m_content = cgi not possible here
+				}
+				break;
+			case DIRECTORY:
+				run_directory_listing();
+				break;
+			case OTHER:
+				read_from_file();
+				break;
+			default:
+				break;
+			}
+		}
+		else
+			m_status_code = 404;
 	}
+
+	// this is hard
+	if (m_req.get_method() == "POST")
+	{
+		m_status_code = 405;
+	}
+
+	if (m_req.get_method() == "PUT")
+		put_handler();
+	if (m_req.get_method() == "DELETE")
+		delete_handler();
+
+}
+
+void
+Executer::put_handler()
+{
+	if (resource_exist())
+		m_status_code = 204;
+	else
+		m_status_code = 201;
+	std::ofstream file(m_filename.c_str());
+	if (file.is_open()) {
+		file.write(&(*m_req.get_body().begin()), m_req.get_body().size());
+		file.close();
+		if (!file.good())
+			m_status_code = 500;
+	}
+	else
+		m_status_code = 500;
+}
+
+void
+Executer::delete_handler()
+{
+	if(!resource_exist())
+	{
+		m_status_code = 404;
+		return ;
+	}
+	int status = std::remove(m_filename.c_str());
+	if (status == 0)
+		m_status_code = 204;
+	else
+		m_status_code = 500;
 }
 
 void

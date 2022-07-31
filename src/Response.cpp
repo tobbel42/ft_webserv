@@ -1,6 +1,8 @@
 #include "Response.hpp"
 
-
+//				Layout of http response headers:
+// status line:
+//	HTTP/[version] [status code] [reason phrase]
 // general header:
 //		Connection: (close or maybe keep-alive)
 //		Date: the timestamp in http time format
@@ -26,10 +28,10 @@
 //		Last-Modified: Timestamp of the sent resource (e.g. file)
 
 std::map<int, const char*>
-Response::s_status_codes(Response::s_init_status_codes());
+Response::s_status_codes(Response::init_status_codes());
 
 std::map<std::string, const char*>
-Response::s_mime_types(Response::s_init_mime_types());
+Response::s_mime_types(Response::init_mime_types());
 
 Response::Response( void ) {
 	#ifdef VERBOSE
@@ -79,10 +81,8 @@ Response & Response::operator=( const Response & rhs ) {
 }
 
 void
-Response::m_init_header()
+Response::init_header(const std::string& header_lines)
 {
-	// status line:
-	//	HTTP/[version] [status code] [reason phrase]
 	m_header = "HTTP/";
 	m_header += utils::to_string(HTTP_VERSION);
 	m_header += ' ';
@@ -90,16 +90,19 @@ Response::m_init_header()
 
 	m_header += utils::to_string(m_status_code);
 	m_header += ' ';
-	m_header += m_get_reason_phrase();
+	m_header += get_reason_phrase();
 
 	m_header += "\r\n";
 
-	m_add_to_head("Date", utils::get_http_time());
+	add_to_head("Date", utils::get_http_time());
+
+	if (!header_lines.empty())
+		m_header += header_lines;
 }
 
 
 const char*
-Response::s_get_mime_type(const std::string& filename)
+Response::get_mime_type(const std::string& filename)
 {
 	std::string extension = utils::get_file_ext(filename);
 	if (extension.empty() ||						// directory listing and
@@ -140,26 +143,28 @@ Response::get_body_size() const { return m_body.size(); }
 void
 Response::send(const s_kevent& kevent)
 {
+	int i;
 	if (p_server != nullptr)
 	{
 		if (p_server->max_client_body_size > m_body.size())
-			write(kevent.ident, m_payload.c_str(), m_payload.size());
+			i = write(kevent.ident, m_payload.c_str(), m_payload.size());
 		else
 		{
 			set_status_code(413); // request too large
 			m_payload.clear();
 			generate();
-			write(kevent.ident, m_payload.c_str(), m_payload.size());
+			i = write(kevent.ident, m_payload.c_str(), m_payload.size());
 		}
 	}
 	else
-		write(kevent.ident, m_payload.c_str(), m_payload.size());
+		i = write(kevent.ident, m_payload.c_str(), m_payload.size());
 }
 #else
 
 void
 Response::send(const s_pollfd& poll)
 {
+	PRINT(m_payload);
 	if (p_server != nullptr)
 	{
 		if (p_server->max_client_body_size > m_body.size())
@@ -182,59 +187,58 @@ Response::generate()
 	switch (m_status_code)
 	{
 	case 100: // Just continue whatever you're doing
-		m_init_header();
+		init_header();
 		break;
 	case 101:
-		m_switching_protocols();
+		switching_protocols();
 		break;
 	case 200 ... 206:
-		m_success();
+		success();
 		break;
 	case 300 ... 307:
-		m_redirect();
+		redirect();
 		break;
 	default: // 400 ... 417 && 500 ... 505
-		m_error();
+		error();
 		break;
 	}
-	m_add_to_head("Server", "lil l and the beachboys 1.0");
-	m_add_to_payload(m_header);
-	m_payload += "\r\n";
-	m_add_to_payload(m_body);
+	add_to_head("Server", "lil l and the beachboys 1.0");
+	add_to_payload(m_header);
+	m_payload += m_body;
 	return std::make_pair(m_payload, m_body.size());
 }
 
 void
-Response::m_switching_protocols()
+Response::switching_protocols()
 {
-	m_init_header();
+	init_header();
 
 	std::string supported_http = "HTTP/";
 	supported_http += utils::to_string(HTTP_VERSION);
-	m_add_to_head("Upgrade", supported_http);
+	add_to_head("Upgrade", supported_http);
 }
 
 
 void
-Response::m_success()
+Response::success()
 {
-	m_init_header();
+	init_header();
 
 	if (p_loc != nullptr)
-		m_add_to_head("Allow", utils::arr_to_csv(p_loc->allowed_methods, ", "));
+		add_to_head("Allow", utils::arr_to_csv(p_loc->allowed_methods, ", "));
 	else if (p_server != nullptr)
-		m_add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
-	m_add_to_head("Content-Length", utils::to_string(m_body.size()));
-	m_add_to_head("Content-Location", m_filename);
-	m_add_to_head("Content-Type", s_get_mime_type(m_filename));
+		add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
+	add_to_head("Content-Length", utils::to_string(m_body.size()));
+	add_to_head("Content-Location", m_filename);
+	add_to_head("Content-Type", get_mime_type(m_filename));
 
 	switch (m_status_code)
 	{
 	case 200:
 		
 		break;
-	case 201:
-
+	case 201: 
+		add_to_head("Content-Location", m_filename);
 		break;
 	case 202:
 		break;
@@ -246,29 +250,30 @@ Response::m_success()
 }
 
 void
-Response::m_redirect()
+Response::redirect()
 {
-	m_init_header();
+	init_header();
 
-	m_add_to_head("Retry-after", utils::to_string(120));
+	add_to_head("Retry-after", utils::to_string(120));
 }
 
 void
-Response::m_error()
+Response::error()
 {
 	std::ifstream file;
 	std::string filename;
 
 	if (p_server != nullptr)
 	{
+		// attempt to use the error pages of the config file
 		filename = p_server->error_pages;
-
 		filename += '/';
 		filename += utils::to_string(m_status_code);
 		filename += ".html";
 
 		file.open(filename.c_str());
 	}
+
 	if (p_server == nullptr || !file.is_open())
 	{
 		// trying to use the default errror pages
@@ -283,38 +288,39 @@ Response::m_error()
 		{
 			// if no file can be found generate the status manually
 
-			m_init_header();
+			init_header();
 
-			std::string reason = m_get_reason_phrase();
+			std::string reason = get_reason_phrase();
 			m_body = "<html>\r\n<head>"
 						"<title>" + reason +  "</title></head>\r\n"
 						"<body><h1>errorcode " + utils::to_string(m_status_code) +
 						": " + reason + "</h1> </body></html>\r\n";
 			
-			m_add_to_head("Content-Length", utils::to_string(m_body.size()));
+			add_to_head("Content-Length", utils::to_string(m_body.size()));
 			return;
 		}
 	}
 
-	m_init_header();
+	init_header();
+
 	// Retry-after should be specified for Service Unavailable
 	// so we just hardcode it to 120 seconds
 	if (m_status_code == 503)
-		m_add_to_head("Retry-after", utils::to_string(120));
+		add_to_head("Retry-after", utils::to_string(120));
 
 	m_body = utils::read_file(file, "\r\n");
 	
 	if (p_loc != nullptr)
-		m_add_to_head("Allow", utils::arr_to_csv(p_loc->allowed_methods, ", "));
+		add_to_head("Allow", utils::arr_to_csv(p_loc->allowed_methods, ", "));
 	else if (p_server != nullptr)
-		m_add_to_head("Allow", "GET");
-	m_add_to_head("Content-Length", utils::to_string(m_body.size()));
-	m_add_to_head("Content-Location", filename);
-	m_add_to_head("Content-Type", s_get_mime_type(filename));
+		add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
+	add_to_head("Content-Length", utils::to_string(m_body.size()));
+	add_to_head("Content-Location", filename);
+	add_to_head("Content-Type", get_mime_type(filename));
 }
 
 void
-Response::m_add_to_head(const std::string& key, const std::string& value)
+Response::add_to_head(const std::string& key, const std::string& value)
 {
 	m_header += key;
 	m_header += ": ";
@@ -323,14 +329,14 @@ Response::m_add_to_head(const std::string& key, const std::string& value)
 }
 
 void
-Response::m_add_to_payload(const std::string& to_add)
+Response::add_to_payload(const std::string& to_add)
 {
 	m_payload += to_add;
 	m_payload += "\r\n";
 }
 
 const char*
-Response::m_get_reason_phrase() const
+Response::get_reason_phrase() const
 {
 	typedef std::map<int, const char*>::iterator Iter;
 
@@ -343,7 +349,7 @@ Response::m_get_reason_phrase() const
 
 
 std::map<int, const char*>
-Response::s_init_status_codes()
+Response::init_status_codes()
 {
 	std::map<int, const char*> status_codes;
 
@@ -404,7 +410,7 @@ Response::s_init_status_codes()
 }
 
 std::map<std::string, const char*>
-Response::s_init_mime_types()
+Response::init_mime_types()
 {
 	std::map<std::string, const char*> mime_types;
 

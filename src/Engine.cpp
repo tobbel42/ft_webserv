@@ -517,7 +517,7 @@ Engine::launch()
 			&(*m_events.begin()), m_events.size(),
 			&timeout);
 
-		#ifdef VERBOSE
+		#ifdef VERBOSE_EVENTS
 		{
 			std::cout << "\nEvents: " << n_events << std::endl;
 			this->debug();
@@ -556,12 +556,13 @@ Engine::launch()
 	{
 		n_events = poll(&(*m_polls.begin()), m_polls.size(), 1000);
 
-		#ifdef VERBOSE
+		#ifdef VERBOSE_EVENTS
 		{
 			std::cout << "\nEvents: " << n_events << std::endl;
 			this->debug();
 		}
 		#endif
+
 
 		if (n_events > 0) {
 			for (size_t i = 0; i < m_polls.size(); ++i) {
