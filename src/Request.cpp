@@ -4,7 +4,7 @@
 
 Request::Request():
 m_offset(0),
-m_state(HEADER),
+m_state(REQUEST_LINE),
 m_done(0),
 m_content_len(0),
 m_err_code(0),
@@ -17,7 +17,7 @@ m_expectedPort(80)
 
 Request::Request(uint32_t expectedPort):
 m_offset(0),
-m_state(HEADER),
+m_state(REQUEST_LINE),
 m_done(0),
 m_content_len(0),
 m_err_code(0),
@@ -312,7 +312,7 @@ Request::parse_first_line() {
 /*RequestHeaderParsing--------------------------------------------------------*/
 
 //header entrys can span multible lines -> custom lineParser
-void
+bool
 Request::get_next_header_line(std::string & line) {
 	std::vector<char> CRLF;
 	CRLF.push_back('\r');
@@ -337,9 +337,15 @@ Request::get_next_header_line(std::string & line) {
 	line = std::string(m_buffer.begin() + m_offset, pos);
 
 	if (pos == m_buffer.end())
+	{
+		if (line != "")
+			return false;
+		PRINT("MAYBE: " << line);
 		m_offset = m_buffer.size();
+	}
 	else
 		m_offset = (pos - m_buffer.begin()) + 2;
+	return true;
 }
 
 size_t
@@ -374,7 +380,8 @@ Request::parse_header() {
 
 	while (m_offset < m_buffer.size())
 	{
-		get_next_header_line(line);
+		if (get_next_header_line(line) == false)
+			return false;
 		if (line == "")
 			break;
 		
@@ -482,11 +489,15 @@ bool
 Request::append_read(std::vector<char> buf) {
 
 	m_buffer.insert(m_buffer.end(), buf.begin(), buf.end());
-	if (m_state == HEADER)
+	if (m_state == REQUEST_LINE)
 	{
 		//parsing of the header
 		if (parse_first_line() == false)
 			return is_done();
+		m_state = HEADER;
+	}
+	if (m_state == HEADER)
+	{
 		if (parse_header() == false)
 			return is_done();
 		//determining if a Body is present, if yes, determining BodyType

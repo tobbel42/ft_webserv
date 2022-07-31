@@ -8,6 +8,7 @@
 #include "utils.hpp"
 
 enum e_req_state{
+	REQUEST_LINE,
 	HEADER,
 	BODY,
 	CHUNKED_BODY
@@ -53,7 +54,7 @@ class Request {
 
 	/*RequestHeaderParsing----------------------------------------------------*/
 
-	void get_next_header_line(std::string &);
+	bool get_next_header_line(std::string &);
 	bool parse_header();
 	size_t remove_leading_LWS(const std::string &, size_t);
 	size_t remove_trailing_LWS(const std::string &);

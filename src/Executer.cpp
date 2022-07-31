@@ -149,8 +149,7 @@ Executer::run_location()
 
 	//Action based on Filetype
 	//GET BLOCK
-	PRINT("EXIST:");
-	PRINT((int)resource_exist());
+
 
 	if (m_req.get_method() == "GET")
 	{
@@ -184,16 +183,7 @@ Executer::run_location()
 	// this is hard
 	if (m_req.get_method() == "POST")
 	{
-		switch (file_type)
-		{
-		case PHP:
-		case PYTHON:
-			/* code */
-			break;
-		
-		default:
-			break;
-		}
+		m_status_code = 405;
 	}
 
 	if (m_req.get_method() == "PUT")
