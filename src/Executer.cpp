@@ -82,6 +82,7 @@ Executer::run_server()
 	}
 
 	PRINT("in server:\n" << m_filename << " file type = " << file_type);
+
 	switch (file_type)
 	{
 		case PHP:
@@ -137,47 +138,42 @@ Executer::run_location()
 
 
 
-	//Action based on Filetype
-	//GET BLOCK
-
-
 	if (m_req.get_method() == "GET")
-	{
-		if (resource_exist()) {
-			switch (file_type){
-				case PHP:
-				case PYTHON:
-					if (cgi_is_allowed(p_loc->scripts, file_type))
-						run_cgi(file_type);
-					else
-					{
-						m_status_code = 403;
-						// m_content = cgi not possible here
-					}
-					break;
-				case DIRECTORY:
-					run_directory_listing();
-					break;
-				case OTHER:
-					read_from_file();
-					break;
-				default:
-					break;
-			}
-		}
-		else
-			m_status_code = 404;
-	}
-
-	// this is hard
-	if (m_req.get_method() == "POST")
-		m_status_code = 405;
+		get_handler();
+	else if (m_req.get_method() == "POST")
 		post_handler();
-	if (m_req.get_method() == "PUT")
+	else if (m_req.get_method() == "PUT")
 		put_handler();
-	if (m_req.get_method() == "DELETE")
+	else if (m_req.get_method() == "DELETE")
 		delete_handler();
 
+}
+
+void
+Executer::get_handler()
+{
+	e_FileType file_type = get_file_type();
+	if (resource_exist()) {
+		switch (file_type){
+			case PHP:
+			case PYTHON:
+				if (cgi_is_allowed(p_loc->scripts, file_type))
+					run_cgi(file_type);
+				else
+					m_status_code = 403;
+				break;
+			case DIRECTORY:
+				run_directory_listing();
+				break;
+			case OTHER:
+				read_from_file();
+				break;
+			default:
+				break;
+		}
+	}
+	else
+		m_status_code = 404;
 }
 
 void
