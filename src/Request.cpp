@@ -4,7 +4,7 @@
 
 Request::Request():
 m_offset(0),
-m_state(HEADER),
+m_state(REQUEST_LINE),
 m_done(0),
 m_content_len(0),
 m_err_code(0),
@@ -17,7 +17,7 @@ m_expectedPort(80)
 
 Request::Request(uint32_t expectedPort):
 m_offset(0),
-m_state(HEADER),
+m_state(REQUEST_LINE),
 m_done(0),
 m_content_len(0),
 m_err_code(0),
@@ -52,7 +52,7 @@ Request::operator=(const Request & rhs) {
 	m_done = rhs.m_done;
 	m_content_len = rhs.m_content_len;
 	m_err_code = rhs.m_err_code;
-	m_methode = rhs.m_methode;
+	m_method = rhs.m_method;
 	m_uri = rhs.m_uri;
 
 	m_host = rhs.m_host;
@@ -70,7 +70,7 @@ Request::operator=(const Request & rhs) {
 /*Getter----------------------------------------------------------------------*/
 
 const std::string & 
-Request::get_methode() const { return m_methode; }
+Request::get_method() const { return m_method; }
 
 const std::string & 
 Request::get_target() const { return m_target; }
@@ -129,6 +129,9 @@ Request::set_host() {
 
 bool 
 Request::is_done() {
+	#ifdef VERBOSE
+	print_request();
+	#endif
 	if (m_err_code != 0)
 		return true;
 	else if (m_done)
@@ -224,7 +227,7 @@ Request::parse_request_line(const std::string & line){
 	pos = line.find(' ');
 	if (pos == std::string::npos)
 		return false;
-	m_methode = line.substr(0, pos);
+	m_method = line.substr(0, pos);
 	pos1 = pos + 1;
 	pos = line.find(' ', pos1);
 	if (pos == std::string::npos)
@@ -279,7 +282,7 @@ Request::is_valid_request_line() {
 
 	char c[4] = {'\t', '\r', '\n', ' '};
 
-	if (check_invalid_char(m_methode, c, 4))
+	if (check_invalid_char(m_method, c, 4))
 		return false;
 	if (check_invalid_char(m_uri, c, 4))
 		return false;
@@ -309,7 +312,7 @@ Request::parse_first_line() {
 /*RequestHeaderParsing--------------------------------------------------------*/
 
 //header entrys can span multible lines -> custom lineParser
-void
+bool
 Request::get_next_header_line(std::string & line) {
 	std::vector<char> CRLF;
 	CRLF.push_back('\r');
@@ -334,9 +337,15 @@ Request::get_next_header_line(std::string & line) {
 	line = std::string(m_buffer.begin() + m_offset, pos);
 
 	if (pos == m_buffer.end())
+	{
+		if (line != "")
+			return false;
+		PRINT("MAYBE: " << line);
 		m_offset = m_buffer.size();
+	}
 	else
 		m_offset = (pos - m_buffer.begin()) + 2;
+	return true;
 }
 
 size_t
@@ -371,7 +380,8 @@ Request::parse_header() {
 
 	while (m_offset < m_buffer.size())
 	{
-		get_next_header_line(line);
+		if (get_next_header_line(line) == false)
+			return false;
 		if (line == "")
 			break;
 		
@@ -446,6 +456,7 @@ Request::parse_chunked_body() {
 
 	//appending chunk to body
 
+
 	m_body.insert(m_body.end(),
 		m_buffer.begin() + m_offset, m_buffer.begin() + m_offset + chunk_size);
 	m_offset += chunk_size + 2; // skipping CRLF
@@ -457,10 +468,11 @@ Request::parse_chunked_body() {
 
 bool
 Request::is_chunked() {
+
 	std::pair<bool, std::string> value = get_header_entry("transfer-encoding");
 	if (value.first == false)
 		return false;
-	
+
 	StringArr split = utils::str_split(value.second, ",");
 	for (size_t i = 0; i < split.size(); ++i) {
 		if (split[i] == "chunked")
@@ -477,11 +489,15 @@ bool
 Request::append_read(std::vector<char> buf) {
 
 	m_buffer.insert(m_buffer.end(), buf.begin(), buf.end());
-	if (m_state == HEADER)
+	if (m_state == REQUEST_LINE)
 	{
 		//parsing of the header
 		if (parse_first_line() == false)
 			return is_done();
+		m_state = HEADER;
+	}
+	if (m_state == HEADER)
+	{
 		if (parse_header() == false)
 			return is_done();
 		//determining if a Body is present, if yes, determining BodyType
@@ -521,7 +537,7 @@ Request::append_read(std::vector<char> buf) {
 
 void
 Request::print_request() {
-	std::cout << m_methode << "##" << std::endl;
+	std::cout << m_method << "##" << std::endl;
 	std::cout << m_uri << "##" << std::endl;
 	std::cout << m_http_ver << "##" << std::endl;
 	std::cout << "HEADER" << "##" << std::endl;

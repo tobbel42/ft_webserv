@@ -18,7 +18,7 @@
 
 #define HTTP_VERSION 1.1
 #define DEFAULT_ERROR_PAGES "config/default_error_pages"
-#define READSIZE 68192 //we reading at max 8kb of data, might change
+#define READSIZE 8192 //we reading at max 8kb of data, might change
 #define CNCT_TIMEOUT 2 // in seconds
 #define ENGINE_BACKLOG 10
 
@@ -31,10 +31,9 @@
 #endif
 
 #define PHP_PATH "/usr/bin/php"
-#if 1
+
 #define PYTHON_PATH "/usr/bin/python"
-#endif
-// #define PYTHON_PATH "./IntraTesterDirectory/cgi_tester"
+//#define PYTHON_PATH "./IntraTesterDirectory/cgi_tester"
 typedef	int	fd_type;
 
 class Server;

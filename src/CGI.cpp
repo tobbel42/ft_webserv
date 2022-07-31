@@ -6,6 +6,7 @@ CGI::CGI(const CGI& other):
 	m_content(other.m_content),
 	m_req(other.m_req),
 	m_env(other.m_env),
+	m_cgi_header(other.m_cgi_header),
 	m_status_code(other.m_status_code)
 {}
 
@@ -27,10 +28,14 @@ CGI::operator=(const CGI& other)
 		m_content = other.m_content;
 		// m_req = other.m_req;
 		m_env = other.m_env;
+		m_cgi_header = other.m_cgi_header;
 		m_status_code = other.m_status_code;
 	}
 	return *this;
 }
+
+const std::map<std::string, std::string> &
+CGI::get_cgi_header() { return m_cgi_header; }
 
 bool
 CGI::prep_env() //toDo prep some env
@@ -42,7 +47,7 @@ CGI::prep_env() //toDo prep some env
 	m_env["GATEWAY_INTERFACE"] = "CGI/1.1";
 
 	m_env["QUERY_STRING"] = m_req.get_query();
-	m_env["REQUEST_METHOD"] = m_req.get_methode();
+	m_env["REQUEST_METHOD"] = m_req.get_method();
 
 	m_env["SERVER_NAME"] = "lil l and the beachboys 1.0";
 	m_env["SERVER_PORT"] =  utils::to_string(m_req.get_port());
@@ -167,6 +172,7 @@ CGI::exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[])
 	else // parent
 	{
 		int stat_loc = 0;
+		PRINT("stat" << stat_loc);
 		// TODO: protection against infinate scripts
 		if (waitpid(pid, &stat_loc, 0) == -1)
 		{
@@ -185,6 +191,26 @@ CGI::exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[])
 	return true;
 }
 
+void
+CGI::parse_header(std::string & output) {
+	size_t offset = 0;
+	size_t pos = output.find("\r\n");
+	std::string line;
+	std::string key, value;
+	while(pos != std::string::npos) {
+		line = output.substr(offset, pos - offset);
+		if (line == "")
+			break;
+		key = line.substr(0, line.find(":"));
+		value = line.substr(line.find(":") + 2);
+		m_cgi_header[key] = value;
+		pos += 2;
+		offset = pos;
+		pos = output.find("\r\n", offset);
+	}
+	output = output.substr(offset);
+}
+
 std::string
 CGI::read_output(FileWrap& outfile)
 {
@@ -196,10 +222,9 @@ CGI::read_output(FileWrap& outfile)
 		output += buf;
 
 
-	//todo process CGI Header
-	if (output.find("\n\n") != std::string::npos)
-		output = output.substr(output.find("\n\n"));
-
+	//we truncate the cgi response header and storing the key value
+	//pairs inside the gci_header map 
+	parse_header(output);
 
 
 	if (ferror(outfile))

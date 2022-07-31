@@ -71,6 +71,9 @@ bonus: all
 debug: CFLAGS += -g -DVERBOSE
 debug: re
 
+events: CFLAGS += -g -DVERBOSE_EVENTS
+events: re
+
 release: CFLAGS += -Ofast
 release: re
 

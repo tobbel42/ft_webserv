@@ -4,6 +4,8 @@
 #include <string>
 #include <fstream>
 
+#include <unistd.h>
+
 
 #include "typedefs.hpp"
 #include "utils.hpp"
@@ -32,6 +34,7 @@ public: // methods
 
 	int get_status_code() const { return m_status_code; }
 
+	std::string get_filename() const { return m_filename; }
 
 	void run();
 
@@ -56,6 +59,10 @@ private: // methods
 	static bool cgi_is_allowed(const std::map<std::string,std::string>& scripts,
 								e_FileType type);
 
+	bool resource_exist();
+
+	void put_handler();
+	void delete_handler();
 
 private: // attributes
 	const Server*	p_server;
