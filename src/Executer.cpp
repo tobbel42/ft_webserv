@@ -82,6 +82,7 @@ Executer::run_server()
 	}
 
 	PRINT("in server:\n" << m_filename << " file type = " << file_type);
+
 	switch (file_type)
 	{
 		case PHP:
@@ -137,49 +138,71 @@ Executer::run_location()
 
 
 
-	//Action based on Filetype
-	//GET BLOCK
-
-
 	if (m_req.get_method() == "GET")
-	{
-		if (resource_exist()) {
-			switch (file_type){
-				case PHP:
-				case PYTHON:
-					if (cgi_is_allowed(p_loc->scripts, file_type))
-						run_cgi(file_type);
-					else
-					{
-						m_status_code = 403;
-						// m_content = cgi not possible here
-					}
-					break;
-				case DIRECTORY:
-					run_directory_listing();
-					break;
-				case OTHER:
-					read_from_file();
-					break;
-				default:
-					break;
-			}
-		}
-		else
-			m_status_code = 404;
-	}
-
-	// this is hard
-	if (m_req.get_method() == "POST")
-	{
-		m_status_code = 405;
-	}
-
-	if (m_req.get_method() == "PUT")
+		get_handler();
+	else if (m_req.get_method() == "POST")
+		post_handler();
+	else if (m_req.get_method() == "PUT")
 		put_handler();
-	if (m_req.get_method() == "DELETE")
+	else if (m_req.get_method() == "DELETE")
 		delete_handler();
 
+}
+
+void
+Executer::get_handler()
+{
+	e_FileType file_type = get_file_type();
+	if (resource_exist()) {
+		switch (file_type){
+			case PHP:
+			case PYTHON:
+				if (cgi_is_allowed(p_loc->scripts, file_type))
+					run_cgi(file_type);
+				else
+					m_status_code = 403;
+				break;
+			case DIRECTORY:
+				run_directory_listing();
+				break;
+			case OTHER:
+				read_from_file();
+				break;
+			default:
+				break;
+		}
+	}
+	else
+		m_status_code = 404;
+}
+
+void
+Executer::post_handler()
+{
+	e_FileType file_type = get_file_type();
+	if (file_type == PHP || file_type == PYTHON)
+	{
+		if (cgi_is_allowed(p_loc->scripts, file_type))
+		{
+			if (resource_exist())
+				run_cgi(file_type);
+			else
+				m_status_code = 404;
+		}
+		else
+			m_status_code = 403;
+	}
+	else {
+		//here the file creation stuff is happening
+		//only test/plain request are allowed to create files
+		//the rest is getting 404 
+		std::string content_type = m_req.get_header_entry("Content-Type").second ;
+		if (content_type == "text/plain")
+			put_handler();
+		else {
+			m_status_code = 404;
+		}
+	}
 }
 
 void
