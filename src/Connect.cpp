@@ -179,7 +179,7 @@ Connect::composeResponse()
 
 	#else
 
-	Executer exec(p_server, p_location, g_envp, m_req);
+	Executer exec(p_server, p_location, m_req);
 
 	exec.run();
 

@@ -1,6 +1,7 @@
 #include "utils.hpp"
 
 #include <arpa/inet.h>
+#include <unistd.h>
 
 #include <iostream>
 #include <unistd.h>
@@ -104,6 +105,7 @@ get_http_time()
 	strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M%S %Z", &current_time);
 	return std::string(buffer);
 }
+
 
 uint32_t
 string_to_ip(const std::string& ip_string)

@@ -38,9 +38,9 @@ typedef	int	fd_type;
 
 class Server;
 
-typedef std::vector<std::string>	StringArr;
-typedef std::vector<Server>			ServerArr;
-typedef std::vector<char>			ByteArr;
+typedef std::vector<std::string>			StringArr;
+typedef std::vector<Server>					ServerArr;
+typedef std::vector<char>					ByteArr;
 
 
 enum e_FileType

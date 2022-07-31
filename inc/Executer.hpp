@@ -19,9 +19,9 @@ class Executer
 public: // methods
 	Executer(const Executer& other);
 	Executer(const Server* server, const Server::Location* location,
-				char** envp, const Request& req);
-	Executer(const Server* server,  const Server::Location* location,
-				char** envp, const Request& req, const std::string& filename);
+				const Request& req);
+	Executer(const Server* server, const Server::Location* location,
+				const Request& req, const std::string& filename);
 
 	~Executer();
 
@@ -56,10 +56,8 @@ private: // methods
 
 	std::string find_dir(const std::string& name) const;
 
-	static bool cgi_is_allowed(const StringArr& scripts, e_FileType type);
-
-	static bool method_is_allowed(const StringArr& methods,
-									const std::string& reqested_method);
+	static bool cgi_is_allowed(const std::map<std::string,std::string>& scripts,
+								e_FileType type);
 
 	bool resource_exist();
 
@@ -69,11 +67,8 @@ private: // methods
 private: // attributes
 	const Server*	p_server;
 	const Server::Location* p_loc;
-	char**			p_env;
 	int				m_status_code;
 	const Request&	m_req;
 	std::string		m_content;
 	std::string		m_filename;
-	// std::string		m_url;
-
 };

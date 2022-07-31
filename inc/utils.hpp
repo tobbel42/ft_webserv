@@ -9,14 +9,13 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 #include "typedefs.hpp"
 
 #define PRINT(msg) (std::cout << msg << std::endl)
 #define EPRINT(msg) (std::cerr << msg << std::endl)
 
-
-extern char** g_envp; // remember to erase this filth!!
 
 namespace utils {
 
@@ -76,6 +75,20 @@ from_string(const std::string& s)
 	ss >> value;
 	return value;
 }
+
+/*
+@brief determines whether the specified value is inside the container
+*/
+template<typename Container>
+inline bool
+is_element_of(const Container& cntr,
+			const typename Container::value_type& value)
+{
+	return std::find(cntr.begin(), cntr.end(), value) != cntr.end();
+}
+
+std::string
+get_abs_path(const std::string& filename);
 
 /*
 @return The current time in the format:
@@ -139,6 +152,7 @@ compr_slash(std::string path);
 */
 bool
 is_dir(const std::string& name);
+
 
 } // namespace utils
 

@@ -37,7 +37,6 @@ SRC = main.cpp\
 	DirectoryListing.cpp
 
 
-
 SDIR = src
 SRC_FULL = $(addprefix $(SDIR)/, $(SRC))
 
@@ -50,7 +49,7 @@ $(NAME): $(ODIR) $(OBJ) $(INC_FULL) $(TPP_FULL)
 	$(CC) $(CFLAGS) $(OBJ) -o $(NAME) -I $(IDIR)
 
 $(ODIR):
-	@mkdir -p $@
+	mkdir -p $@
 
 $(ODIR)/%.o: $(SDIR)/%.cpp
 	$(CC) $(CFLAGS) -c $< -o $@ -I $(IDIR)

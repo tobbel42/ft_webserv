@@ -26,7 +26,7 @@ CGI::operator=(const CGI& other)
 	{
 		m_filename = other.m_filename;
 		m_content = other.m_content;
-		m_req = other.m_req;
+		// m_req = other.m_req;
 		m_env = other.m_env;
 		m_cgi_header = other.m_cgi_header;
 		m_status_code = other.m_status_code;
@@ -64,7 +64,8 @@ CGI::prep_env() //toDo prep some env
 }
 
 std::string
-CGI::run(e_FileType file_type, const std::string& input)
+CGI::run(e_FileType file_type, const std::string& input,
+		const std::string& executable)
 {
 	char* argv[3];
 	FileWrap infile, outfile;
@@ -78,10 +79,10 @@ CGI::run(e_FileType file_type, const std::string& input)
 	switch (file_type)
 	{
 		case PHP:
-			argv[0] = (char *)(PHP_PATH); //cpp is killing me ;_;
+			argv[0] = (char *)executable.c_str(); //cpp is killing me ;_;
 			break;
 		case PYTHON:
-			argv[0] = (char *)(PYTHON_PATH);
+			argv[0] = (char *)executable.c_str();
 			break;
 		default:
 			m_status_code = 501; // not implemented
