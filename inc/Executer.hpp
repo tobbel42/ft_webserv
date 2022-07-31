@@ -4,6 +4,8 @@
 #include <string>
 #include <fstream>
 
+#include <unistd.h>
+
 
 #include "typedefs.hpp"
 #include "utils.hpp"
@@ -59,6 +61,10 @@ private: // methods
 	static bool method_is_allowed(const StringArr& methods,
 									const std::string& reqested_method);
 
+	bool resource_exist();
+
+	void put_handler();
+	void delete_handler();
 
 private: // attributes
 	const Server*	p_server;

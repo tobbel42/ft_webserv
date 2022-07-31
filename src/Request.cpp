@@ -129,6 +129,9 @@ Request::set_host() {
 
 bool 
 Request::is_done() {
+	#ifdef VERBOSE
+	print_request();
+	#endif
 	if (m_err_code != 0)
 		return true;
 	else if (m_done)

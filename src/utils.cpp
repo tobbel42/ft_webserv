@@ -169,10 +169,7 @@ str_split(const std::string &s, const std::string & del) {
 std::string
 read_file(std::istream& file, const char* nl)
 {
-	std::string contents;
-	std::string line;
-
-	PRINT("HELLO");
+	std::string contents, line;
 
 	while (!file.eof())
 	{
@@ -181,8 +178,6 @@ read_file(std::istream& file, const char* nl)
 		if (!file.eof())
 			contents.append(nl);
 	}
-	PRINT(contents.size());
-	//contents = contents.substr(0, contents.size() - 1);
 	return contents;
 }
 

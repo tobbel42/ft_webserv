@@ -238,7 +238,7 @@ Server::Location::set_script(const std::string& script)
 bool
 Server::Location::set_method(const std::string& method)
 {
-	if (method == "GET" || method == "POST" || method == "DELETE")
+	if (method == "GET" || method == "POST" || method == "DELETE" || method == "PUT")
 	{
 		if (std::find(allowed_methods.begin(), allowed_methods.end(), method)
 			== allowed_methods.end())
