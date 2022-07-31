@@ -16,13 +16,8 @@ bool	strriseq(const char *s1, const char *s2)
 	return i_s2 == -1;
 }
 
-char ** g_envp;
-
-int main(int argc, char **argv, char **envp)
+int main(int argc, char **argv, char **)
 {
-	// CGI cgi("testServerDir/test/pyt.py", envp);
-	// std::cout << "content: " << cgi.run(PYTHON, "something really cool") << std::endl;
-	g_envp = envp;
 	if (argc > 2)
 	{
 		std::cerr << "Error:\nwrong number of arguments\nusage: "

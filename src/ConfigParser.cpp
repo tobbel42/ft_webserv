@@ -136,6 +136,20 @@ ConfigParser::m_read_server()
 		}
 		else if (word == "port")
 			server.set_port(m_check_int(m_get_next_word_protected()));
+		else if (word == "allowed_methods")
+		{
+			while (m_line_stream >> word)
+			{
+				if (word.empty() || word[0] == '#')
+				{
+					m_line_stream.str(std::string());
+					break;
+				}
+				if (!server.set_method(word))
+					throw ConfigParser::InvalidConfig(m_line_number,
+						"invalid http-method type", word.c_str());
+			}
+		}
 		else if (word == "location")
 		{
 			Server::Location location;
@@ -184,20 +198,6 @@ ConfigParser::m_read_location(Server::Location& location)
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"only one index page shall be specified for each location");
 		}
-		else if (word == "allowed_scripts")
-		{
-			while (m_line_stream >> word)
-			{
-				if (word.empty() || word[0] == '#')
-				{
-					m_line_stream.str(std::string());
-					break;
-				}
-				if (!location.set_script(word))
-					throw ConfigParser::InvalidConfig(m_line_number,
-						"invalid script type", word.c_str());
-			}
-		}
 		else if (word == "allowed_methods")
 		{
 			while (m_line_stream >> word)
@@ -211,6 +211,20 @@ ConfigParser::m_read_location(Server::Location& location)
 					throw ConfigParser::InvalidConfig(m_line_number,
 						"invalid http-method type", word.c_str());
 			}
+		}
+		else if (word == "allowed_scripts")
+		{
+			std::pair<std::string,std::string> pr = parse_key_value();
+			if (!location.set_script(pr))
+				throw ConfigParser::InvalidConfig(m_line_number,
+					"invalid script name or binary",
+					(pr.first += " -> " + pr.second).c_str());
+		}
+		else if (word == "max_client_body_size")
+		{
+			if (!location.set_max_client_body_size(m_check_int(m_get_next_word_protected())))
+				throw ConfigParser::InvalidConfig(m_line_number,
+					"only one client body size shall be specified for each server");
 		}
 		else if (word == "directory_listing")
 		{
@@ -304,6 +318,45 @@ ConfigParser::m_check_ip_address()
 	return ip_addr;
 }
 
+std::pair<std::string,std::string>
+ConfigParser::parse_key_value()
+{
+	std::string word;
+	std::string first, second;
+	size_t i = 0;
+
+	for (; m_line_stream >> word; ++i)
+	{
+		if (word.empty() || word[0] == '#')
+		{
+			m_line_stream.str(std::string());
+			break;
+		}
+
+		switch (i)
+		{
+		case 0:
+			first = word;
+			break;
+		case 1:
+			if (word != "=")
+				throw ConfigParser::InvalidConfig(m_line_number,
+					"key-value pairs must be separated by a =");
+			break;
+		case 2:
+			second = word;
+			break;
+		default:
+			break;
+		}
+	}
+	if (i != 3)
+		throw ConfigParser::InvalidConfig(m_line_number,
+			"invalid layout for a pair");
+
+	return std::make_pair(first, second);
+}
+
 /*
 Checks for duplicate ip-address:port combinations
 and server names across all server blocks
@@ -341,14 +394,13 @@ ConfigParser::m_check_server_configs()
 					port_it != server_it->ports.end(); ++port_it)
 				{
 					// if there is a match we throw an error
-					if (std::find(it->ports.begin(), it->ports.end(), *port_it)
-						!= it->ports.end())
-							throw ConfigParser::InvalidConfig(m_line_number,
-								"duplicate ip:port combination",
-								std::string(
-									utils::ip_to_string(server_it->ip_address) +
-									":" + utils::to_string(*port_it)
-								).c_str());
+					if (utils::is_element_of(it->ports, *port_it))
+						throw ConfigParser::InvalidConfig(m_line_number,
+							"duplicate ip:port combination",
+							std::string(
+								utils::ip_to_string(server_it->ip_address) +
+								":" + utils::to_string(*port_it)
+							).c_str());
 				}
 			}
 
@@ -358,8 +410,7 @@ ConfigParser::m_check_server_configs()
 			{
 				// for duplicates aswell
 				const std::string& name = *server_name_it;
-				if (std::find(it->server_names.begin(), it->server_names.end(), name)
-					!= it->server_names.end())
+				if (utils::is_element_of(it->server_names, name))
 						throw ConfigParser::InvalidConfig(m_line_number,
 							"duplicated server names are not allowed",
 							name.c_str());

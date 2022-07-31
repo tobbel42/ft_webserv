@@ -10,13 +10,15 @@ Server::Server():
 	error_pages(DEFAULT_ERROR_PAGES),
 	ip_address(),
 	ports(),
-	max_client_body_size(std::numeric_limits<uint32_t>::max()),
+	allowed_methods(),
+	max_client_body_size(UINT32_MAX),
 	locations(),
 	m_checks(7, false)
 {
 	// reserving memory beforehand to avoid copies
 	server_names.reserve(3);
 	ports.reserve(5);
+	allowed_methods.reserve(3);
 	locations.reserve(3);
 }
 
@@ -27,6 +29,7 @@ Server::Server(const Server& other):
 	error_pages(other.error_pages),
 	ip_address(other.ip_address),
 	ports(other.ports),
+	allowed_methods(other.allowed_methods),
 	max_client_body_size(other.max_client_body_size),
 	locations(other.locations),
 	m_checks(other.m_checks)
@@ -43,6 +46,7 @@ Server::operator=(const Server& other)
 		error_pages = other.error_pages;
 		ip_address = other.ip_address;
 		ports = other.ports;
+		allowed_methods = other.allowed_methods;
 		max_client_body_size = other.max_client_body_size;
 		locations = other.locations;
 		m_checks = other.m_checks;
@@ -108,6 +112,20 @@ Server::set_port(uint32_t port)
 }
 
 bool
+Server::set_method(const std::string& method)
+{
+	if (method == "GET" || method == "PUT" || method == "POST"||
+		method == "DELETE")
+	{
+		if (!utils::is_element_of(allowed_methods, method))
+			allowed_methods.push_back(method);
+		return true;
+	}
+	else
+		return false;
+}
+
+bool
 Server::set_max_client_body_size(uint32_t n)
 {
 	if (m_checks[MAX_CLIENT_BODY_SIZE])
@@ -143,6 +161,9 @@ std::ostream& operator<<(std::ostream& out, const Server& rhs)
 		<< rhs.max_client_body_size << "\nports:" << std::endl;
 	for (size_t i = 0; i < rhs.ports.size(); ++i)
 		out << rhs.ports[i] << ", ";
+	out << "\nallowed methods: ";
+	for (size_t i = 0; i < rhs.allowed_methods.size(); ++i)
+		out << rhs.allowed_methods[i] << ", ";
 	out << std::endl;
 	for (size_t i = 0; i < rhs.locations.size(); ++i)
 		out << rhs.locations[i] << std::endl;
@@ -157,12 +178,11 @@ Server::Location::Location():
 	prefix(),
 	root("/"),
 	index("index.html"),
-	allowed_scripts(),
-	allowed_methods(),
+	scripts(),
+	max_client_body_size(UINT32_MAX),
 	directory_listing_enabled(false),
-	m_checks(5, false)
+	m_checks(6, false)
 {
-	allowed_scripts.reserve(2);
 	allowed_methods.reserve(3);
 }
 
@@ -170,8 +190,9 @@ Server::Location::Location(const Location& other):
 	prefix(other.prefix),
 	root(other.root),
 	index(other.index),
-	allowed_scripts(other.allowed_scripts),
 	allowed_methods(other.allowed_methods),
+	scripts(other.scripts),
+	max_client_body_size(other.max_client_body_size),
 	directory_listing_enabled(other.directory_listing_enabled),
 	m_checks(other.m_checks)
 {}
@@ -184,8 +205,9 @@ Server::Location::operator=(const Location& other)
 		prefix = other.prefix;
 		root = other.root;
 		index = other.index;
-		allowed_scripts = other.allowed_scripts;
 		allowed_methods = other.allowed_methods;
+		scripts = other.scripts;
+		max_client_body_size = other.max_client_body_size;
 		directory_listing_enabled = other.directory_listing_enabled;
 		m_checks = other.m_checks;
 	}
@@ -222,13 +244,13 @@ Server::Location::set_index(const std::string& word)
 }
 
 bool
-Server::Location::set_script(const std::string& script)
+Server::Location::set_method(const std::string& method)
 {
-	if (script == "python" || script == "php")
+	if (method == "GET" || method == "PUT" || method == "POST"
+		|| method == "DELETE")
 	{
-		if (std::find(allowed_scripts.begin(), allowed_scripts.end(), script)
-			== allowed_scripts.end())
-			allowed_scripts.push_back(script);
+		if (!utils::is_element_of(allowed_methods, method))
+			allowed_methods.push_back(method);
 		return true;
 	}
 	else
@@ -236,17 +258,33 @@ Server::Location::set_script(const std::string& script)
 }
 
 bool
-Server::Location::set_method(const std::string& method)
+Server::Location::set_script(const std::pair<std::string,std::string>& script)
 {
-	if (method == "GET" || method == "POST" || method == "DELETE")
-	{
-		if (std::find(allowed_methods.begin(), allowed_methods.end(), method)
-			== allowed_methods.end())
-			allowed_methods.push_back(method);
-		return true;
-	}
-	else
+	if (script.first != "php" && script.first != "python")
 		return false;
+	PRINT("set script: " << script.first << ", " << script.second);
+	const std::string& binary = script.second;
+	if (binary[0] == '/' || binary[0] == '.') // absolute path
+	{
+		scripts.insert(script);
+		return access(binary.c_str(), X_OK) == 0;
+	}
+	else // relative path
+	{
+		std::string full_binary = utils::get_abs_path(binary);
+		scripts.insert(std::make_pair(script.first, full_binary));
+		return access(full_binary.c_str(), X_OK) == 0;
+	}
+}
+
+bool
+Server::Location::set_max_client_body_size(uint32_t n)
+{
+	if (m_checks[MAX_CLIENT_BODY_SIZE])
+		return false;
+	m_checks[MAX_CLIENT_BODY_SIZE] = true;
+	max_client_body_size = n;
+	return true;
 }
 
 const char*
@@ -277,13 +315,16 @@ Server::Location::check_attributes() const
 
 std::ostream& operator<<(std::ostream& out, const Server::Location& rhs)
 {
-	out << "location: " << rhs.prefix << "\nroot: " << rhs.root
+	out << "prefix: " << rhs.prefix << "\nroot: " << rhs.root
 		<< "\nindex: " << rhs.index << std::endl;
-	out << "\nallowed scripts:" << std::endl;
-	for (size_t i = 0; i < rhs.allowed_scripts.size(); ++i)
-		out << rhs.allowed_scripts[i] << ", ";
 	out << "\nallowed methods: ";
 	for (size_t i = 0; i < rhs.allowed_methods.size(); ++i)
 		out << rhs.allowed_methods[i] << ", ";
+	out << "\nscripts:" << std::endl;
+	for (std::map<std::string,std::string>::const_iterator it = rhs.scripts.begin();
+		it != rhs.scripts.end(); ++it)
+		out << it->first << " = " << it->second << '\n';
+	out << "\nmax client body size: " << rhs.max_client_body_size
+		<< "\ndirectory listing: " << rhs.directory_listing_enabled;
 	return out;
 }
