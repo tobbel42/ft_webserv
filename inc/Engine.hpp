@@ -6,8 +6,8 @@
 #include <vector>
 #include <map>
 #include <algorithm>
-#include <sys/event.h>
 #include <stdio.h>
+#include <ctime>
 
 #include <Socket.hpp>
 #include <Connect.hpp>
@@ -15,33 +15,14 @@
 #include <utils.hpp>
 #include "typedefs.hpp"
 
-# define ENGINE_BACKLOG 10
 
-
-struct	s_kevent: public kevent
-{
-	bool	operator==( fd_type fd );
-/*
-inherited from struct kevent:
-    uintptr_t ident;	     identifier for this event
-    short     filter;	     filter for event
-    u_short   flags;	     action flags for kqueue
-    u_int     fflags;	     filter flag value
-    int64_t   data;		     filter data value 
-    void      *udata;	     opaque user data identifier
-    uint64_t  ext[4];	     extensions
-*/
-};
-
-std::ostream	&operator<< ( std::ofstream & out, s_kevent const & in );
+#ifdef KQUEUE
+std::ostream	&operator<<(std::ofstream & out, s_kevent const & in);
+#else
+std::ostream	&operator<<(std::ostream & out, s_pollfd const & in);
+#endif
 
 enum	Type { SOCKET, CONNECTION };
-
-struct ObjPtr
-{
-	Type	type;
-	void	*ptr;
-};
 
 class Socket;
 class Connect;
@@ -49,43 +30,83 @@ class Connect;
 class Engine
 {
 	private:
-		std::vector<s_kevent>			m_changes;
-		std::vector<s_kevent>			m_events;
-		std::map<fd_type, Socket>			m_sockets;
-		std::map<fd_type, Connect>			m_connects;
-		ServerArr						m_servers; // will be populated by the ConfigParser
-		int								m_kqueue;
 
-		typedef	std::map<fd_type, Socket>::iterator	SockIter;
-		typedef	std::map<fd_type, Connect>::iterator	CnctIter;
-		typedef	std::vector<s_kevent>::iterator		KeventIter;
+	/*MemberVariabels---------------------------------------------------------*/
+	#ifdef KQUEUE
+	fd_type							m_kqueue;
+	std::vector<s_kevent>			m_changes;
+	std::vector<s_kevent>			m_events;
+	#else
+	std::vector<s_pollfd>			m_polls;
+	#endif
 
+	std::map<fd_type, Socket>		m_sockets;
+	std::map<fd_type, Connect>		m_connects;
+	// will be populated by the ConfigParser
+	ServerArr						m_servers;
+	std::map<fd_type, std::time_t>	m_timers;
 
+	/*Typedefs----------------------------------------------------------------*/
 
-		void		socketEvent( s_kevent & kevent  );
-		void		connectEvent( s_kevent & kevent );
-		void		acceptConnect( Socket & sock );
-		void		closeConnects( void );
-		void		debug( void );
-		void		setKevent( fd_type fd, int16_t filter, uint16_t flag );
-		void		closeSockets( void );
-		void		listenSockets( void );
+	#ifdef KQUEUE
+	typedef	std::vector<s_kevent>::iterator				KeventIter;
+	#else
+	typedef std::vector<s_pollfd>::iterator				PollIter;
+	#endif
 
-		void		assignServer( Connect &connect );
+	typedef	std::map<fd_type, Socket>::iterator			SockIter;
+	typedef	std::map<fd_type, Connect>::iterator		CnctIter;
+	typedef std::map<fd_type, std::time_t>::iterator	TimerIter;
+
+	/*InternalMemberFunctions-------------------------------------------------*/
+	#ifdef KQUEUE
+	void		set_kevent(fd_type fd, int16_t filter, uint16_t flag );
+	void		socket_event(s_kevent & kevent);
+	void		connect_event(s_kevent & kevent);
+	#else
+	void		set_poll(fd_type fd, short events);
+	void		socket_event(s_pollfd & poll);
+	void		connect_event(s_pollfd & poll);
+	#endif
+
+	void		accept_connect(Socket & sock);
+	void		close_connects();
+	void		close_sockets();
+	bool		listen_sockets();
+	void		assign_server(Connect & cnct);
+	Server*		find_server(const Connect & cnct);
+	void		check_for_timeout();
 
 	public:
-		Engine( void );
-		~Engine( void );
-		Engine( const Engine &copy );
-		Engine	&operator=( const Engine &rhs );
 
-		ServerArr&	getServers();
+	ServerArr&	get_servers();
 
-		//ToDo: ErrorHandling
+	/*Debug-------------------------------------------------------------------*/
+	private:
 
-		void		initSockets( void );
-		void		initServers( void );
-		void		launch( void );
+	void		debug();
+
+	void		print_start_msg();
+
+	/*ControllStuff-----------------------------------------------------------*/
+
+	bool		user_event();
+
+	/*Constructors------------------------------------------------------------*/
+	public:
+	Engine();
+	~Engine();
+
+	private:
+	Engine(const Engine &copy);
+	Engine	&operator=(const Engine &rhs);
+
+	/*UserInterface-----------------------------------------------------------*/
+	public:
+
+	//ToDo: ErrorHandling
+	bool		init_sockets();
+	bool		launch();
 
 
 };

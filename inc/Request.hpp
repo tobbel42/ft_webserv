@@ -3,6 +3,8 @@
 
 #include <map>
 #include <iostream>
+#include <algorithm>
+#include <cstring>
 #include "utils.hpp"
 
 enum e_req_state{
@@ -23,6 +25,7 @@ class Request {
 	/*Constructors------------------------------------------------------------*/
 
 	Request();
+	Request(uint32_t expectedPort);
 	~Request();
 	Request(const Request &);
 	Request & operator=(const Request &);
@@ -33,6 +36,7 @@ class Request {
 
 	bool check_invalid_char(const std::string &, char *, size_t);
 	bool is_done();
+	void set_host();
 	bool set_error(size_t);
 
 	/*RequestLineParsing------------------------------------------------------*/
@@ -43,9 +47,9 @@ class Request {
 	bool is_valid_request_line();
 
 	void parse_target();
-
-	//these are maybe
 	bool is_valid_http_ver();
+
+	void parse_uri(const std::string &);
 
 	/*RequestHeaderParsing----------------------------------------------------*/
 
@@ -74,7 +78,15 @@ class Request {
 
 	uint32_t	m_err_code;
 	std::string m_methode;
+	std::string m_uri;
+
+	std::string m_host;
+
+	uint32_t	m_expectedPort;
+	uint32_t	m_port;
 	std::string m_target;
+	std::string m_query;
+
 	std::string m_http_ver;
 	std::map<std::string, std::string> m_header; 
 	std::vector<char> m_body;
@@ -93,10 +105,20 @@ class Request {
 
 	const std::string & get_methode() const;
 	const std::string & get_target() const;
+	const std::string & get_host() const;
+	uint32_t get_port() const;
+	const std::string & get_query() const;
 	const std::string & get_http_ver() const;
-	std::string 		get_header_entry(std::string);
+	std::pair<bool, std::string> get_header_entry(std::string) const;
 	const std::vector<char> & get_body() const;
-	uint32_t 			get_err_code() const;
+	uint32_t get_err_code() const;
+	const std::map<std::string, std::string> & get_header() const;
+
+	/*Setter------------------------------------------------------------------*/
+
+	//todo implement
+	void substitute_default_target(const std::string &);
+
 };
 
 #endif

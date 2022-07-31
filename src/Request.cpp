@@ -2,18 +2,33 @@
 
 /*Constructors----------------------------------------------------------------*/
 
-Request::Request( void ):
+Request::Request():
 m_offset(0),
 m_state(HEADER),
 m_done(0),
 m_content_len(0),
-m_err_code(0) {
+m_err_code(0),
+m_expectedPort(80)
+{
 	#ifdef VERBOSE
 		std::cout << "Request: Constructor called" << std::endl;
 	#endif
 }
 
-Request::Request( const Request & cpy ) {
+Request::Request(uint32_t expectedPort):
+m_offset(0),
+m_state(HEADER),
+m_done(0),
+m_content_len(0),
+m_err_code(0),
+m_expectedPort(expectedPort)
+{
+	#ifdef VERBOSE
+		std::cout << "Request: Constructor called" << std::endl;
+	#endif
+}
+
+Request::Request(const Request & cpy) {
 	#ifdef VERBOSE
 		std::cout << "Request: Copy Constructor called" << std::endl;
 	#endif
@@ -27,7 +42,7 @@ Request::~Request() {
 }
 
 Request & 
-Request::operator=( const Request & rhs ) {
+Request::operator=(const Request & rhs) {
 	#ifdef VERBOSE
 		std::cout << "Request: Assignation operator called" << std::endl;
 	#endif
@@ -38,7 +53,14 @@ Request::operator=( const Request & rhs ) {
 	m_content_len = rhs.m_content_len;
 	m_err_code = rhs.m_err_code;
 	m_methode = rhs.m_methode;
+	m_uri = rhs.m_uri;
+
+	m_host = rhs.m_host;
+	m_expectedPort = rhs.m_expectedPort;
+	m_port = rhs.m_port;
 	m_target = rhs.m_target;
+	m_query = rhs.m_query;
+
 	m_http_ver = rhs.m_http_ver;
 	m_header = rhs.m_header;
 	m_body = rhs.m_body;
@@ -53,43 +75,68 @@ Request::get_methode() const { return m_methode; }
 const std::string & 
 Request::get_target() const { return m_target; }
 
+const std::string &
+Request::get_host() const { return m_host; }
+
+uint32_t
+Request::get_port() const { return m_port; }
+
 const std::string & 
 Request::get_http_ver() const { return m_http_ver; }
 
 //returns an empty string when field_name not found
-std::string 
-Request::get_header_entry(std::string field_name) {
+std::pair<bool, std::string>
+Request::get_header_entry(std::string field_name) const {
 	utils::str_tolower(field_name);
 	std::map<std::string,std::string>::const_iterator iter;
 	iter = m_header.find(field_name);
-
-	std::string field_value;
-
 	if (iter != m_header.end())
-		field_value = iter->second;
-	return field_value;
+		return std::make_pair(true, iter->second);
+	else
+		return std::make_pair(false, "");
 }
 
 const std::vector<char> &
 Request::get_body() const { return m_body; }
 
-uint32_t
+unsigned int
 Request::get_err_code() const { return m_err_code; }
+
+const std::string &
+Request::get_query() const { return m_query; }
+
+const std::map<std::string, std::string> &
+Request::get_header() const { return m_header; }
 
 /*Utils-----------------------------------------------------------------------*/
 
+void
+Request::set_host() {
+	std::pair<bool, std::string> hostField = get_header_entry("host");
+
+	if (hostField.first == false)
+		m_err_code = 400;
+	else
+		parse_uri(hostField.second);
+	
+	#ifdef VERBOSE
+	PRINT("HOST: " << m_host);
+	PRINT("PORT: " << m_port);
+	PRINT("TARGET: " << m_target);
+	PRINT("QUERY: " << m_query);
+	#endif
+}
+
 bool 
 Request::is_done() {
+	if (m_err_code != 0)
+		return true;
+	else if (m_done)
+		set_host();
 	#ifdef VERBOSE
 	print_request();
+	PRINT("ErrorCode: " << m_err_code);
 	#endif
-	if (m_err_code != 0)
-	{
-		return true;
-	}
-	else if (m_done && get_header_entry("host") == "")
-		m_err_code = 400;
-	std::cout << "ERRCODE: " << m_err_code << std::endl;
 	return m_done;
 }
 
@@ -109,6 +156,46 @@ Request::set_error(size_t err_code) {
 }
 
 /*RequestLineParsing----------------------------------------------------------*/
+
+void
+Request::parse_uri(const std::string & host_field) {
+	std::string port;
+	if (m_uri.substr(0, 7) == "http://")
+	{
+		size_t pos = m_uri.find(':', 7);
+		size_t pos1 = m_uri.find('/', 7);
+		size_t pos2 = m_uri.find('?', 7);
+
+		m_host = m_uri.substr(7, std::min(pos, pos1) - 7);
+
+		if (pos != std::string::npos)
+			port = m_uri.substr(pos + 1, std::min(pos1, pos2) - pos - 1);
+		if (pos1 != std::string::npos)
+			m_target = m_uri.substr(pos1, pos2 - pos1);
+		if (pos2 != std::string::npos)
+			m_query = m_uri.substr(pos2 + 1);
+	}
+	else
+	{
+		size_t pos = host_field.find(':');
+		m_host = host_field.substr(0, pos);
+		if (pos != std::string::npos)
+			port = host_field.substr(pos + 1);
+
+		pos = m_uri.find('?');
+		m_target = m_uri.substr(0, pos);
+		if (pos != std::string::npos)
+			m_query = m_uri.substr(pos + 1); 
+	}
+	if (port == "")
+		m_port = 80;
+	else
+	{
+		m_port = utils::from_string<uint32_t>(port);
+		if (m_port != m_expectedPort)
+			m_err_code = 400;
+	}
+}
 
 void
 Request::get_next_req_line(std::string & line) {
@@ -142,7 +229,7 @@ Request::parse_request_line(const std::string & line){
 	pos = line.find(' ', pos1);
 	if (pos == std::string::npos)
 		return false;
-	m_target = line.substr(pos1, pos - pos1);
+	m_uri = line.substr(pos1, pos - pos1);
 	m_http_ver = line.substr(pos + 1);
 
 	return true;
@@ -152,25 +239,49 @@ void
 Request::parse_target() {
 	char c[2];
 	c[1] = '\0' ;
-	for (size_t i = 0; i < m_target.size(); ++i) {
-		if (m_target[i] == '%' && i <= m_target.size() - 2) {
-			std::string hexcode = m_target.substr(i + 1, 2);
+	for (size_t i = 0; i < m_uri.size(); ++i) {
+		if (m_uri[i] == '%' && i <= m_uri.size() - 2) {
+			std::string hexcode = m_uri.substr(i + 1, 2);
 			c[0] = utils::hex_str_to_i(hexcode);
-			m_target.erase(i, 3);
-			m_target.insert(i, c);
+			m_uri.erase(i, 3);
+			m_uri.insert(i, c);
 		}
 	}
+}
+
+bool
+Request::is_valid_http_ver() {
+	if (m_http_ver.substr(0, 5) != "HTTP/")
+		return false;
+	const char * ptr = m_http_ver.c_str() + 5;
+	if (!isdigit(*ptr))
+		return false;
+	while(isdigit(*ptr))
+		++ptr;
+	if (*ptr != '.')
+		return false;
+	++ptr;
+	if (!isdigit(*ptr))
+		return false;
+	while(isdigit(*ptr))
+		++ptr;
+	if (*ptr != '\0')\
+		return false;
+	return true;
 }
 
 //is stupid, maybe overhaul
 bool
 Request::is_valid_request_line() {
 
+	if (!is_valid_http_ver())
+		return false;
+
 	char c[4] = {'\t', '\r', '\n', ' '};
 
 	if (check_invalid_char(m_methode, c, 4))
 		return false;
-	if (check_invalid_char(m_target, c, 4))
+	if (check_invalid_char(m_uri, c, 4))
 		return false;
 	if (check_invalid_char(m_http_ver, c, 4))
 		return false;
@@ -346,12 +457,11 @@ Request::parse_chunked_body() {
 
 bool
 Request::is_chunked() {
-	std::string value = get_header_entry("transfer-encoding");
-	//print_request();
-	if (value == "")
+	std::pair<bool, std::string> value = get_header_entry("transfer-encoding");
+	if (value.first == false)
 		return false;
 	
-	StringArr split = utils::str_split(value, ",");
+	StringArr split = utils::str_split(value.second, ",");
 	for (size_t i = 0; i < split.size(); ++i) {
 		if (split[i] == "chunked")
 			return true;
@@ -367,7 +477,6 @@ bool
 Request::append_read(std::vector<char> buf) {
 
 	m_buffer.insert(m_buffer.end(), buf.begin(), buf.end());
-
 	if (m_state == HEADER)
 	{
 		//parsing of the header
@@ -375,20 +484,19 @@ Request::append_read(std::vector<char> buf) {
 			return is_done();
 		if (parse_header() == false)
 			return is_done();
-
 		//determining if a Body is present, if yes, determining BodyType
-		if (is_chunked())
+		if (is_chunked()){
 			m_state = CHUNKED_BODY;
-		else if (get_header_entry("content-length") != "")
+		}
+		else if (get_header_entry("content-length").first)
 		{
 			m_state = BODY;
-			std::string len = get_header_entry("content-length");
+			std::string len = get_header_entry("content-length").second;
 			m_content_len = std::strtoll(len.data(), NULL, 10);
 		}
 		else
 			m_done = true;
 	}
-
 	//Handling of BodyParsing
 	if (m_state == BODY){
 		m_done = parse_body();
@@ -406,7 +514,6 @@ Request::append_read(std::vector<char> buf) {
 	print_request();
 	#endif
 
-
 	return is_done();
 }
 
@@ -415,7 +522,7 @@ Request::append_read(std::vector<char> buf) {
 void
 Request::print_request() {
 	std::cout << m_methode << "##" << std::endl;
-	std::cout << m_target << "##" << std::endl;
+	std::cout << m_uri << "##" << std::endl;
 	std::cout << m_http_ver << "##" << std::endl;
 	std::cout << "HEADER" << "##" << std::endl;
 	for (std::map<std::string, std::string>::iterator iter = m_header.begin();
@@ -426,5 +533,14 @@ Request::print_request() {
 	std::cout << "BODY" << std::endl;
 	for (size_t i = 0; i < m_body.size(); ++i) {
 		std::cout << m_body[i];
+	}
+}
+
+/*Setter----------------------------------------------------------------------*/
+
+void
+Request::substitute_default_target(const std::string & serverDefault) {
+	if (m_target == "" || m_target == "/") {
+		m_target = serverDefault;
 	}
 }

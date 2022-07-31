@@ -15,7 +15,7 @@ Socket::Socket():
 	#endif
 }
 
-Socket::Socket(unsigned int ip, unsigned int port):
+Socket::Socket(uint32_t ip, uint32_t port):
 	m_ip(ip),
 	m_port(port),
 	m_address(),
@@ -25,7 +25,7 @@ Socket::Socket(unsigned int ip, unsigned int port):
 	#ifdef VERBOSE
 		std::cout << "Socket: Constructor called" << std::endl;
 	#endif
-	m_init();
+	//m_init();
 }
 
 Socket::Socket(const Socket& other):
@@ -61,50 +61,42 @@ Socket::operator=(const Socket& other)
 		m_port = other.m_port;
 		m_address = other.m_address;
 		m_sockfd = other.m_sockfd;
-		m_defaultServer = other.m_defaultServer;
 	}
 	return (*this);
 }
 
-void
+bool
 Socket::m_init()
 {
 	m_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_sockfd < 0)
 	{
-		// throw
+		EPRINT("ERROR: could not create Socket");
+		return false;
 	}
+
+	#ifdef VERBOSE
+	PRINT("ip:" << utils::ip_to_string(m_ip) << ", port: " << m_port);
+	#endif
+
 	m_address.sin_family = AF_INET;
 	m_address.sin_addr.s_addr = htonl(m_ip);
 	m_address.sin_port = htons(m_port);
 	if (bind(m_sockfd, reinterpret_cast<sockaddr*>(&m_address), sizeof m_address) == -1)
 	{
-		exit(EXIT_FAILURE);
+		EPRINT("ERROR: bind failed");
+		return false;
 	}
-	
-}
-
-void
-Socket::setDefaultServer( Server *server )
-{
-	m_defaultServer = server;
-}
-
-Server *
-Socket::getServer( std::string hostname )
-{
-	//todo search m_Server for hostname
-
-	return (m_defaultServer); 
+	return true;
 }
 
 fd_type
 Socket::getSockFd( void ) const { return(m_sockfd); }
 
-unsigned int
+uint32_t
 Socket::getIp () const { return m_ip; }
 
-unsigned int
+uint32_t
 Socket::getPort () const { return m_port; }
 
 bool
@@ -114,7 +106,7 @@ Socket::operator==( fd_type fd )
 }
 
 fd_type
-Socket::acceptConnect( void )
+Socket::acceptConnect() 
 {
 	fd_type	fd = accept(
 				m_sockfd,

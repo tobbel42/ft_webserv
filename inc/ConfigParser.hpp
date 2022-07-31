@@ -3,7 +3,7 @@
 
 #include <cctype>
 #include <cstdlib>
-#include <cstdint>
+#include <cstring>
 
 #include <limits>
 #include <string>
@@ -52,6 +52,7 @@ private: // methods
 	void		m_check_server_configs();
 	uint32_t	m_check_int(const std::string& word);
 	uint32_t	m_check_ip_address();
+	std::pair<std::string,std::string>		parse_key_value();
 
 
 private: // subclass

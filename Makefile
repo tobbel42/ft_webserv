@@ -2,7 +2,7 @@
 
 NAME = webserv
 CC = c++
-CFLAGS = -Wall -Wextra -std=c++98 # -Werror 
+CFLAGS = -Wall -Wextra -std=c++98 -Werror 
 RM = rm -rf
 
 INC = Engine.hpp\
@@ -12,7 +12,11 @@ INC = Engine.hpp\
 	Server.hpp\
 	Request.hpp\
 	Response.hpp\
-	ConfigParser.hpp
+	ConfigParser.hpp \
+	Executer.hpp \
+	CGI.hpp \
+	DirectoryListing.hpp
+
 IDIR = inc
 INC_FULL = $(addprefix $(IDIR)/, $(INC))
 
@@ -28,9 +32,9 @@ SRC = main.cpp\
 	utils.cpp\
 	ConfigParser.cpp \
 	Connect.cpp\
-	get_next_line.cpp\
-	get_next_line_utils.cpp
-
+	Executer.cpp \
+	CGI.cpp \
+	DirectoryListing.cpp
 
 
 SDIR = src
@@ -45,7 +49,7 @@ $(NAME): $(ODIR) $(OBJ) $(INC_FULL) $(TPP_FULL)
 	$(CC) $(CFLAGS) $(OBJ) -o $(NAME) -I $(IDIR)
 
 $(ODIR):
-	@mkdir -p $@
+	mkdir -p $@
 
 $(ODIR)/%.o: $(SDIR)/%.cpp
 	$(CC) $(CFLAGS) -c $< -o $@ -I $(IDIR)
@@ -56,6 +60,7 @@ clean:
 	$(RM) $(ODIR)
 
 fclean: clean
+	$(RM) ./testServerDir/test/uploads/*
 	$(RM) $(NAME)
 
 re: fclean all
@@ -69,4 +74,8 @@ debug: re
 release: CFLAGS += -Ofast
 release: re
 
-.PHONY: all clean fclean re bonus debug release
+docker:
+	docker build -t webserver .
+	docker run -p4242:4242 -ti webserver
+
+.PHONY: all clean fclean re bonus debug release docker

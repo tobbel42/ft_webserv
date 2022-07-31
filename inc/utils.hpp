@@ -1,18 +1,21 @@
 #pragma once
 
 #include <ctime>
-#include <cstdint>
 #include <cctype>
+#include <sys/stat.h>
 
 #include <string>
 #include <vector>
 #include <sstream>
 #include <fstream>
+#include <iostream>
+#include <algorithm>
 
 #include "typedefs.hpp"
 
+#define PRINT(msg) (std::cout << msg << std::endl)
+#define EPRINT(msg) (std::cerr << msg << std::endl)
 
-extern char** g_envp; // remember to erase this filth!!
 
 namespace utils {
 
@@ -41,6 +44,8 @@ bool isCRLF(const std::vector<char> &, size_t pos);
 */
 void
 str_tolower(std::string & s);
+std::string
+cgi_str_toupper(const std::string & s);
 
 /*
 @brief Converts the supplied value to a std::string. 
@@ -69,6 +74,20 @@ from_string(const std::string& s)
 	ss >> value;
 	return value;
 }
+
+/*
+@brief determines whether the specified value is inside the container
+*/
+template<typename Container>
+inline bool
+is_element_of(const Container& cntr,
+			const typename Container::value_type& value)
+{
+	return std::find(cntr.begin(), cntr.end(), value) != cntr.end();
+}
+
+std::string
+get_abs_path(const std::string& filename);
 
 /*
 @return The current time in the format:
@@ -109,6 +128,30 @@ read_file(std::istream& file, const char* nl);
 */
 std::string
 arr_to_csv(const StringArr& arr, const char* sep);
+
+/*
+@brief searches for the extension of a file
+
+@return the extension of the file or an empty string
+	if there is no extension
+*/
+std::string
+get_file_ext(const std::string& filename);
+
+/*
+@brief concentrates multiple slashes into one 
+		Example: //var////www/ becomes /var/www/
+*/
+std::string
+compr_slash(std::string path);
+
+
+/*
+@brief determines whether the specified name is a directory
+*/
+bool
+is_dir(const std::string& name);
+
 
 } // namespace utils
 

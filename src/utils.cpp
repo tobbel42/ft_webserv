@@ -1,8 +1,8 @@
 #include "utils.hpp"
 
 #include <arpa/inet.h>
+#include <unistd.h>
 
-#include <iostream>
 
 namespace utils {
 
@@ -12,6 +12,20 @@ str_tolower(std::string & s)
 {
 	for (size_t i = 0; i < s.size(); ++i)
 		s[i] = tolower(s[i]);
+}
+
+std::string
+cgi_str_toupper(const std::string & s)
+{
+	std::string s2;
+	for (size_t i = 0; i < s.size(); ++i)
+	{
+		if (s[i] == '-')
+			s2.push_back('_');
+		else
+			s2.push_back(toupper(s[i]));
+	}
+	return s2;
 }
 
 bool isCRLF(const std::string & s, size_t pos) {
@@ -76,6 +90,21 @@ get_http_time()
 	return std::string(buffer);
 }
 
+std::string
+get_abs_path(const std::string& filename)
+{
+	std::string str;
+	char * pwd = getcwd(NULL, 0);
+	if (pwd)
+	{
+		str = pwd;
+		free(pwd);
+	}
+	str += "/";
+	str += filename;
+	return str;
+}
+
 uint32_t
 string_to_ip(const std::string& ip_string)
 {
@@ -101,7 +130,7 @@ ip_to_string(uint32_t ip_addr)
 
 uint32_t
 hex_str_to_i(const std::string & str) {
-	u_int32_t n;
+	uint32_t n;
 	std::stringstream ss;
 	ss << std::hex << str;
 	ss >> n;
@@ -167,6 +196,35 @@ arr_to_csv(const StringArr& arr, const char* sep)
 			result += sep;
 	}
 	return result;
+}
+
+std::string
+get_file_ext(const std::string& filename)
+{
+	size_t pos = filename.find_last_of('.');
+	if (pos == std::string::npos)
+		return std::string();
+	return filename.substr(pos + 1);
+}
+
+std::string
+compr_slash(std::string path)
+{
+	size_t pos = 0;
+	while ((pos = path.find("//")) != std::string::npos)
+		path.erase(pos, 1);
+	return path;
+}
+
+bool
+is_dir(const std::string& name)
+{
+	struct stat dir;
+
+	if (stat(name.c_str(), &dir) == 0)
+		return dir.st_mode & S_IFDIR; // checks whether the DIR bit is set
+	else
+		return false;
 }
 
 } // namespace utils

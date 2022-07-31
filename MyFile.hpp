@@ -1,10 +1,11 @@
 #ifndef MYFILE_HPP
 #define MYFILE_HPP
 
-
+#if 0
 #define PHP 1
 #define PYTHON 2
 #define HTML 3
+#endif
 #define FOLDER 4
 
 
@@ -15,14 +16,19 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <cstdio>
+#include <unistd.h>
 
 // wait
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "get_next_line.hpp"
+#include "utils.hpp"
 #include "MyDirectory.hpp"
 
+
+//404 file not found
+// 500 internal error
 class MyFile
 {
 
@@ -32,6 +38,7 @@ private:
 	std::string _current_url;
 	char **_envp;
 	bool _directory_listing;
+	int _errorcode;
 
 
 
@@ -41,25 +48,29 @@ private:
 		std::string content;
 		std::string line;
 
-		in.open(this->_complete_filename);
+		in.open(this->_complete_filename.c_str());
+		PRINT(_complete_filename);
 		if (in.is_open()) // else??
 		{
 			while (getline (in,line))
 				content = content + line + '\n';
 		in.close();
 		}
+		else
+			_errorcode = 404;
 		return (content);
 	}
 
 	int	check_file_extension()
 	{
-		if(this->_complete_filename.substr(this->_complete_filename.find_last_of(".") + 1) == "php")
+		std::string extension = utils::get_file_ext(_complete_filename);
+		if (extension == "php")
 			return PHP;
-		else if(this->_complete_filename.substr(this->_complete_filename.find_last_of(".") + 1) == "py")
+		else if (extension == "py")
 			return PYTHON;
-		else if (this->_complete_filename.substr(this->_complete_filename.find_last_of(".") + 1) == "html")
+		else if (extension == "html")
 			return HTML;
-		else if (this->_complete_filename.find_last_of(".") == std::string::npos)
+		else if (extension.empty())
 			return FOLDER; // macht das Sinn??
 		else
 			return HTML; // ist es angreifbar wenn wir sonst einfach die File ausgeben??
@@ -69,14 +80,23 @@ private:
 	{
 		int fd = mkstemp(filename); // Creates and opens a new temp file r/w.
 		if (fd == -1)
-			std::cout << "creation of file went wrong" << std::endl; //Errorhandling
+		{
+			perror("mkstemp");
+			_errorcode = 500;
+		}
 		return fd;
 	}
 
-#if 0
-	std::string read_from_file(int fd)
+	std::string read_from_file(FILE* file)
 	{
 		std::string content;
+		#if 1
+		char buffer[1000];
+		while (fread(buffer, sizeof(*buffer), sizeof(buffer), file) == sizeof(buffer))
+			content += buffer;
+		content += buffer;
+		fclose(file);
+		#else
 		char* line = get_next_line(fd);
 		while(line != NULL)
 		{
@@ -84,44 +104,68 @@ private:
 			line = get_next_line(fd);
 		}
 		close(fd);
+		#endif
 		return content;
 	}
 
-
+#if 1
 	std::string execute_cgi(int file_extension)
 	{
 		char *argv[3];
 		char filename_char[] = "/tmp/mytemp.XXXXXX";
-		std::string python_executable("/usr/bin/python");
-		std::string php_executable("/usr/bin/php");
 
 		int fd = create_temp_file(filename_char);
-
 		if (file_extension == PHP)
-			argv[0] = (char *) php_executable.c_str();
+			argv[0] = (char *) "/usr/bin/php";
 		else
-			argv[0] = (char *) python_executable.c_str();
+			argv[0] = (char *) "/usr/bin/python";
 		argv[1] = (char *) _complete_filename.c_str();
 		argv[2] = NULL;
 
-		int pid = fork();
+		pid_t pid = fork();
 		if (pid == -1)
-			std::cout << "Problem bei fork" << std::endl;
-		if (pid == 0)
 		{
-			dup2(fd, STDOUT_FILENO);
-			if (execve(argv[0], argv, this->_envp) == -1)
-				std::cout << "Problem bei execve" << std::endl; // exiten hier??
+			perror("fork");
+			_errorcode = 500;
 		}
-		wait(NULL); // Achtung, wenn Endlosschleife, dann kann es hier zu Problemen kommen
-		close(fd);
-		fsync(fd);
-		int fd2 = open(filename_char, 0);
-		unlink(filename_char); // deletes the temp file after closing
-		return (read_from_file(fd2));
-	}
-#else
+		else if (pid == 0)
+		{
+			if (dup2(fd, STDOUT_FILENO) == -1)
+			{
+				perror("dup2");
+				std::exit(errno);
+			}
+			close(fd);
+			execve(argv[0], argv, _envp);
+			perror("execve");
+			std::exit(errno);
+		}
 
+		int stat_loc = 0;
+		wait(&stat_loc); // Achtung, wenn Endlosschleife, dann kann es hier zu Problemen kommen
+		int child_errno = WEXITSTATUS(stat_loc);
+		if (child_errno != 0)
+			_errorcode = 500;
+
+		close(fd);
+
+		std::string content;
+		std::ifstream file(filename_char);
+		if (file.is_open())
+		{
+			content = utils::read_file(file, "\n");
+			file.close();
+		}
+		else
+		{
+			EPRINT("couldn't open the temp file" << filename_char);
+			_errorcode = 500;
+		}
+		unlink(filename_char); // deletes the temp file after closing
+		return (content);
+	}
+
+#else
 	std::string
 	execute_cgi(int file_extension)
 	{
@@ -141,10 +185,7 @@ private:
 		pclose(pipe);
 		return content;
 	}
-
-
 #endif
-
 
 	std::string get_directory_content()
 	{
@@ -153,11 +194,17 @@ private:
 	}
 
 
+
 public:
-	MyFile(std::string filename, std::string path, std::string current_url, char **envp, bool directory_listing)
-		: _complete_filename(path + filename), _current_url(current_url + "/"), _envp(envp), _directory_listing(directory_listing)
+	MyFile(std::string filename,  std::string current_url, char **envp, bool directory_listing)
+		: _complete_filename(filename), _current_url(current_url + "/"), _envp(envp), _directory_listing(directory_listing)
 	{
-	
+		_errorcode = 200; //current model: ok by default, is set on error
+	}
+
+	int	get_error_code() const
+	{
+		return _errorcode;
 	}
 
 	std::string read_file()
@@ -174,9 +221,15 @@ public:
 		else if (file_extension == HTML)
 			return get_file_content();
 		else if (file_extension == FOLDER && _directory_listing == true)
-			return get_directory_content();
+		{
+			std::string dir_list = get_directory_content();
+			if(dir_list == "page not found")
+				_errorcode = 500;
+			return dir_list;
+		}
 		else
 			return ""; // prüfen
 	}
 };
+
 #endif

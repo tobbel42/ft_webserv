@@ -8,6 +8,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <unistd.h>
+
 #include "Server.hpp"
 #include "Request.hpp"
 #include "utils.hpp"
@@ -20,21 +22,28 @@ class Response
 public: // methods
 	Response();
 	Response(const Response& other);
-	Response(int status_code, const std::string& body, Server* server, Request* request);
+	Response(int status_code, const std::string& body, const Server* server, Request* request);
 	~Response();
 
 	Response& operator=(const Response& other);
 
 
-	void			set_server(Server* server);
+	void			set_server(const Server* server);
+	void			set_location(const Server::Location* location);
 	void			set_status_code(int status_code);
 	void			set_body(const std::string& body);
+	void			set_filename(const std::string& filename);
 	std::string		get_payload() const;
 	size_t			get_body_size() const;
 
 	// first = payload, second = client body size
 	std::pair<std::string, size_t> generate();
 
+	#ifdef KQUEUE
+	void							send(const s_kevent& kevent);
+	#else
+	void							send(const s_pollfd & poll);
+	#endif
 
 private: // methods
 
@@ -49,8 +58,9 @@ private: // methods
 
 	void m_init_header();
 
+	const char*	m_get_reason_phrase() const;
+
 private: // typedefs
-	typedef void (Response::*method_ptr)();
 
 	typedef std::map<std::string, const char*>::iterator	MimeIter;
 	typedef std::map<int, const char*>::iterator			StatusIter;
@@ -58,12 +68,14 @@ private: // typedefs
 
 private: // attributes
 
-	Server*								p_server;
+	const Server*						p_server;
+	const Server::Location*				p_loc;
 	Request*							p_request;
 	int									m_status_code;
 	std::string							m_header;
 	std::string							m_body;
 	std::string							m_payload;
+	std::string							m_filename;
 
 
 private: // statics
