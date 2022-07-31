@@ -140,6 +140,7 @@ Response::send(const s_kevent& kevent)
 void
 Response::send(const s_pollfd& poll)
 {
+	PRINT(m_payload);
 	if (p_server != nullptr)
 	{
 		if (p_server->max_client_body_size > m_body.size())

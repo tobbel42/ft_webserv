@@ -449,6 +449,7 @@ Request::parse_chunked_body() {
 
 	//appending chunk to body
 
+
 	m_body.insert(m_body.end(),
 		m_buffer.begin() + m_offset, m_buffer.begin() + m_offset + chunk_size);
 	m_offset += chunk_size + 2; // skipping CRLF
@@ -460,10 +461,11 @@ Request::parse_chunked_body() {
 
 bool
 Request::is_chunked() {
+
 	std::pair<bool, std::string> value = get_header_entry("transfer-encoding");
 	if (value.first == false)
 		return false;
-	
+
 	StringArr split = utils::str_split(value.second, ",");
 	for (size_t i = 0; i < split.size(); ++i) {
 		if (split[i] == "chunked")

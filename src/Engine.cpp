@@ -566,6 +566,7 @@ Engine::launch()
 		}
 		#endif
 
+
 		if (n_events > 0) {
 			for (size_t i = 0; i < m_polls.size(); ++i) {
 				if (m_polls[i].revents & 0x0008 ||

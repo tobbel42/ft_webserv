@@ -193,7 +193,6 @@ Connect::composeResponse()
 
 
 
-
 	#endif
 	
 	m_action = WRITE;
