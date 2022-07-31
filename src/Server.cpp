@@ -115,7 +115,7 @@ bool
 Server::set_method(const std::string& method)
 {
 	if (method == "GET" || method == "PUT" || method == "POST"||
-		method == "DELETE"|| method == "HEAD")
+		method == "DELETE")
 	{
 		if (!utils::is_element_of(allowed_methods, method))
 			allowed_methods.push_back(method);
@@ -247,7 +247,7 @@ bool
 Server::Location::set_method(const std::string& method)
 {
 	if (method == "GET" || method == "PUT" || method == "POST"
-		|| method == "DELETE" || method == "HEAD")
+		|| method == "DELETE")
 	{
 		if (!utils::is_element_of(allowed_methods, method))
 			allowed_methods.push_back(method);
