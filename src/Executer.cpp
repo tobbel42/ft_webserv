@@ -171,15 +171,42 @@ Executer::run_location()
 
 	// this is hard
 	if (m_req.get_method() == "POST")
-	{
 		m_status_code = 405;
-	}
-
+		post_handler();
 	if (m_req.get_method() == "PUT")
 		put_handler();
 	if (m_req.get_method() == "DELETE")
 		delete_handler();
 
+}
+
+void
+Executer::post_handler()
+{
+	e_FileType file_type = get_file_type();
+	if (file_type == PHP || file_type == PYTHON)
+	{
+		if (cgi_is_allowed(p_loc->scripts, file_type))
+		{
+			if (resource_exist())
+				run_cgi(file_type);
+			else
+				m_status_code = 404;
+		}
+		else
+			m_status_code = 403;
+	}
+	else {
+		//here the file creation stuff is happening
+		//only test/plain request are allowed to create files
+		//the rest is getting 404 
+		std::string content_type = m_req.get_header_entry("Content-Type").second ;
+		if (content_type == "text/plain")
+			put_handler();
+		else {
+			m_status_code = 404;
+		}
+	}
 }
 
 void

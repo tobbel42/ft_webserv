@@ -61,6 +61,7 @@ private: // methods
 
 	bool resource_exist();
 
+	void post_handler();
 	void put_handler();
 	void delete_handler();
 

@@ -536,12 +536,12 @@ Request::append_read(std::vector<char> buf) {
 /*Debug-----------------------------------------------------------------------*/
 
 void
-Request::print_request() {
+Request::print_request() const {
 	std::cout << m_method << "##" << std::endl;
 	std::cout << m_uri << "##" << std::endl;
 	std::cout << m_http_ver << "##" << std::endl;
 	std::cout << "HEADER" << "##" << std::endl;
-	for (std::map<std::string, std::string>::iterator iter = m_header.begin();
+	for (std::map<std::string, std::string>::const_iterator iter = m_header.begin();
 		iter != m_header.end(); ++iter) {
 		std::cout << (*iter).first << ": " 
 			<< (*iter).second << "##" << std::endl;
