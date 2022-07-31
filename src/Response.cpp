@@ -1,6 +1,29 @@
-exit
 #include "Response.hpp"
 
+
+// general header:
+//		Connection: (close or maybe keep-alive)
+//		Date: the timestamp in http time format
+// response-header:
+//		Accept-ranges: HTTP 1.1 is designed not to rely on those
+//		Retry-after: (maybe for 503 and 3XX status codes -> time in seconds)
+//		Server: lil l and the beachboys 1.0
+// entity-header:
+//		Allow: The allowed requests for the current server
+//		Content-Encoding: Must be provided when the coding is not "identity"
+//						If the coding is not accepted, status code 415 must be sent back
+//						If there are muliple encodings, the must be listed in order of usage
+//		Content-Length: The length of the response body. For chunked responses the field 
+//						should not be incuded (or included as 0)
+//		Content-Location: The path to the accessed resource. Optional.
+//		Content-MD5: Used for end-to-end encoding. Not neccessary.
+//		Content-Range: For chunked responses in case.
+//						Not implementable due to the constraints of the subject
+//		Content-Type: The type of media sent in MIME format.
+//						Default is: "application/octet-stream"
+//		Expires: Date untill the response is valid and should be cached
+//						Dates in the past (or 0) count as instantly expired
+//		Last-Modified: Timestamp of the sent resource (e.g. file)
 
 std::map<int, const char*>
 Response::s_status_codes(Response::s_init_status_codes());
@@ -71,9 +94,6 @@ Response::m_init_header()
 
 	m_header += "\r\n";
 
-	// general header:
-	//		Connection: (close or maybe keep-alive)
-	//		Date: the timestamp in http time format
 	m_add_to_head("Date", utils::get_http_time());
 }
 
@@ -203,7 +223,7 @@ Response::m_success()
 	if (p_loc != nullptr)
 		m_add_to_head("Allow", utils::arr_to_csv(p_loc->allowed_methods, ", "));
 	else if (p_server != nullptr)
-		m_add_to_head("Allow", "GET");
+		m_add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
 	m_add_to_head("Content-Length", utils::to_string(m_body.size()));
 	m_add_to_head("Content-Location", m_filename);
 	m_add_to_head("Content-Type", s_get_mime_type(m_filename));
@@ -291,27 +311,6 @@ Response::m_error()
 	m_add_to_head("Content-Length", utils::to_string(m_body.size()));
 	m_add_to_head("Content-Location", filename);
 	m_add_to_head("Content-Type", s_get_mime_type(filename));
-
-	// response-header:
-	//		Accept-ranges: HTTP 1.1 is designed not to rely on those
-	//		Retry-after: (maybe for 503 and 3XX status codes -> time in seconds)
-	//		Server: lil l and the beachboys 1.0
-	// entity-header:
-	//		Allow: The allowed requests for the current server
-	//		Content-Encoding: Must be provided when the coding is not "identity"
-	//						If the coding is not accepted, status code 415 must be sent back
-	//						If there are muliple encodings, the must be listed in order of usage
-	//		Content-Length: The length of the response body. For chunked responses the field 
-	//						should not be incuded (or included as 0)
-	//		Content-Location: The path to the accessed resource. Optional.
-	//		Content-MD5: Used for end-to-end encoding. Not neccessary.
-	//		Content-Range: For multiple byte-ranges in multiple responses.
-	//						Very complicated!
-	//		Content-Type: The type of media sent in MIME format.
-	//						Default is: "application/octet-stream"
-	//		Expires: Date untill the response is valid and should be cached
-	//						Dates in the past (or 0) count as instantly expired
-	//		Last-Modified: Timestamp of the sent resource (e.g. file)
 }
 
 void
