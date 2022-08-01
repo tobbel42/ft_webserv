@@ -31,6 +31,8 @@ class Connect
 		typedef	Request	request_type;
 		typedef Response response_type;
 
+		typedef std::map<std::string, std::string> cookies;
+
 		fd_type		m_fd;
 		uint32_t	m_ip;
 		uint32_t	m_port;
@@ -40,13 +42,15 @@ class Connect
 		int			m_status_code;
 		request_type		m_req;
 		response_type		m_res;
+
+		cookies * p_cookie_base;
 		
 		Connect( void ); //we do not allow default construction
 		
 		
 	public:
 
-		Connect(fd_type fd, uint32_t ip, uint32_t port);
+		Connect(fd_type fd, uint32_t ip, uint32_t port, cookies * cookie_base);
 		~Connect();
 		Connect(const Connect &copy);
 

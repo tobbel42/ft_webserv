@@ -167,7 +167,7 @@ Engine::accept_connect(Socket & sock)
 		return ;
 	}
 
-	Connect	newConnect(fd, sock.getIp(), sock.getPort());
+	Connect	newConnect(fd, sock.getIp(), sock.getPort(), &m_cookie_base);
 
 	m_connects.insert(std::pair<fd_type, Connect>(fd, newConnect));
 	m_timers.insert(std::make_pair(fd, std::time(nullptr)));

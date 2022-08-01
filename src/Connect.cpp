@@ -1,9 +1,10 @@
 #include "Connect.hpp"
 
 Connect::Connect():
-p_server(NULL),
+p_server(nullptr),
 m_action(READ),
-m_req(80)
+m_req(80),
+p_cookie_base(nullptr)
 {
 	#ifdef VERBOSE
 		std::cout << "Connect: Constructor called" << std::endl;
@@ -39,16 +40,18 @@ Connect	&Connect::operator = (const Connect &rhs)
 	m_status_code = rhs.m_status_code;
 	m_req = rhs.m_req;
 	m_res = rhs.m_res;
+	p_cookie_base = rhs.p_cookie_base;
 	return (*this);
 }
 
-Connect::Connect(fd_type fd, uint32_t ip, uint32_t port):
+Connect::Connect(fd_type fd, uint32_t ip, uint32_t port, cookies * cookie_base):
 	m_fd(fd),
 	m_ip(ip),
 	m_port(port),
 	p_server(nullptr),
 	m_action(READ),
-	m_req(port)
+	m_req(port),
+	p_cookie_base(cookie_base)
 {
 	#ifdef VERBOSE
 		std::cout << "Connect: Constructor called" << std::endl;
@@ -179,9 +182,40 @@ Connect::composeResponse()
 
 	#else
 
+	bool req_has_cookie = m_req.get_header_entry("Cookie").first;
+
+	bool is_valid_cookie = false;
+
+	if (req_has_cookie) {
+		std::string cookie = m_req.get_header_entry("Cookie").second;
+		cookie = cookie.substr(cookie.find("=") + 1);
+		if (p_cookie_base->find(cookie) != p_cookie_base->end()) {
+			is_valid_cookie = true;
+			m_req.decrypt_cookie(p_cookie_base->find(cookie)->second);
+		}
+	}
+	
 	Executer exec(p_server, p_location, m_req);
 
 	exec.run();
+
+
+	//hic sunt dracones
+
+	PRINT(exec.is_cgi() << (exec.get_cgi_header().find("Cookie_data") != exec.get_cgi_header().end()) << !is_valid_cookie);
+
+
+	if (exec.is_cgi()
+		&& exec.get_cgi_header().find("Cookie_data") != exec.get_cgi_header().end()
+		&& !is_valid_cookie)
+	{
+		std::string cookies_value = exec.get_cgi_header().find("Cookie_data")->second;
+		std::string cookies_key = utils::to_string(p_cookie_base->size());
+		PRINT("COOKIVALUE:" << cookies_value);
+		p_cookie_base->insert(std::make_pair(cookies_key, cookies_value));
+		m_res.set_cookie("helloCookie=" + cookies_key);
+	}
+	//
 
 	m_res.set_server(p_server);
 	m_res.set_location(p_location);

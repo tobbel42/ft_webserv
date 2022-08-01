@@ -28,7 +28,8 @@ Response::Response(int status_code, const std::string& body, const Server* serve
 	m_header(),
 	m_body(body),
 	m_payload(),
-	m_filename()
+	m_filename(),
+	m_cookie()
 {}
 
 Response::~Response() {
@@ -50,6 +51,7 @@ Response & Response::operator=( const Response & rhs ) {
 		m_header = rhs.m_header;
 		m_body = rhs.m_body;
 		m_payload = rhs.m_payload;
+		m_cookie = rhs.m_cookie;
 	}
 	return (*this);
 }
@@ -108,6 +110,8 @@ Response::set_body(const std::string& body) { m_body = body; }
 void
 Response::set_filename(const std::string& filename) { m_filename = filename; }
 
+void
+Response::set_cookie(const std::string & cookie) { m_cookie = cookie; }
 
 std::string
 Response::get_payload() const { return m_payload; }
@@ -206,6 +210,8 @@ Response::m_success()
 	m_add_to_head("Content-Length", utils::to_string(m_body.size()));
 	m_add_to_head("Content-Location", m_filename);
 	m_add_to_head("Content-Type", s_get_mime_type(m_filename));
+	if (m_cookie != "")
+		m_add_to_head("Set-Cookie", m_cookie);
 
 	switch (m_status_code)
 	{

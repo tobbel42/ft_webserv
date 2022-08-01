@@ -117,6 +117,7 @@ class Request {
 
 	/*Setter------------------------------------------------------------------*/
 
+	void decrypt_cookie(std::string & cookie_value);
 	//todo implement
 	void substitute_default_target(const std::string &);
 
