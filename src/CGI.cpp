@@ -181,12 +181,12 @@ CGI::exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[])
 			return false;
 		}
 		// temporarily disabled
-		// if (WEXITSTATUS(stat_loc) != 0)
-		// {
-		// 	EPRINT("exit status was not 0" << WEXITSTATUS(stat_loc));
-		// 	m_status_code = 500;
-		// 	return false;
-		// }
+		if (WEXITSTATUS(stat_loc) != 0)
+		{
+			EPRINT("exit status was not 0" << WEXITSTATUS(stat_loc));
+			m_status_code = 500;
+			return false;
+		}
 	}
 	return true;
 }
@@ -204,7 +204,7 @@ CGI::parse_header(std::string & output) {
 		key = line.substr(0, line.find(":"));
 		value = line.substr(line.find(":") + 2);
 		m_cgi_header[key] = value;
-		pos += 2;
+		pos += 3;
 		offset = pos;
 		pos = output.find("\r\n", offset);
 	}

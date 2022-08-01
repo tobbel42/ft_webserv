@@ -33,6 +33,7 @@ public: // methods
 	void			set_status_code(int status_code);
 	void			set_body(const std::string& body);
 	void			set_filename(const std::string& filename);
+	void			set_cookie(const std::string& cookie);
 	std::string		get_payload() const;
 	size_t			get_body_size() const;
 
@@ -76,6 +77,7 @@ private: // attributes
 	std::string							m_body;
 	std::string							m_payload;
 	std::string							m_filename;
+	std::string							m_cookie;
 
 
 private: // statics

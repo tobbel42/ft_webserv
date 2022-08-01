@@ -42,6 +42,11 @@ public: // methods
 
 	e_FileType get_file_type() const;
 
+	bool is_cgi() const { return m_is_cgi; }
+
+	const std::map<std::string, std::string> &
+	get_cgi_header() const { return m_cgi_header; }
+
 private: // methods
 	Executer();
 
@@ -66,6 +71,7 @@ private: // methods
 	void put_handler();
 	void delete_handler();
 
+
 private: // attributes
 	const Server*	p_server;
 	const Server::Location* p_loc;
@@ -73,4 +79,9 @@ private: // attributes
 	const Request&	m_req;
 	std::string		m_content;
 	std::string		m_filename;
+
+
+	bool m_is_cgi;
+	std::map<std::string, std::string> m_cgi_header;
+
 };

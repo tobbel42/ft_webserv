@@ -555,6 +555,14 @@ Request::print_request() const {
 /*Setter----------------------------------------------------------------------*/
 
 void
+Request::decrypt_cookie(std::string & cookie_value) {
+	PRINT(m_query);
+	if (m_query != "")
+		m_query += "&";
+	m_query += cookie_value;
+}
+
+void
 Request::substitute_default_target(const std::string & serverDefault) {
 	if (m_target == "" || m_target == "/") {
 		m_target = serverDefault;

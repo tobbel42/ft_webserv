@@ -7,7 +7,9 @@ Executer::Executer(const Executer& other):
 	m_status_code(other.m_status_code),
 	m_req(other.m_req),
 	m_content(other.m_content),
-	m_filename(other.m_filename)
+	m_filename(other.m_filename),
+	m_is_cgi(other.m_is_cgi),
+	m_cgi_header(other.m_cgi_header)
 {}
 
 Executer::Executer(const Server* server, const Server::Location* location,
@@ -17,7 +19,8 @@ Executer::Executer(const Server* server, const Server::Location* location,
 	m_status_code(200),
 	m_req(req),
 	m_content(),
-	m_filename(req.get_target())
+	m_filename(req.get_target()),
+	m_is_cgi(false)
 {}
 
 Executer::Executer(const Server* server, const Server::Location* location,
@@ -27,7 +30,8 @@ Executer::Executer(const Server* server, const Server::Location* location,
 	m_status_code(200),
 	m_req(req),
 	m_content(),
-	m_filename(filename)
+	m_filename(filename),
+	m_is_cgi(false)
 {}
 
 
@@ -135,7 +139,6 @@ Executer::run_location()
 	}
 	
 	PRINT("in location: " << p_loc->root << '\n' << m_filename << " file type = " << file_type);
-
 
 
 	if (m_req.get_method() == "GET")
@@ -285,8 +288,20 @@ Executer::run_cgi(e_FileType file_type)
 			executable = PHP_PATH;
 	}
 
+	m_is_cgi = true;
+
 	m_content = cgi.run(file_type, input, executable);
-	m_status_code = cgi.get_status_code();
+
+	m_cgi_header = cgi.get_cgi_header();
+	std::map<std::string, std::string>::iterator iter = m_cgi_header.find("Status");
+
+	if (iter != m_cgi_header.end())
+		m_status_code = utils::from_string<int>(iter->second);
+	else
+		m_status_code = cgi.get_status_code();
+
+
+	
 }
 
 e_FileType
