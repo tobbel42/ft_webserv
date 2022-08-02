@@ -479,6 +479,24 @@ Engine::user_event() {
 	std::getline(std::cin, user_input);
 	if (user_input == "exit")
 		return false;
+	else if (user_input.compare(0, 15, "reassign config") == 0)
+	{
+		ServerArr server_backup = m_servers; // I miss std::move :(
+		StringArr input = utils::str_split(user_input, " ");
+		try
+		{
+			ConfigParser parser(m_servers, input.at(2).c_str());
+			m_servers.clear();
+			parser.run();
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+			m_servers = server_backup; // still no std::move in c++98
+			return true;
+		}
+		PRINT("successfully switched to config " << input[2]);
+	}
 	else
 		PRINT("Unknown command \'" << user_input << "\'");
 	return true;

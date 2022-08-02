@@ -12,6 +12,7 @@
 
 #include "../inc/ConfigParser.hpp"
 
+
 ConfigParser::ConfigParser(ServerArr& servers):
 	m_servers(servers),
 	m_infile(),

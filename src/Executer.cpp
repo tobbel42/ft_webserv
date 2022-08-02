@@ -196,23 +196,25 @@ void
 Executer::get_handler()
 {
 	e_FileType file_type = get_file_type();
-	if (resource_exist()) {
-		switch (file_type){
-			case PHP:
-			case PYTHON:
-				if (cgi_is_allowed(p_loc->scripts, file_type))
-					run_cgi(file_type);
-				else
-					m_status_code = 403;
-				break;
-			case DIRECTORY:
-				run_directory_listing();
-				break;
-			case OTHER:
-				read_from_file();
-				break;
-			default:
-				break;
+	if (resource_exist())
+	{
+		switch (file_type)
+		{
+		case PHP:
+		case PYTHON:
+			if (cgi_is_allowed(p_loc->scripts, file_type))
+				run_cgi(file_type);
+			else
+				m_status_code = 403;
+			break;
+		case DIRECTORY:
+			run_directory_listing();
+			break;
+		case OTHER:
+			read_from_file();
+			break;
+		default:
+			break;
 		}
 	}
 	else
