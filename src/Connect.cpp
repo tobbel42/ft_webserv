@@ -182,11 +182,10 @@ Connect::composeResponse()
 
 	#else
 
-	bool req_has_cookie = m_req.get_header_entry("Cookie").first;
-
 	bool is_valid_cookie = false;
 
-	if (req_has_cookie) {
+	if (m_req.get_header_entry("Cookie").first) 
+	{
 		std::string cookie = m_req.get_header_entry("Cookie").second;
 		cookie = cookie.substr(cookie.find("=") + 1);
 		if (p_cookie_base->find(cookie) != p_cookie_base->end()) {
@@ -199,23 +198,15 @@ Connect::composeResponse()
 
 	exec.run();
 
-
-	//hic sunt dracones
-
-	PRINT(exec.is_cgi() << (exec.get_cgi_header().find("Cookie_data") != exec.get_cgi_header().end()) << !is_valid_cookie);
-
-
 	if (exec.is_cgi()
 		&& exec.get_cgi_header().find("Cookie_data") != exec.get_cgi_header().end()
 		&& !is_valid_cookie)
 	{
 		std::string cookies_value = exec.get_cgi_header().find("Cookie_data")->second;
 		std::string cookies_key = utils::to_string(p_cookie_base->size());
-		PRINT("COOKIVALUE:" << cookies_value);
 		p_cookie_base->insert(std::make_pair(cookies_key, cookies_value));
-		m_res.set_cookie("helloCookie=" + cookies_key);
+		m_res.set_cookie("helloCookie=" + cookies_key + "; SameSite=Lax");
 	}
-	//
 
 	m_res.set_server(p_server);
 	m_res.set_location(p_location);

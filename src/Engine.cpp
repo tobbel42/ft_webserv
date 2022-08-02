@@ -186,7 +186,7 @@ Engine::accept_connect(Socket & sock)
 		return ;
 	}
 
-	Connect	newConnect(fd, sock.getIp(), sock.getPort());
+	Connect	newConnect(fd, sock.getIp(), sock.getPort(), &m_cookie_base);
 
 	m_connects.insert(std::pair<fd_type, Connect>(fd, newConnect));
 	m_timers.insert(std::make_pair(fd, std::time(nullptr)));
@@ -474,7 +474,7 @@ Engine::print_start_msg() {
 	PRINT("\n");
 }
 
-/*ControllStuff---------------------------------------------------------------*/
+/*ControlStuff---------------------------------------------------------------*/
 
 bool
 Engine::user_event() {
@@ -482,6 +482,8 @@ Engine::user_event() {
 	std::getline(std::cin, user_input);
 	if (user_input == "exit")
 		return false;
+	else
+		PRINT("Unknown command \'" << user_input << "\'");
 	return true;
 }
 

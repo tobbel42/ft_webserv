@@ -129,17 +129,17 @@ Request::set_host() {
 
 bool 
 Request::is_done() {
+	//deleting already parsed buffer
+	m_buffer.erase(m_buffer.begin(), m_buffer.begin() + m_offset);
+	m_offset = 0;
 	#ifdef VERBOSE
 	print_request();
+	PRINT("ErrorCode: " << m_err_code);
 	#endif
 	if (m_err_code != 0)
 		return true;
 	else if (m_done)
 		set_host();
-	#ifdef VERBOSE
-	print_request();
-	PRINT("ErrorCode: " << m_err_code);
-	#endif
 	return m_done;
 }
 
@@ -559,6 +559,7 @@ Request::decrypt_cookie(std::string & cookie_value) {
 	PRINT(m_query);
 	if (m_query != "")
 		m_query += "&";
+	m_query += "cookie=true&";
 	m_query += cookie_value;
 }
 

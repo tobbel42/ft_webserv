@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <string>
 
 class MyDirectory
 {
@@ -87,7 +88,7 @@ public:
 	{
 		//if we access a dir both /dirname or /dirname/ are valid targets
 		//so we have to normalize the input
-		if (_current_url.back() == '/')
+		if (*(--_current_url.end()) == '/')
 			_current_url.erase(_current_url.length() - 1);
 		#ifdef VERBOSE
 		std::cout << "current url: " << _current_url << std::endl;

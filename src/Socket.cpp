@@ -82,6 +82,16 @@ Socket::m_init()
 	m_address.sin_family = AF_INET;
 	m_address.sin_addr.s_addr = htonl(m_ip);
 	m_address.sin_port = htons(m_port);
+
+	int on = 1;
+	int tmp = setsockopt(m_sockfd, SOL_SOCKET,  SO_REUSEADDR, (char *)&on, sizeof(on));
+
+	if (tmp == -1) 
+	{
+		EPRINT("ERROR: setsockopt failed");
+		return false;
+	}
+
 	if (bind(m_sockfd, reinterpret_cast<sockaddr*>(&m_address), sizeof m_address) == -1)
 	{
 		EPRINT("ERROR: bind failed");
