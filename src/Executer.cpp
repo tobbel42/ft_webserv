@@ -94,7 +94,8 @@ Executer::run_server()
 		return;
 	}
 
-	if (file_type == DIRECTORY && p_server->root == m_req.get_target())
+	if (file_type == DIRECTORY && 
+		(m_req.get_target().empty() || m_req.get_target() == "/"))
 	{
 		m_filename = utils::compr_slash(m_filename + "/" + p_server->index);
 		file_type = OTHER;
@@ -110,11 +111,35 @@ Executer::run_server()
 			m_status_code = 403; // cgi and directory listing
 			break; // are forbidden in server blocks
 		case OTHER:
-			read_from_file();
+			server_method_execution();
 			break;
 		default:
 			break;
 	}
+}
+
+void
+Executer::server_method_execution()
+{
+	if (m_req.get_method() == "GET")
+	{
+		if (resource_exist())
+			read_from_file();
+		else
+			m_status_code = 404;
+	}
+	else if (m_req.get_method() == "POST")
+	{
+		std::string content_type = m_req.get_header_entry("Content-Type").second;
+		if (content_type == "tex/plain")
+			put_handler();
+		else
+			m_status_code = 404;
+	}
+	else if (m_req.get_method() == "PUT")
+		put_handler();
+	else if (m_req.get_method() == "DELETE")
+		delete_handler();
 }
 
 bool
@@ -227,9 +252,9 @@ void
 Executer::put_handler()
 {
 	if (resource_exist())
-		m_status_code = 204;
+		m_status_code = 204; // no content
 	else
-		m_status_code = 201;
+		m_status_code = 201; // created
 	std::ofstream file(m_filename.c_str());
 	if (file.is_open()) {
 		file.write(&(*m_req.get_body().begin()), m_req.get_body().size());
@@ -251,7 +276,7 @@ Executer::delete_handler()
 	}
 	int status = std::remove(m_filename.c_str());
 	if (status == 0)
-		m_status_code = 204;
+		m_status_code = 204; // no content
 	else
 		m_status_code = 500;
 }
