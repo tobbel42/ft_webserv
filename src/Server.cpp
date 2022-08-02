@@ -262,7 +262,6 @@ Server::Location::set_script(const std::pair<std::string,std::string>& script)
 {
 	if (script.first != "php" && script.first != "python")
 		return false;
-	PRINT("set script: " << script.first << ", " << script.second);
 	const std::string& binary = script.second;
 	if (binary[0] == '/' || binary[0] == '.') // absolute path
 	{
@@ -288,7 +287,7 @@ Server::Location::set_max_client_body_size(uint32_t n)
 }
 
 const char*
-Server::Location::set_directory_listing(const std::string& state)
+Server::Location::set_dir_listing(const std::string& state)
 {
 	if (m_checks[DIRECTORY_LISTING])
 		return "directory listing shall only be specified once per location block";

@@ -42,17 +42,17 @@ private: // methods
 
 	ConfigParser& operator=(const ConfigParser&);
 
+	std::string get_next_word();
+	// gnw = get next word
+	std::string gnw_protected(bool is_on_same_line = true);
 
-	std::string m_get_next_word();
-	std::string m_get_next_word_protected(bool is_on_same_line = true);
-
-	std::pair<std::string, Server>	m_read_server();
-	std::string						m_read_location(Server::Location& location);
-
-	void		m_check_server_configs();
-	uint32_t	m_check_int(const std::string& word);
-	uint32_t	m_check_ip_address();
+	std::pair<std::string, Server>	parse_server();
+	std::string						parse_location(Server::Location& location);
 	std::pair<std::string,std::string>		parse_key_value();
+
+	void		check_configs();
+	uint32_t	check_uint(const std::string& word);
+	uint32_t	check_ip_address();
 
 
 private: // subclass
