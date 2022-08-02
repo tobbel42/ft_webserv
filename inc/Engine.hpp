@@ -13,6 +13,7 @@
 #include <Connect.hpp>
 #include <Server.hpp>
 #include <utils.hpp>
+#include "ConfigParser.hpp"
 #include "typedefs.hpp"
 
 

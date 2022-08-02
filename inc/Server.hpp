@@ -73,7 +73,7 @@ public: // subclass
 		bool set_method(const std::string& method);
 		bool set_script(const std::pair<std::string,std::string>& script);
 		bool set_max_client_body_size(uint32_t n);
-		const char* set_directory_listing(const std::string& state);
+		const char* set_dir_listing(const std::string& state);
 
 		const char* check_attributes() const;
 

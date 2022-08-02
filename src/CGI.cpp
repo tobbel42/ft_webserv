@@ -180,7 +180,6 @@ CGI::exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[])
 			perror("cgi wait");
 			return false;
 		}
-		// temporarily disabled
 		if (WEXITSTATUS(stat_loc) != 0)
 		{
 			EPRINT("exit status was not 0" << WEXITSTATUS(stat_loc));

@@ -216,11 +216,16 @@ Engine::find_server(const Connect& cnct)
 					if (default_server == nullptr)
 						default_server = &server;
 
+					PRINT("connection hostname: " << cnct.get_hostname());
 					// look for a matching server_name
 					for (size_t k = 0; k < server.server_names.size(); ++k)
 					{
+						PRINT("server name: " << server.server_names[k]);
 						if (cnct.get_hostname() == server.server_names[k])
+						{
+							PRINT("found a server name");
 							return &server;
+						}
 					}
 				}
 			}
@@ -237,10 +242,7 @@ Engine::assign_server(Connect & cnct)
 	if (server == nullptr)
 		cnct.set_status(404);
 	else
-	{
 		cnct.setServer(server);
-		cnct.find_location();
-	}
 }
 
 #ifdef KQUEUE
@@ -470,7 +472,8 @@ Engine::print_start_msg() {
 	#endif
 
 	PRINT("\n\033[38;5;" << i << "mControls:\n"
-		<< " exit -> exit the server \033[0m");
+		<< " exit -> exit the server\n"
+		<< " reassign config [configfilename] -> assign a new config file\033[0m");
 	PRINT("\n");
 }
 
@@ -482,6 +485,25 @@ Engine::user_event() {
 	std::getline(std::cin, user_input);
 	if (user_input == "exit")
 		return false;
+	else if (user_input.compare(0, 15, "reassign config") == 0)
+	{
+		ServerArr server_backup = m_servers; // I miss std::move :(
+		StringArr input = utils::str_split(user_input, " ");
+		try
+		{
+			ConfigParser parser(m_servers, input.at(2));
+			m_servers.clear();
+			parser.run();
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << "\nreassigning the config failed because:\n"
+						<< e.what() << std::endl;
+			m_servers = server_backup; // still no std::move in c++98
+			return true;
+		}
+		PRINT("\nsuccessfully switched to config " << input[2]);
+	}
 	else
 		PRINT("Unknown command \'" << user_input << "\'");
 	return true;

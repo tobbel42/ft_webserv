@@ -5,7 +5,7 @@
 
 Server::Server():
 	server_names(),
-	root("/"),
+	root(),
 	index("index.html"),
 	error_pages(DEFAULT_ERROR_PAGES),
 	ip_address(),
@@ -141,8 +141,6 @@ Server::check_attributes() const
 {
 	if (!m_checks[ROOT])
 		return "every server must have a root directory";
-	else if (!m_checks[INDEX])
-		return "every server must have a index file";
 	else if (!m_checks[IP_ADDRESS])
 		return "every server must have an ip address";
 	else if (ports.empty())
@@ -176,8 +174,8 @@ std::ostream& operator<<(std::ostream& out, const Server& rhs)
 
 Server::Location::Location():
 	prefix(),
-	root("/"),
-	index("index.html"),
+	root(),
+	index(),
 	scripts(),
 	max_client_body_size(UINT32_MAX),
 	directory_listing_enabled(false),
@@ -220,6 +218,8 @@ Server::Location::set_prefix(const std::string& word)
 	if (word == "{")
 		return false;
 	prefix = utils::compr_slash(word);
+	if (root.empty())
+		root = prefix; // default value for the root
 	return true;
 }
 
@@ -262,7 +262,6 @@ Server::Location::set_script(const std::pair<std::string,std::string>& script)
 {
 	if (script.first != "php" && script.first != "python")
 		return false;
-	PRINT("set script: " << script.first << ", " << script.second);
 	const std::string& binary = script.second;
 	if (binary[0] == '/' || binary[0] == '.') // absolute path
 	{
@@ -288,7 +287,7 @@ Server::Location::set_max_client_body_size(uint32_t n)
 }
 
 const char*
-Server::Location::set_directory_listing(const std::string& state)
+Server::Location::set_dir_listing(const std::string& state)
 {
 	if (m_checks[DIRECTORY_LISTING])
 		return "directory listing shall only be specified once per location block";
@@ -305,9 +304,7 @@ Server::Location::set_directory_listing(const std::string& state)
 const char*
 Server::Location::check_attributes() const
 {
-	if (!m_checks[ROOT])
-		return "every location must have a root directory";
-	else if (!m_checks[INDEX])
+	if (!m_checks[INDEX])
 		return "every location must have a index file";
 	else
 		return nullptr;

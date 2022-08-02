@@ -146,42 +146,6 @@ Connect::writeResponse(s_pollfd & poll)
 void
 Connect::composeResponse()
 {
-	#if 0
-	if (p_server == nullptr)
-	{
-		m_res.set_status_code(404);
-		m_action = WRITE;
-		return;
-	}
-
-
-
-	m_req.substitute_default_target(p_server->index);
-	std::string filename = m_req.get_target();
-
-
-	//TOO: letztes Argument mit directory listing bool ersetzen
-	//TODO we now have host, port, taregt and query in the requestthey need to be passed into the MyFile
-	//maybe rename Myfile
-	MyFile f(p_server->root + filename, "http://" + m_req.get_host() + ":" + utils::to_string(m_req.get_port()) + filename, g_envp, true);
-	std::string file = f.read_file();
-
-	// the response should also have access to the file that was accessed
-	// to determine the MINE type of the body
-	m_res.set_server(p_server);
-	m_res.set_filename(p_server->root + filename);
-
-	//here we need a Myfile methode which returns on interanl error
-	//->no error
-	//->404
-	//->500 on exec fail
-	// m_res.set_status_code(400);
-	m_res.set_status_code(f.get_error_code());
-	if (f.get_error_code() == 200)
-		m_res.set_body(file + "\r\n");
-
-	#else
-
 	bool is_valid_cookie = false;
 
 	if (m_req.get_header_entry("Cookie").first) 
@@ -193,7 +157,7 @@ Connect::composeResponse()
 			m_req.decrypt_cookie(p_cookie_base->find(cookie)->second);
 		}
 	}
-	
+
 	Executer exec(p_server, p_location, m_req);
 
 	exec.run();
@@ -212,14 +176,9 @@ Connect::composeResponse()
 	m_res.set_location(p_location);
 	m_res.set_filename(exec.get_filename());
 	m_res.set_status_code(exec.get_status_code());
-	if (exec.get_status_code() == 200)
+	if (exec.get_status_code() >= 200 && exec.get_status_code() <= 400)
 		m_res.set_body(exec.get_content());
 
-
-
-
-	#endif
-	
 	m_action = WRITE;
 }
 

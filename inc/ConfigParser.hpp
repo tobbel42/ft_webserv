@@ -20,18 +20,19 @@
 #include "typedefs.hpp"
 
 
-#ifndef nullptr
-#define nullptr NULL
-#endif
+#define RESET "\033[0m"
+#define BOLD "\033[1m"
+#define RED "\033[91m"
+#define YELLOW "\033[33m"
 
 class ConfigParser
 {
 public: // methods
 	ConfigParser(ServerArr& servers);
-	ConfigParser(ServerArr& servers, const char *filename);
+	ConfigParser(ServerArr& servers, const std::string& filename);
 	~ConfigParser();
 
-	void assign_file(const char *filename);
+	void assign_file(const std::string& filename);
 
 	void run();
 
@@ -42,17 +43,17 @@ private: // methods
 
 	ConfigParser& operator=(const ConfigParser&);
 
+	std::string get_next_word();
+	// gnw = get next word
+	std::string gnw_protected(bool is_on_same_line = true);
 
-	std::string m_get_next_word();
-	std::string m_get_next_word_protected(bool is_on_same_line = true);
-
-	std::pair<std::string, Server>	m_read_server();
-	std::string						m_read_location(Server::Location& location);
-
-	void		m_check_server_configs();
-	uint32_t	m_check_int(const std::string& word);
-	uint32_t	m_check_ip_address();
+	std::pair<std::string, Server>	parse_server();
+	std::string						parse_location(Server::Location& location);
 	std::pair<std::string,std::string>		parse_key_value();
+
+	void		check_configs();
+	uint32_t	check_uint(const std::string& word);
+	uint32_t	check_ip_address();
 
 
 private: // subclass
