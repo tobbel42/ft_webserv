@@ -9,4 +9,4 @@ execute
 make docker
 ```
 
-the server runs on port 4242 by default
+the server runs on port 8080 by default
