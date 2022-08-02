@@ -20,18 +20,19 @@
 #include "typedefs.hpp"
 
 
-#ifndef nullptr
-#define nullptr NULL
-#endif
+#define RESET "\033[0m"
+#define BOLD "\033[1m"
+#define RED "\033[91m"
+#define YELLOW "\033[33m"
 
 class ConfigParser
 {
 public: // methods
 	ConfigParser(ServerArr& servers);
-	ConfigParser(ServerArr& servers, const char *filename);
+	ConfigParser(ServerArr& servers, const std::string& filename);
 	~ConfigParser();
 
-	void assign_file(const char *filename);
+	void assign_file(const std::string& filename);
 
 	void run();
 

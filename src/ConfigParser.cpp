@@ -24,15 +24,19 @@ ConfigParser::ConfigParser(ServerArr& servers):
 	#endif
 }
 
-ConfigParser::ConfigParser(ServerArr& servers, const char *filename):
+ConfigParser::ConfigParser(ServerArr& servers, const std::string& filename):
 	m_servers(servers),
-	m_infile(filename),
+	m_infile(filename.c_str()),
 	m_line_stream(),
 	m_line_number()
 {
 	#ifdef VERBOSE
 	std::cout << "ConfigParser filename constructor called" << std::endl;
 	#endif
+
+	if (utils::get_file_ext(filename) != "conf")
+		throw ConfigParser::InvalidConfig(m_line_number,
+			"config files must end with .conf");
 
 	if (!m_infile.is_open())
 		throw ConfigParser::InvalidConfig(m_line_number,
@@ -45,12 +49,16 @@ ConfigParser::~ConfigParser()
 }
 
 void
-ConfigParser::assign_file(const char *filename)
+ConfigParser::assign_file(const std::string& filename)
 {
+	if (utils::get_file_ext(filename) != "conf")
+		throw ConfigParser::InvalidConfig(m_line_number,
+			"config files must end with .conf");
+
 	if (m_infile.is_open())
 		m_infile.close();
 
-	m_infile.open(filename);
+	m_infile.open(filename.c_str());
 	if (!m_infile.is_open())
 		throw ConfigParser::InvalidConfig(m_line_number,
 			"couldnt open the config file", std::strerror(errno));
@@ -60,9 +68,8 @@ void
 ConfigParser::run()
 {
 	std::string word;
-	std::pair<std::string, Server> server_ret;
 
-	while (!(word = get_next_word()).empty())
+	while ((word = get_next_word()).empty() == false)
 	{
 		if (word != "server")
 			throw ConfigParser::InvalidConfig(m_line_number,
@@ -72,7 +79,7 @@ ConfigParser::run()
 			throw ConfigParser::InvalidConfig(m_line_number,
 				"server blocks must be followed by {");
 
-		server_ret = parse_server();
+		std::pair<std::string, Server> server_ret = parse_server();
 		std::string& token = server_ret.first;
 		Server& server = server_ret.second;
 
@@ -101,7 +108,7 @@ ConfigParser::parse_server()
 	Server server;
 	std::string word;
 
-	while (!(word = gnw_protected(false)).empty())
+	while ((word = gnw_protected(false)).empty() == false)
 	{
 		if (word == "server_name")
 			server.set_server_name(gnw_protected());
@@ -175,9 +182,9 @@ ConfigParser::parse_server()
 			server.locations.push_back(location);
 		}
 		else
-			return make_pair(word, server);
+			return std::make_pair(word, server);
 	}
-	return make_pair(std::string(), server);
+	return std::make_pair(std::string(), server);
 }
 
 std::string
@@ -419,19 +426,28 @@ ConfigParser::check_configs()
 	}
 }
 
+
 //-------------------------------------------------------------------------
 //		InvalidConfig
 
 ConfigParser::InvalidConfig::InvalidConfig(size_t line, const char *msg,
 											const char *details):
 	exception(),
-	m_errorMsg("error in line ")
+	m_errorMsg("\nconfig file error in line ")
 {
 	m_errorMsg += utils::to_string(line);
-
-	(m_errorMsg += ":\n") += msg;
+	m_errorMsg += ":\n";
+	m_errorMsg += RED;
+	m_errorMsg += BOLD;
+	m_errorMsg += msg;
 	if (details != nullptr)
-		(m_errorMsg += ": ") += details;
+	{
+		m_errorMsg += ": ";
+		m_errorMsg += YELLOW;
+		m_errorMsg += details;
+	}
+	m_errorMsg += RESET;
+	m_errorMsg += '\n';
 }
 
 ConfigParser::InvalidConfig::~InvalidConfig() throw() {}

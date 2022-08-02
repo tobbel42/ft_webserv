@@ -24,12 +24,12 @@ int main(int argc, char **argv, char **)
 					<< argv[0] << " <config file>" << std::endl;
 		return 1;
 	}
-	else if (argc == 2 && !strriseq(argv[1], ".conf"))
-	{
-		std::cerr << "Error:\nwrong file extension\n"
-				<< "the config file has to end in .conf" << std::endl;
-		return 1;
-	}
+	// else if (argc == 2 && !strriseq(argv[1], ".conf"))
+	// {
+	// 	std::cerr << "Error:\nwrong file extension\n"
+	// 			<< "the config file has to end in .conf" << std::endl;
+	// 	return 1;
+	// }
 
 	Engine	e;
 	ConfigParser parser(e.get_servers());
