@@ -57,12 +57,27 @@ Executer::run()
 		m_status_code = 404;
 		return;
 	}
-	else if (p_loc == nullptr)
+
+	if (p_loc == nullptr)
 	{
+		if (m_req.get_body().size() > p_server->max_client_body_size)
+		{
+			EPRINT("client body to large");
+			m_status_code = 413;
+			return ;
+		}
 		run_server();
 	}
 	else
 	{
+		//we need to decide whats more important location or server max client body size
+		if (m_req.get_body().size() > 
+			(std::min(p_loc->max_client_body_size, p_server->max_client_body_size)))
+		{
+			EPRINT("client body to large");
+			m_status_code = 413;
+			return ;
+		}
 		run_location();
 	}
 }

@@ -124,39 +124,39 @@ void
 Response::send(const s_kevent& kevent)
 {
 	int i;
-	if (p_server != nullptr)
-	{
-		if (p_server->max_client_body_size > m_body.size())
-			i = write(kevent.ident, m_payload.c_str(), m_payload.size());
-		else
-		{
-			set_status_code(413); // request too large
-			m_payload.clear();
-			generate();
-			i = write(kevent.ident, m_payload.c_str(), m_payload.size());
-		}
-	}
-	else
-		i = write(kevent.ident, m_payload.c_str(), m_payload.size());
+	// if (p_server != nullptr)
+	// {
+	// 	if (p_server->max_client_body_size > m_body.size())
+	// 		i = write(kevent.ident, m_payload.c_str(), m_payload.size());
+	// 	else
+	// 	{
+	// 		set_status_code(413); // request too large
+	// 		m_payload.clear();
+	// 		generate();
+	// 		i = write(kevent.ident, m_payload.c_str(), m_payload.size());
+	// 	}
+	// }
+	// else
+	i = write(kevent.ident, m_payload.c_str(), m_payload.size());
 }
 #else
 
 void
 Response::send(const s_pollfd& poll)
 {
-	if (p_server != nullptr)
-	{
-		if (p_server->max_client_body_size > m_body.size())
-			write(poll.fd, m_payload.c_str(), m_payload.size());
-		else
-		{
-			set_status_code(413); // request too large
-			generate();
-			write(poll.fd, m_payload.c_str(), m_payload.size());
-		}
-	}
-	else
-		write(poll.fd, m_payload.c_str(), m_payload.size());
+	// if (p_server != nullptr)
+	// {
+	// 	if (p_server->max_client_body_size > m_body.size())
+	// 		write(poll.fd, m_payload.c_str(), m_payload.size());
+	// 	else
+	// 	{
+	// 		set_status_code(413); // request too large
+	// 		generate();
+	// 		write(poll.fd, m_payload.c_str(), m_payload.size());
+	// 	}
+	// }
+	// else
+	write(poll.fd, m_payload.c_str(), m_payload.size());
 }
 #endif
 
