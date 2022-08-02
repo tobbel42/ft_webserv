@@ -79,6 +79,6 @@ release: re
 
 docker:
 	docker build -t webserver .
-	docker run -p4242:4242 -ti webserver
+	docker run -p8080:8080 -ti webserver
 
 .PHONY: all clean fclean re bonus debug release docker

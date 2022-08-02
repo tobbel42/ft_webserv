@@ -6,7 +6,7 @@ import cgi, cgitb, os
 # Create instance of FieldStorage
 form = cgi.FieldStorage()
 
-has_cookie = os.environ.get("HTTP_COOKIE")
+has_cookie = form.getvalue('cookie')
 
 first_name = form.getvalue('first_name')
 last_name  = form.getvalue('last_name')
@@ -41,6 +41,7 @@ if (cookie_data == ""):
 	print "<!DOCTYPE html>"
 	print "<html>"
 	print " <head>"
+	print "		<meta charset=\"utf-8\"/>"
 	print "		<title>Cookie Test</title>"
 	print "		<style>"
 	print "			* {"
@@ -48,15 +49,21 @@ if (cookie_data == ""):
 	print "		</style>"
 	print " </head>"
 	print "	<body>"
-	print "		<p>Hello Stranger please introduce yourself<p>"
-	print "		<form action = \"/cookie_test/cookie_index.py\" method = \"get\">"
-	print "			First Name: <input type = \"text\" name = \"first_name\" required>"
-	print "			<br/>"
-	print "			Last Name: <input type = \"text\" name = \"last_name\" required/>"
-	print "			<br/>"
-   	print "			Your favorite Color: <input type=\"color\" name = \"color\" id=\"color\" value=\"#0000ff\">"
-	print "			<input type = \"submit\" value = \"Submit\" />"
-	print "		</form>"
+	print "		<h2>Hello stranger please introduce yourself</h2>"
+	print "		<div>"
+	print "			<form action = \"/cookie_test/cookie_index.py\" method = \"get\">"
+	print "				First Name: <input type = \"text\" name = \"first_name\" required>"
+	print "				<br>"
+	print "				<br>"
+	print "				Last Name: <input type = \"text\" name = \"last_name\" required/>"
+	print "				<br>"
+	print "				<br>"
+   	print "				Your favorite Color: <input type=\"color\" name = \"color\" id=\"color\" value=\"#12ddeb\">"
+	print "				<br>"
+	print "				<br>"
+	print "				<input type = \"submit\" value = \"Submit\" />"
+	print "			</form>"
+	print "		</div>"
 	print "	</body>"
 	print "</html>"
 else:
@@ -68,6 +75,7 @@ else:
 	print "<!DOCTYPE html>"
 	print "<html>"
 	print " <head>"
+	print "		<meta charset=\"utf-8\"/>"
 	print "		<title>Cookie Test</title>"
 	print "		<style>"
 	print "			* {"
@@ -88,6 +96,14 @@ else:
 	print "		<script type=\"text/javascript\">"
 	print "	    	document.getElementById(\"myButton2\").onclick = function () {"
 	print "	        	location.href = \"/\";"
+	print "	    	};"
+	print "		</script>"
+	print "		</script>"
+	print "		<button id=\"myButton3\" class=\"float-left submit-button\" >Delete Cookie</button>"
+	print "		<script type=\"text/javascript\">"
+	print "	    	document.getElementById(\"myButton3\").onclick = function () {"
+	print "	        	document.cookie = document.cookie + \";expires=Thu 01 Jan 1970 00:00:01 GMT\";"
+	print "				location.href = \"/cookie_test/\""
 	print "	    	};"
 	print "		</script>"
 	print "	</body>"
