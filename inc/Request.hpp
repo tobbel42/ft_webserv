@@ -43,7 +43,7 @@ class Request {
 	/*RequestLineParsing------------------------------------------------------*/
 
 	bool parse_first_line();
-	void get_next_req_line(std::string &);
+	bool get_next_req_line(std::string &);
 	bool parse_request_line(const std::string &);
 	bool is_valid_request_line();
 

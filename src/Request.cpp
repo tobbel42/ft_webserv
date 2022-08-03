@@ -200,7 +200,7 @@ Request::parse_uri(const std::string & host_field) {
 	}
 }
 
-void
+bool
 Request::get_next_req_line(std::string & line) {
 	std::vector<char> CRLF;
 	CRLF.push_back('\r');
@@ -210,13 +210,16 @@ Request::get_next_req_line(std::string & line) {
 		CRLF.begin(), CRLF.end()); 
 	if (pos == m_buffer.end())
 	{
-		line = std::string(m_buffer.begin() + m_offset, pos);
-		m_offset = m_buffer.size();
+		PRINT("THE wierd shit");
+		// line = std::string(m_buffer.begin() + m_offset, pos);
+		// m_offset = m_buffer.size();
+		return false;
 	}
 	else
 	{
 		line = std::string(m_buffer.begin() + m_offset, pos);
 		m_offset = (pos - m_buffer.begin()) + 2;
+		return true;
 	}
 }
 
@@ -296,11 +299,17 @@ Request::is_valid_request_line() {
 bool
 Request::parse_first_line() {
 		std::string line;
-		get_next_req_line(line);
+		bool done_read = get_next_req_line(line);
+
+		if (!done_read)
+			return false;
 
 		//skiping leading empty Lines
-		while (line == "")
-			get_next_req_line(line);
+		while (line == "" && done_read == true)
+			done_read = get_next_req_line(line);
+
+		if (!done_read)
+			return false;
 
 		if (parse_request_line(line) == false ||
 			is_valid_request_line() == false)
@@ -434,12 +443,25 @@ Request::parse_body() {
 bool
 Request::parse_chunked_body() {
 	std::string line;
-	get_next_req_line(line);
+	bool done_line_read = get_next_req_line(line);
 
+
+	if (done_line_read)
+		return false;
+	
 	//getting the chunksize
-	u_int32_t  chunk_size = utils::hex_str_to_i(line);
+	u_int32_t  chunk_size;
+	if (line != "")
+		chunk_size = utils::hex_str_to_i(line);
+	else
+		chunk_size = 0;
 
+	PRINT("CHUNKSIZE:" << chunk_size << "LINE" << line);
 	//checking if the chunksize matches actual size
+
+
+	// if (m_offset + chunk_size + 2 > m_buffer.size())
+	// 	return false;
 
 	if (m_offset + chunk_size + 2 > m_buffer.size()
 		|| m_buffer[m_offset + chunk_size] != '\r' 
