@@ -145,7 +145,6 @@ CGI::map_to_env() //todo protect
 	return env;
 }
 
-
 bool
 CGI::exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[])
 {
@@ -170,23 +169,7 @@ CGI::exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[])
 		std::exit(errno);
 	}
 	else // parent
-	{
-		int stat_loc = 0;
-		PRINT("stat" << stat_loc);
-		// TODO: protection against infinate scripts
-		if (waitpid(pid, &stat_loc, 0) == -1)
-		{
-			m_status_code = 500;
-			perror("cgi wait");
-			return false;
-		}
-		if (WEXITSTATUS(stat_loc) != 0)
-		{
-			EPRINT("exit status was not 0" << WEXITSTATUS(stat_loc));
-			m_status_code = 500;
-			return false;
-		}
-	}
+		return wait_for_child(pid);
 	return true;
 }
 
@@ -208,6 +191,57 @@ CGI::parse_header(std::string & output) {
 		pos = output.find("\r\n", offset);
 	}
 	output = output.substr(offset);
+}
+
+bool
+CGI::wait_for_child(pid_t worker_pid)
+{
+	pid_t timeout_pid = fork();
+	if (timeout_pid < 0)
+	{
+		perror("cgi timeout fork");
+		m_status_code = 500;
+		kill(worker_pid, SIGKILL);
+		return false;
+	}
+	else if (timeout_pid == 0) // timeout child
+	{
+		sleep(CGI_TIMEOUT);
+		std::exit(0);
+	}
+	else // parent
+	{
+		int stat_loc = 0;
+		pid_t pid = 0;
+		while ((pid = waitpid(worker_pid, &stat_loc, WNOHANG)) == 0 &&
+				(pid = waitpid(timeout_pid, &stat_loc, WNOHANG)) == 0)
+			usleep(50);
+
+		if (pid == -1)
+		{
+			perror("cgi wait");
+			m_status_code = 500;
+			kill(worker_pid, SIGKILL);
+			kill(timeout_pid, SIGKILL);
+			return false;
+		}
+		else if (pid == worker_pid)
+		{
+			kill(timeout_pid, SIGKILL);
+			if (!WIFSIGNALED(stat_loc) && WEXITSTATUS(stat_loc) == 0)
+				return true;
+			m_status_code = 500; // might be changed to the status code of the CGI
+			EPRINT("cgi execution failed");
+			return false;
+		}
+		else
+		{
+			m_status_code = 504; // gateway timeout
+			EPRINT("cgi script timeout");
+			kill(worker_pid, SIGKILL);
+			return false;
+		}
+	}
 }
 
 std::string

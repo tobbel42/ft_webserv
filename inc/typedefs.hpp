@@ -20,6 +20,7 @@
 #define DEFAULT_ERROR_PAGES "config/default_error_pages"
 #define READSIZE 8192 //we reading at max 8kb of data, might change
 #define CNCT_TIMEOUT 2 // in seconds
+#define CGI_TIMEOUT 5 // in seconds
 #define ENGINE_BACKLOG 10
 
 

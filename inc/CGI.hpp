@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <cstdio>
+#include <csignal>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <map>
@@ -42,6 +43,7 @@ private: // methods
 	char ** map_to_env();
 	bool prep_files(FileWrap& infile, FileWrap& outfile, const std::string& input);
 	bool exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[]);
+	bool wait_for_child(pid_t worker_pid);
 	std::string read_output(FileWrap& outfile);
 	void parse_header(std::string & output);
 
