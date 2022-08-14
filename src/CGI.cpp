@@ -10,7 +10,7 @@ CGI::CGI(const CGI& other):
 	m_status_code(other.m_status_code)
 {}
 
-CGI::CGI(const std::string& filename, const Request & req):
+CGI::CGI(const std::string& filename, const Request& req):
 	m_filename(filename),
 	m_content(),
 	m_req(req),
@@ -122,29 +122,6 @@ CGI::prep_files(FileWrap& infile, FileWrap& outfile, const std::string& input)
 	return true;
 }
 
-char **
-CGI::map_to_env() //todo protect
-{
-	char ** env = (char **)calloc(m_env.size() + 1, sizeof(char *));
-	
-	char * ptr;
-
-	int i = 0;
-	for (std::map<std::string, std::string>::iterator iter = m_env.begin();
-		iter != m_env.end(); ++iter, ++i)
-	{
-		ptr = (char *)calloc((*iter).first.size() + (*iter).second.size() + 2, sizeof(char));
-		if (!ptr)
-			exit(EXIT_FAILURE);
-		strncpy(ptr, (*iter).first.c_str(), (*iter).first.size());
-		ptr[(*iter).first.size()] = '=';
-		strncpy(ptr + (*iter).first.size() + 1, (*iter).second.c_str(), (*iter).second.size());
-		env[i] = ptr;
- 	}
-	env[i] = nullptr;
-	return env;
-}
-
 bool
 CGI::exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[])
 {
@@ -163,34 +140,42 @@ CGI::exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[])
 			perror("cgi dup2");
 			std::exit(errno);
 		}
-		char ** envs = map_to_env();
+		char** envs = map_to_env();
 		execve(argv[0], argv, envs);
 		perror("cgi execve");
 		std::exit(errno);
 	}
 	else // parent
 		return wait_for_child(pid);
-	return true;
 }
 
-void
-CGI::parse_header(std::string & output) {
-	size_t offset = 0;
-	size_t pos = output.find("\r\n");
-	std::string line;
-	std::string key, value;
-	while(pos != std::string::npos) {
-		line = output.substr(offset, pos - offset);
-		if (line == "")
-			break;
-		key = line.substr(0, line.find(":"));
-		value = line.substr(line.find(":") + 2);
-		m_cgi_header[key] = value;
-		pos += 3;
-		offset = pos;
-		pos = output.find("\r\n", offset);
-	}
-	output = output.substr(offset);
+char **
+CGI::map_to_env() //todo protect
+{
+	char ** env = (char **)calloc(m_env.size() + 1, sizeof(char *));
+	if (env == nullptr)
+		std::exit(errno); // we can exit safely because it's the child process
+	
+	char * ptr;
+	int i = 0;
+	for (std::map<std::string, std::string>::iterator iter = m_env.begin();
+		iter != m_env.end(); ++iter, ++i)
+	{
+		const std::string& key = iter->first;
+		const std::string& value = iter->second;
+
+		ptr = (char *)calloc(key.size() + value.size() + 2, sizeof(char));
+		if (ptr == nullptr)
+			std::exit(errno);
+
+		strncpy(ptr, key.c_str(), key.size());
+		ptr[key.size()] = '=';
+		strncpy(ptr + key.size() + 1, value.c_str(), value.size());
+		env[i] = ptr;
+ 	}
+
+	env[i] = nullptr;
+	return env;
 }
 
 bool
@@ -207,7 +192,7 @@ CGI::wait_for_child(pid_t worker_pid)
 	else if (timeout_pid == 0) // timeout child
 	{
 		sleep(CGI_TIMEOUT);
-		std::exit(0);
+		std::exit(EXIT_SUCCESS);
 	}
 	else // parent
 	{
@@ -267,6 +252,29 @@ CGI::read_output(FileWrap& outfile)
 		return std::string();
 	}
 	return output;
+}
+
+void
+CGI::parse_header(std::string & output)
+{
+	size_t offset = 0;
+	size_t pos = output.find("\r\n");
+	std::string line;
+	std::string key, value;
+
+	while (pos != std::string::npos)
+	{
+		line = output.substr(offset, pos - offset);
+		if (line == "")
+			break;
+		key = line.substr(0, line.find(":"));
+		value = line.substr(line.find(":") + 2);
+		m_cgi_header[key] = value;
+		pos += 3;
+		offset = pos;
+		pos = output.find("\r\n", offset);
+	}
+	output = output.substr(offset);
 }
 
 //-------------------------------------------------------------------------

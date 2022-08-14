@@ -1,5 +1,9 @@
 #include "Response.hpp"
 
+#include <ctime>
+
+#include <fstream>
+
 //				Layout of http response headers:
 // status line:
 //	HTTP/[version] [status code] [reason phrase]
@@ -33,17 +37,36 @@ Response::s_status_codes(Response::init_status_codes());
 std::map<std::string, const char*>
 Response::s_mime_types(Response::init_mime_types());
 
-Response::Response( void ) {
+Response::Response():
+	p_server(),
+	p_loc(),
+	p_request(),
+	m_status_code(200),
+	m_header(),
+	m_body(),
+	m_payload(),
+	m_filename(),
+	m_cookie()
+{
 	#ifdef VERBOSE
-		std::cout << "Response: Constructor called" << std::endl;
+		PRINT("Response: Constructor called");
 	#endif
 }
 
-Response::Response( const Response & cpy ) {
+Response::Response(const Response& other):
+	p_server(other.p_server),
+	p_loc(other.p_loc),
+	p_request(other.p_request),
+	m_status_code(other.m_status_code),
+	m_header(other.m_header),
+	m_body(other.m_body),
+	m_payload(other.m_payload),
+	m_filename(other.m_filename),
+	m_cookie(other.m_cookie)
+{
 	#ifdef VERBOSE
-		std::cout << "Response: Copy Constructor called" << std::endl;
+		PRINT("Response: Copy Constructor called");
 	#endif
-	*this = cpy;
 }
 
 Response::Response(int status_code, const std::string& body, const Server* server, Request* request):
@@ -58,15 +81,17 @@ Response::Response(int status_code, const std::string& body, const Server* serve
 	m_cookie()
 {}
 
-Response::~Response() {
+Response::~Response()
+{
 	#ifdef VERBOSE
-		std::cout << "Response: Destructor called" << std::endl;
+		PRINT("Response: Destructor called");
 	#endif
 }
 
-Response & Response::operator=( const Response & rhs ) {
+Response & Response::operator=( const Response & rhs )
+{
 	#ifdef VERBOSE
-		std::cout << "Response: Assignation operator called" << std::endl;
+		PRINT("Response: Assignation operator called");
 	#endif
 	if (this != &rhs)
 	{
@@ -77,47 +102,11 @@ Response & Response::operator=( const Response & rhs ) {
 		m_header = rhs.m_header;
 		m_body = rhs.m_body;
 		m_payload = rhs.m_payload;
+		m_filename = rhs.m_filename;
 		m_cookie = rhs.m_cookie;
 	}
 	return (*this);
 }
-
-void
-Response::init_header(const std::string& header_lines)
-{
-	m_header = "HTTP/";
-	m_header += utils::to_string(HTTP_VERSION);
-	m_header += ' ';
-
-
-	m_header += utils::to_string(m_status_code);
-	m_header += ' ';
-	m_header += get_reason_phrase();
-
-	m_header += "\r\n";
-
-	add_to_head("Date", utils::get_http_time());
-
-	if (!header_lines.empty())
-		m_header += header_lines;
-}
-
-
-const char*
-Response::get_mime_type(const std::string& filename)
-{
-	std::string extension = utils::get_file_ext(filename);
-	if (extension.empty() ||						// directory listing and
-		extension == "py" || extension == "php")	// CGI needs to be excluded
-		return "text/html";
-
-	MimeIter mime_type = s_mime_types.find(extension);
-	if (mime_type == s_mime_types.end()) // file extension is not in the list
-		return DEFAULT_MIME_TYPE;
-
-	return mime_type->second;
-}
-
 
 void
 Response::set_server(const Server* server) { p_server = server; }
@@ -340,16 +329,61 @@ Response::add_to_payload(const std::string& to_add)
 	m_payload += "\r\n";
 }
 
+void
+Response::init_header(const std::string& header_lines)
+{
+	m_header = "HTTP/";
+	m_header += utils::to_string(HTTP_VERSION);
+	m_header += ' ';
+
+
+	m_header += utils::to_string(m_status_code);
+	m_header += ' ';
+	m_header += get_reason_phrase();
+
+	m_header += "\r\n";
+
+	add_to_head("Date", get_http_time());
+
+	if (!header_lines.empty())
+		m_header += header_lines;
+}
+
+const char*
+Response::get_mime_type(const std::string& filename)
+{
+	std::string extension = utils::get_file_ext(filename);
+	if (extension.empty() ||						// directory listing and
+		extension == "py" || extension == "php")	// CGI needs to be excluded
+		return "text/html";
+
+	MimeIter mime_type = s_mime_types.find(extension);
+	if (mime_type == s_mime_types.end()) // file extension is not in the list
+		return DEFAULT_MIME_TYPE;
+
+	return mime_type->second;
+}
+
 const char*
 Response::get_reason_phrase() const
 {
-	typedef std::map<int, const char*>::iterator Iter;
+	// typedef std::map<int, const char*>::iterator Iter;
 
-	Iter status_code = s_status_codes.find(m_status_code);
+	StatusIter status_code = s_status_codes.find(m_status_code);
 	if (status_code != s_status_codes.end())
 		return status_code->second;
 	else
 		return s_status_codes[404];
+}
+
+std::string
+Response::get_http_time()
+{
+	char buffer[1000];
+	time_t unix_time = time(NULL);
+	tm current_time = *gmtime(&unix_time);
+	strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M%S %Z", &current_time);
+	return std::string(buffer);
 }
 
 

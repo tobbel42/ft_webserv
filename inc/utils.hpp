@@ -1,9 +1,5 @@
 #pragma once
 
-#include <ctime>
-#include <cctype>
-#include <sys/stat.h>
-
 #include <string>
 #include <vector>
 #include <sstream>
@@ -34,9 +30,9 @@ isRLWS(const std::string & s, size_t pos);
 bool
 isRCRLF(const std::string & s, size_t pos);
 
-bool isLWS(const std::vector<char> &, size_t pos);
-bool isWS(const std::vector<char> &, size_t pos);
-bool isCRLF(const std::vector<char> &, size_t pos);
+bool isLWS(const ByteArr&, size_t pos);
+bool isWS(const ByteArr&, size_t pos);
+bool isCRLF(const ByteArr&, size_t pos);
 
 /*
 @brief Converts the supplied string to uppercase
@@ -87,13 +83,6 @@ is_element_of(const Container& cntr,
 
 std::string
 get_abs_path(const std::string& filename);
-
-/*
-@return The current time in the format:
-Weekday-name, Day Month-name Year Hour:Minute:Second Timezone
-*/
-std::string
-get_http_time();
 
 /*
 @brief Converts the supplied string to an ip address

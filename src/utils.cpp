@@ -1,10 +1,9 @@
 #include "utils.hpp"
 
+#include <cctype>
 #include <arpa/inet.h>
 #include <unistd.h>
-
-#include <iostream>
-#include <unistd.h>
+#include <sys/stat.h>
 
 namespace utils {
 
@@ -44,7 +43,8 @@ cgi_str_toupper(const std::string & s)
 	return s2;
 }
 
-bool isCRLF(const std::string & s, size_t pos) {
+bool isCRLF(const std::string & s, size_t pos)
+{
 	if (pos + 2 > s.size())
 		return false;
 	if (s[pos] == '\r' && s[pos + 1] == '\n')
@@ -52,19 +52,22 @@ bool isCRLF(const std::string & s, size_t pos) {
 	return false;
 }
 
-bool isWS(const std::string & s, size_t pos) {
+bool isWS(const std::string & s, size_t pos)
+{
 	if (s[pos] == '\t' || s[pos] == ' ')
 		return true;
 	return false;
 }
 
-bool isLWS(const std::string & s, size_t pos) {
+bool isLWS(const std::string & s, size_t pos)
+{
 	if (isCRLF(s, pos))
 		pos += 2;
 	return isWS(s, pos);
 }
 
-bool isRCRLF(const std::string & s, size_t pos) {
+bool isRCRLF(const std::string & s, size_t pos)
+{
 	if (pos < 1)
 		return false;
 	if (s[pos] == '\n' && s[pos - 1] == '\r')
@@ -72,38 +75,32 @@ bool isRCRLF(const std::string & s, size_t pos) {
 	return false;
 }
 
-bool isRLWS(const std::string & s, size_t pos) {	
+bool isRLWS(const std::string & s, size_t pos)
+{
 	if (isRCRLF(s, pos))
 		pos -= 2;
 	return isWS(s, pos);
 }
 
-bool isLWS(const std::vector<char> &vec, size_t pos) {
+bool isLWS(const ByteArr& vec, size_t pos)
+{
 	if (isCRLF(vec, pos))
 		pos += 2;
 	return isWS(vec, pos);
 }
 
-bool isWS(const std::vector<char> &vec, size_t pos) {
+bool isWS(const ByteArr& vec, size_t pos)
+{
 	if (pos < vec.size() && (vec[pos] == '\t' || vec[pos] == ' '))
 		return true;
 	return false;
 }
 
-bool isCRLF(const std::vector<char> &vec, size_t pos) {
+bool isCRLF(const ByteArr& vec, size_t pos)
+{
 	if (pos + 1 < vec.size() && vec[pos] == '\r' && vec[pos + 1] == '\n')
 		return true;
 	return false;
-}
-
-std::string
-get_http_time()
-{
-	char buffer[1000];
-	time_t unix_time = time(NULL);
-	tm current_time = *gmtime(&unix_time);
-	strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M%S %Z", &current_time);
-	return std::string(buffer);
 }
 
 
@@ -112,7 +109,6 @@ string_to_ip(const std::string& ip_string)
 {
 	return inet_addr(ip_string.c_str());
 }
-
 
 std::string
 ip_to_string(uint32_t ip_addr)

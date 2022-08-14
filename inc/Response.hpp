@@ -4,9 +4,6 @@
 #include <map>
 #include <string>
 #include <utility>
-#include <fstream>
-#include <iostream>
-#include <algorithm>
 
 #include <unistd.h>
 
@@ -60,6 +57,8 @@ private: // methods
 	void init_header(const std::string& header_lines = std::string());
 
 	const char*	get_reason_phrase() const;
+
+	static std::string get_http_time();
 
 private: // typedefs
 
