@@ -1,47 +1,53 @@
 #include "Connect.hpp"
 
-Connect::Connect():
-p_server(nullptr),
-m_action(READ),
-m_req(80),
-p_cookie_base(nullptr)
+#include <unistd.h>
+
+#include "utils.hpp"
+#include "Executer.hpp"
+
+Connect::Connect(const Connect& other):
+	m_fd(other.m_fd),
+	m_ip(other.m_ip),
+	m_port(other.m_port),
+	p_server(other.p_server),
+	p_location(other.p_location),
+	m_action(other.m_action),
+	m_status_code(other.m_status_code),
+	m_req(other.m_req),
+	m_res(other.m_res)
 {
 	#ifdef VERBOSE
-		std::cout << "Connect: Constructor called" << std::endl;
+		PRINT("Connect: Copy Constructor called");
 	#endif
 }
 
 Connect::~Connect()
 {
 	#ifdef VERBOSE
-		std::cout << "Connect: Destructor called" << std::endl;
+		PRINT("Connect: Destructor called");
 	#endif
 }
 
-Connect::Connect(const Connect &copy)
+Connect&
+Connect::operator=(const Connect& rhs)
 {
 	#ifdef VERBOSE
-		std::cout << "Connect: Copy Constructor called" << std::endl;
+		PRINT("Connect: Assignation operator called");
 	#endif
-	*this = copy;
-}
-
-Connect	&Connect::operator = (const Connect &rhs)
-{
-	#ifdef VERBOSE
-		std::cout << "Connect: Assignation operator called" << std::endl;
-	#endif
-	m_fd = rhs.getFd();
-	m_ip = rhs.getIp();
-	m_port = rhs.getPort();
-	p_server = rhs.getServer();
-	p_location = rhs.get_location();
-	m_action = rhs.getAction();
-	m_status_code = rhs.m_status_code;
-	m_req = rhs.m_req;
-	m_res = rhs.m_res;
-	p_cookie_base = rhs.p_cookie_base;
-	return (*this);
+	if (this != &rhs)
+	{
+		m_fd = rhs.getFd();
+		m_ip = rhs.getIp();
+		m_port = rhs.getPort();
+		p_server = rhs.getServer();
+		p_location = rhs.get_location();
+		m_action = rhs.getAction();
+		m_status_code = rhs.m_status_code;
+		m_req = rhs.m_req;
+		m_res = rhs.m_res;
+		p_cookie_base = rhs.p_cookie_base;
+	}
+	return *this;
 }
 
 Connect::Connect(fd_type fd, uint32_t ip, uint32_t port, cookies * cookie_base):
@@ -54,11 +60,11 @@ Connect::Connect(fd_type fd, uint32_t ip, uint32_t port, cookies * cookie_base):
 	p_cookie_base(cookie_base)
 {
 	#ifdef VERBOSE
-		std::cout << "Connect: Constructor called" << std::endl;
+		PRINT("Connect: Constructor called");
 	#endif
 }
 
-const Server *
+const Server*
 Connect::getServer() const { return p_server; }
 
 const Server::Location*
@@ -80,7 +86,7 @@ std::string
 Connect::get_hostname() const { return m_req.get_host(); }
 
 void
-Connect::setServer(const Server * server ) { p_server = server; }
+Connect::set_server(const Server * server ) { p_server = server; }
 
 void
 Connect::set_location(const Server::Location* location) { p_location = location; }
@@ -89,11 +95,12 @@ void
 Connect::set_status(int status_code) { m_status_code = status_code; }
 
 #ifdef KQUEUE
+
 bool
 Connect::readRequest(s_kevent & kevent)
 {
-	std::vector<char> buf;
-	int	len = ((READSIZE < kevent.data)?READSIZE : kevent.data);
+	ByteArr buf;
+	int	len = ((READSIZE < kevent.data) ? READSIZE : kevent.data);
 
 	//Hacky, the read call writes into the internal vector array
 	//we resize the vector beforhand, so its 'knows' its correct size
@@ -102,15 +109,17 @@ Connect::readRequest(s_kevent & kevent)
 
 	//TODO errhandling
 	if (len != read_len)
-		std::cerr << "ERROR: read" << std::endl;
+		EPRINT("ERROR: read");
 
 	return m_req.append_read(buf);
 }
+
 #else
+
 bool
 Connect::readRequest(s_pollfd & poll)
 {
-	std::vector<char> buf;
+	ByteArr buf;
 
 	//Hacky, the read call writes into the internal vector array
 	//we resize the vector beforhand, so its 'knows' its correct size
@@ -118,30 +127,35 @@ Connect::readRequest(s_pollfd & poll)
 	ssize_t read_len = read(poll.fd, &(*buf.begin()), READSIZE);
 
 	//TODO errhandling
-	if (read_len == -1 )
+	if (read_len == -1)
 		std::cerr << "ERROR: read" << std::endl;
 
 	buf.resize(read_len);
 	return m_req.append_read(buf);
 }
-#endif
+
+#endif // KQUEUE
 
 
 #ifdef KQUEUE
+
 void
 Connect::writeResponse(s_kevent & kevent)
 {
 	m_res.generate();
 	m_res.send(kevent);
 }
+
 #else
+
 void
 Connect::writeResponse(s_pollfd & poll)
 {
 	m_res.generate();
 	m_res.send(poll);
 }
-#endif
+
+#endif // KQUEUE
 
 void
 Connect::composeResponse()
@@ -213,10 +227,7 @@ Connect::find_dir(const std::string& name) const
 	if (name.empty())
 		return "/";
 	else if (utils::is_dir(p_server->root + name))
-	{
-		PRINT("is a directory");
 		return name + "/";
-	}
 	else
 	{
 		size_t pos = name.find_last_of('/');

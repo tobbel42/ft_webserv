@@ -43,22 +43,22 @@ public: // methods
 	void							send(const s_pollfd & poll);
 	#endif
 
+
 private: // methods
 
-	void switching_protocols();
-	void success();
-	void redirect();
-	void error();
+	void		switching_protocols();
+	void		success();
+	void		redirect();
+	void		error();
 
-	void add_to_head(const std::string& key, const std::string& value);
+	void		add_to_head(const std::string& key, const std::string& value);
 
-	void add_to_payload(const std::string& to_add);
+	void		add_to_payload(const std::string& to_add);
 
-	void init_header(const std::string& header_lines = std::string());
+	void		init_header(const std::string& header_lines = std::string());
 
 	const char*	get_reason_phrase() const;
 
-	static std::string get_http_time();
 
 private: // typedefs
 
@@ -68,19 +68,20 @@ private: // typedefs
 
 private: // attributes
 
-	const Server*						p_server;
-	const Server::Location*				p_loc;
-	Request*							p_request;
-	int									m_status_code;
-	std::string							m_header;
-	std::string							m_body;
-	std::string							m_payload;
-	std::string							m_filename;
-	std::string							m_cookie;
+	const Server*				p_server;
+	const Server::Location*		p_loc;
+	Request*					p_request;
+	int							m_status_code;
+	std::string					m_header;
+	std::string					m_body;
+	std::string					m_payload;
+	std::string					m_filename;
+	std::string					m_cookie;
 
 
 private: // statics
 
+	static std::string	get_http_time();
 	static const char*	get_mime_type(const std::string& filename);
 
 	static std::map<int, const char*>			init_status_codes();

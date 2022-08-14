@@ -69,7 +69,8 @@ Response::Response(const Response& other):
 	#endif
 }
 
-Response::Response(int status_code, const std::string& body, const Server* server, Request* request):
+Response::Response(int status_code, const std::string& body,
+					const Server* server, Request* request):
 	p_server(server),
 	p_loc(),
 	p_request(request),
@@ -367,8 +368,6 @@ Response::get_mime_type(const std::string& filename)
 const char*
 Response::get_reason_phrase() const
 {
-	// typedef std::map<int, const char*>::iterator Iter;
-
 	StatusIter status_code = s_status_codes.find(m_status_code);
 	if (status_code != s_status_codes.end())
 		return status_code->second;

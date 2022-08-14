@@ -1,17 +1,15 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ConfigParser.cpp                                  :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: skienzle <skienzle@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/03/25 10:08:53 by skienzle          #+#    #+#             */
-/*   Updated: 2022/06/11 16:10:29 by skienzle         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+#include "ConfigParser.hpp"
 
-#include "../inc/ConfigParser.hpp"
+#include <climits>
+#include <cctype>
+#include <cstdlib>
 
+#include "utils.hpp"
+
+#define RESET "\033[0m"
+#define BOLD "\033[1m"
+#define RED "\033[91m"
+#define YELLOW "\033[33m"
 
 ConfigParser::ConfigParser(ServerArr& servers):
 	m_servers(servers),
@@ -20,7 +18,7 @@ ConfigParser::ConfigParser(ServerArr& servers):
 	m_line_number()
 {
 	#ifdef VERBOSE
-		std::cout << "ConfigParser default constructor called" << std::endl;
+		PRINT("ConfigParser default constructor called");
 	#endif
 }
 
@@ -31,7 +29,7 @@ ConfigParser::ConfigParser(ServerArr& servers, const std::string& filename):
 	m_line_number()
 {
 	#ifdef VERBOSE
-	std::cout << "ConfigParser filename constructor called" << std::endl;
+		PRINT("ConfigParser filename constructor called");
 	#endif
 
 	if (utils::get_file_ext(filename) != "conf")
@@ -98,7 +96,7 @@ ConfigParser::run()
 
 	#ifdef VERBOSE
 	for (size_t i = 0; i < m_servers.size(); ++i)
-		std::cout << m_servers[i] << '\n';
+		PRINT(m_servers[i]);
 	#endif
 }
 
@@ -192,7 +190,7 @@ ConfigParser::parse_location(Server::Location& location)
 {
 	std::string word;
 	
-	while (!(word = gnw_protected(false)).empty())
+	while ((word = gnw_protected(false)).empty() == false)
 	{
 		if (word == "root")
 		{
@@ -336,9 +334,10 @@ ConfigParser::check_ip_address()
 	{
 		end = word.find('.', start);
 		uint32_t ip_number = check_uint(word.substr(start, end - start));
-		if (ip_number > std::numeric_limits<uint8_t>::max())
+		if (ip_number > UINT8_MAX)
 			break;
-		ip_addr += ip_number << (byte * 8); // shift the ip-byte to the appropriate byte in the address
+		// shift the ip-byte to the appropriate byte in the address
+		ip_addr += ip_number << (byte * 8);
 		start = end + 1;
 		--byte;
 	}

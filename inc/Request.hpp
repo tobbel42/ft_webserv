@@ -7,7 +7,8 @@
 #include <cstring>
 #include "utils.hpp"
 
-enum e_req_state{
+enum e_req_state
+{
 	REQUEST_LINE,
 	HEADER,
 	BODY,
@@ -19,7 +20,8 @@ enum e_req_state{
 //Data class which parses the Requests and exposens the elements to the User
 //Detects Malformed requests
 //trivia: LWS(linearwhiteSpace) = (' ' or '\t' or "\r\n" followed by ' ' or '\t'
-class Request {
+class Request
+{
 
 	public:
 	

@@ -30,7 +30,7 @@ class Connect;
 
 class Engine
 {
-	private:
+private:
 
 	/*MemberVariabels---------------------------------------------------------*/
 	#ifdef KQUEUE
@@ -80,12 +80,9 @@ class Engine
 	Server*		find_server(const Connect & cnct);
 	void		check_for_timeout();
 
-	public:
-
-	ServerArr&	get_servers();
 
 	/*Debug-------------------------------------------------------------------*/
-	private:
+private:
 
 	void		debug();
 
@@ -96,7 +93,7 @@ class Engine
 	bool		user_event();
 
 	/*Constructors------------------------------------------------------------*/
-	public:
+public:
 	Engine();
 	~Engine();
 
@@ -105,7 +102,9 @@ class Engine
 	Engine	&operator=(const Engine &rhs);
 
 	/*UserInterface-----------------------------------------------------------*/
-	public:
+public:
+
+	ServerArr&	get_servers();
 
 	//ToDo: ErrorHandling
 	bool		init_sockets();

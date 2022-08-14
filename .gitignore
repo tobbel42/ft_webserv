@@ -1,4 +1,5 @@
 *.o
+obj/
 webserv
 .vscode
 test.cpp

@@ -242,7 +242,7 @@ Engine::assign_server(Connect & cnct)
 	if (server == nullptr)
 		cnct.set_status(404);
 	else
-		cnct.setServer(server);
+		cnct.set_server(server);
 }
 
 #ifdef KQUEUE

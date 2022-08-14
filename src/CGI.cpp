@@ -1,5 +1,10 @@
 #include "CGI.hpp"
 
+#include <csignal>
+#include <sys/wait.h>
+#include <cstdlib>
+
+#include "utils.hpp"
 
 CGI::CGI(const CGI& other):
 	m_filename(other.m_filename),
@@ -14,6 +19,8 @@ CGI::CGI(const std::string& filename, const Request& req):
 	m_filename(filename),
 	m_content(),
 	m_req(req),
+	m_env(),
+	m_cgi_header(),
 	m_status_code(200)
 {}
 
@@ -34,34 +41,14 @@ CGI::operator=(const CGI& other)
 	return *this;
 }
 
-const std::map<std::string, std::string> &
-CGI::get_cgi_header() { return m_cgi_header; }
+const std::map<std::string, std::string>&
+CGI::get_cgi_header() const { return m_cgi_header; }
 
-bool
-CGI::prep_env() //toDo prep some env
-{
-	if (m_req.get_header_entry("Content-length").first)
-		m_env["CONTENT_LENGTH"] = m_req.get_header_entry("Content-length").second;
-	if (m_req.get_header_entry("Content-type").first)
-		m_env["CONTENT_TYPE"] = m_req.get_header_entry("Content-type").second;
-	m_env["GATEWAY_INTERFACE"] = "CGI/1.1";
+int
+CGI::get_status_code() const { return m_status_code; }
 
-	m_env["QUERY_STRING"] = m_req.get_query();
-	m_env["REQUEST_METHOD"] = m_req.get_method();
-
-	m_env["SERVER_NAME"] = "lil l and the beachboys 1.0";
-	m_env["SERVER_PORT"] =  utils::to_string(m_req.get_port());
-	m_env["SERVER_PROTOCOL"] = "HTTP/" + utils::to_string(HTTP_VERSION);
-
-	m_env["PATH_INFO"] = utils::get_abs_path(m_filename);
-	m_env["PATH_TRANSLATED"] = utils::get_abs_path(m_filename);
-
-	for (std::map<std::string, std::string>::const_iterator iter = m_req.get_header().begin();
-		iter != m_req.get_header().end(); ++iter) {
-		m_env["HTTP_" + utils::cgi_str_toupper((*iter).first)] = (*iter).second;
-	}
-	return true;
-}
+const std::string&
+CGI::get_content() const { return m_content; }
 
 std::string
 CGI::run(e_FileType file_type, const std::string& input,
@@ -95,6 +82,33 @@ CGI::run(e_FileType file_type, const std::string& input,
 		return std::string();
 
 	return read_output(outfile);
+}
+
+bool
+CGI::prep_env() //toDo prep some env
+{
+	if (m_req.get_header_entry("Content-length").first)
+		m_env["CONTENT_LENGTH"] = m_req.get_header_entry("Content-length").second;
+	if (m_req.get_header_entry("Content-type").first)
+		m_env["CONTENT_TYPE"] = m_req.get_header_entry("Content-type").second;
+	m_env["GATEWAY_INTERFACE"] = "CGI/1.1";
+
+	m_env["QUERY_STRING"] = m_req.get_query();
+	m_env["REQUEST_METHOD"] = m_req.get_method();
+
+	m_env["SERVER_NAME"] = "lil l and the beachboys 1.0";
+	m_env["SERVER_PORT"] =  utils::to_string(m_req.get_port());
+	m_env["SERVER_PROTOCOL"] = "HTTP/" + utils::to_string(HTTP_VERSION);
+
+	m_env["PATH_INFO"] = utils::get_abs_path(m_filename);
+	m_env["PATH_TRANSLATED"] = utils::get_abs_path(m_filename);
+
+	for (std::map<std::string, std::string>::const_iterator iter = m_req.get_header().begin();
+		iter != m_req.get_header().end(); ++iter)
+	{
+		m_env["HTTP_" + utils::cgi_str_toupper(iter->first)] = iter->second;
+	}
+	return true;
 }
 
 bool
@@ -149,14 +163,14 @@ CGI::exec_cgi(FileWrap& infile, FileWrap& outfile, char* argv[])
 		return wait_for_child(pid);
 }
 
-char **
-CGI::map_to_env() //todo protect
+char**
+CGI::map_to_env()
 {
 	char ** env = (char **)calloc(m_env.size() + 1, sizeof(char *));
 	if (env == nullptr)
 		std::exit(errno); // we can exit safely because it's the child process
 	
-	char * ptr;
+	char* ptr = nullptr;
 	int i = 0;
 	for (std::map<std::string, std::string>::iterator iter = m_env.begin();
 		iter != m_env.end(); ++iter, ++i)
@@ -198,6 +212,7 @@ CGI::wait_for_child(pid_t worker_pid)
 	{
 		int stat_loc = 0;
 		pid_t pid = 0;
+
 		while ((pid = waitpid(worker_pid, &stat_loc, WNOHANG)) == 0 &&
 				(pid = waitpid(timeout_pid, &stat_loc, WNOHANG)) == 0)
 			usleep(50);
@@ -267,15 +282,19 @@ CGI::parse_header(std::string & output)
 		line = output.substr(offset, pos - offset);
 		if (line == "")
 			break;
+
 		key = line.substr(0, line.find(":"));
 		value = line.substr(line.find(":") + 2);
 		m_cgi_header[key] = value;
+
 		pos += 3;
 		offset = pos;
 		pos = output.find("\r\n", offset);
 	}
 	output = output.substr(offset);
 }
+
+
 
 //-------------------------------------------------------------------------
 //		FileWrap
