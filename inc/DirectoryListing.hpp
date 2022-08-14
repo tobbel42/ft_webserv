@@ -1,15 +1,10 @@
 #pragma once
 
 #include <string>
-#include <utility>
 
 #include <dirent.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <cerrno>
 
 #include "typedefs.hpp"
-#include "utils.hpp"
 
 class DirectoryListing
 {
@@ -21,7 +16,7 @@ public: // methods
 
 	DirectoryListing& operator=(const DirectoryListing& other);
 
-	int get_status_code() const { return m_status_code; }
+	int get_status_code() const;
 
 	std::string run();
 
@@ -29,9 +24,14 @@ public: // methods
 private: // methods
 	DirectoryListing();
 
-	std::string get_mod_date(const std::string& entry_name) const;
+	std::string	get_mod_date(const std::string& entry_name) const;
+	std::string	generate_table_row(const std::string& entry_name) const;
 
-	std::string generate_table_row(const std::string& entry_name) const;
+
+private: // attributes
+	std::string		m_dirpath;
+	std::string		m_url;
+	int				m_status_code;
 
 
 private: // subclass
@@ -60,10 +60,5 @@ private: // subclass
 
 		DIR* p_dir;
 	};
-
-private: // attributes
-	std::string		m_dirpath;
-	std::string		m_url;
-	int				m_status_code;
 
 };

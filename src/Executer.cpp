@@ -1,5 +1,12 @@
 #include "Executer.hpp"
 
+#include <algorithm>
+
+#include <unistd.h>
+
+#include "utils.hpp"
+#include "CGI.hpp"
+#include "DirectoryListing.hpp"
 
 Executer::Executer(const Executer& other):
 	p_server(other.p_server),
@@ -20,7 +27,8 @@ Executer::Executer(const Server* server, const Server::Location* location,
 	m_req(req),
 	m_content(),
 	m_filename(req.get_target()),
-	m_is_cgi(false)
+	m_is_cgi(false),
+	m_cgi_header()
 {}
 
 Executer::Executer(const Server* server, const Server::Location* location,
@@ -31,11 +39,24 @@ Executer::Executer(const Server* server, const Server::Location* location,
 	m_req(req),
 	m_content(),
 	m_filename(filename),
-	m_is_cgi(false)
+	m_is_cgi(false),
+	m_cgi_header()
 {}
 
 
 Executer::~Executer() {}
+
+const std::string&
+Executer::get_content() const { return m_content; }
+
+int
+Executer::get_status_code() const {return m_status_code; }
+
+const std::string&
+Executer::get_filename() const { return m_filename; }
+
+const std::map<std::string,std::string>&
+Executer::get_cgi_header() const { return m_cgi_header; }
 
 std::string
 Executer::get_full_url() const
@@ -47,10 +68,16 @@ Executer::get_full_url() const
 			m_req.get_target();
 }
 
+bool
+Executer::is_cgi() const { return m_is_cgi; }
+
+void
+Executer::set_server(Server* server) { p_server = server; }
+
 void
 Executer::run()
 {
-	PRINT("EXEC FILENAME" << m_filename);
+	PRINT("EXEC FILENAME " << m_filename);
 	if (p_server == nullptr)
 	{
 		EPRINT("no viable server found");
@@ -64,7 +91,7 @@ Executer::run()
 		{
 			EPRINT("client body to large");
 			m_status_code = 413;
-			return ;
+			return;
 		}
 		run_server();
 	}
@@ -76,7 +103,7 @@ Executer::run()
 		{
 			EPRINT("client body to large");
 			m_status_code = 413;
-			return ;
+			return;
 		}
 		run_location();
 	}
@@ -94,6 +121,7 @@ Executer::run_server()
 		return;
 	}
 
+	// Apply local index
 	if (file_type == DIRECTORY && 
 		(m_req.get_target().empty() || m_req.get_target() == "/"))
 	{
@@ -142,17 +170,6 @@ Executer::server_method_execution()
 		delete_handler();
 }
 
-bool
-Executer::resource_exist()
-{
-	int status = access(m_filename.c_str(), F_OK);
-
-	if (status == 0)
-		return true;
-	PRINT(strerror(errno));
-	return false;
-}
-
 void
 Executer::run_location()
 {
@@ -161,7 +178,6 @@ Executer::run_location()
 
 	m_filename = utils::compr_slash(p_server->root + m_filename);
 
-	//identify Filetype
 	e_FileType file_type = get_file_type();
 
 	if (!utils::is_element_of(p_loc->allowed_methods, m_req.get_method()))
@@ -170,7 +186,7 @@ Executer::run_location()
 		return;
 	}
 
-	//Apply local index 
+	// Apply local index 
 	if (file_type == DIRECTORY && !p_loc->directory_listing_enabled &&
 		p_loc->prefix == m_req.get_target()) // only append the root for exact matches
 	{
@@ -189,7 +205,6 @@ Executer::run_location()
 		put_handler();
 	else if (m_req.get_method() == "DELETE")
 		delete_handler();
-
 }
 
 void
@@ -237,16 +252,16 @@ Executer::post_handler()
 		else
 			m_status_code = 403;
 	}
-	else {
+	else
+	{
 		//here the file creation stuff is happening
 		//only test/plain request are allowed to create files
 		//the rest is getting 404 
-		std::string content_type = m_req.get_header_entry("Content-Type").second ;
+		std::string content_type = m_req.get_header_entry("Content-Type").second;
 		if (content_type == "text/plain")
 			put_handler();
-		else {
+		else
 			m_status_code = 404;
-		}
 	}
 }
 
@@ -257,12 +272,15 @@ Executer::put_handler()
 		m_status_code = 204; // no content
 	else
 		m_status_code = 201; // created
+
 	std::ofstream file(m_filename.c_str());
-	if (file.is_open()) {
-		file.write(&(*m_req.get_body().begin()), m_req.get_body().size());
-		file.close();
+	if (file.is_open())
+	{
+		const ByteArr& payload = m_req.get_body();
+		file.write(&(*payload.begin()), payload.size());
 		if (!file.good())
 			m_status_code = 500;
+		file.close();
 	}
 	else
 		m_status_code = 500;
@@ -283,35 +301,13 @@ Executer::delete_handler()
 		m_status_code = 500;
 }
 
-void
-Executer::read_from_file()
-{
-	std::ifstream file(m_filename.c_str());
-
-	if (file.is_open())
-		m_content = utils::read_file(file, "\n");
-	else
-		m_status_code = 404;
-
-}
-
-void
-Executer::run_directory_listing()
-{
-	DirectoryListing dir_list(m_filename, get_full_url());
-
-	m_content = dir_list.run();
-	m_status_code = dir_list.get_status_code();
-}
 
 void
 Executer::run_cgi(e_FileType file_type)
 {
-	CGI cgi(m_filename, m_req);
-	const ByteArr& req_body = m_req.get_body();
-	std::string input(req_body.begin(), req_body.end());
-
 	typedef std::map<std::string,std::string>::const_iterator MapIt;
+
+	// find the executable of the cgi
 	std::string executable;
 	if (file_type == PYTHON)
 	{
@@ -330,20 +326,55 @@ Executer::run_cgi(e_FileType file_type)
 			executable = PHP_PATH;
 	}
 
+	CGI cgi(m_filename, m_req);
+
+	// prepare the stdin of the cgi
+	const ByteArr& req_body = m_req.get_body();
+	std::string input(req_body.begin(), req_body.end());
+
 	m_is_cgi = true;
 
 	m_content = cgi.run(file_type, input, executable);
 
 	m_cgi_header = cgi.get_cgi_header();
-	std::map<std::string, std::string>::iterator iter = m_cgi_header.find("Status");
 
+	// look for the status code of the CGI and use that if it's provided
+	std::map<std::string, std::string>::iterator iter = m_cgi_header.find("Status");
 	if (iter != m_cgi_header.end())
 		m_status_code = utils::from_string<int>(iter->second);
 	else
 		m_status_code = cgi.get_status_code();
+}
 
+void
+Executer::run_directory_listing()
+{
+	DirectoryListing dir_list(m_filename, get_full_url());
 
-	
+	m_content = dir_list.run();
+	m_status_code = dir_list.get_status_code();
+}
+
+void
+Executer::read_from_file()
+{
+	std::ifstream file(m_filename.c_str());
+
+	if (file.is_open())
+		m_content = utils::read_file(file, "\n");
+	else
+		m_status_code = 404;
+}
+
+bool
+Executer::resource_exist() const
+{
+	int status = access(m_filename.c_str(), F_OK);
+
+	if (status == 0)
+		return true;
+	EPRINT(strerror(errno));
+	return false;
 }
 
 e_FileType

@@ -7,11 +7,8 @@
 #include <cstdio>
 #include <csignal>
 #include <utils.hpp>
-#include <Engine.hpp>
 #include <Connect.hpp>
 #include <Server.hpp>
-
-class Engine;
 
 /*
 //a Socket listens to an ip and port and accepts incomming connection

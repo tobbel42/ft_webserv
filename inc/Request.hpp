@@ -1,11 +1,9 @@
-#ifndef REQUEST_HPP
-# define REQUEST_HPP
+#pragma once
 
 #include <map>
-#include <iostream>
-#include <algorithm>
-#include <cstring>
-#include "utils.hpp"
+#include <string>
+
+#include "typedefs.hpp"
 
 enum e_req_state
 {
@@ -23,7 +21,7 @@ enum e_req_state
 class Request
 {
 
-	public:
+public:
 	
 	/*Constructors------------------------------------------------------------*/
 
@@ -33,7 +31,35 @@ class Request
 	Request(const Request &);
 	Request & operator=(const Request &);
 
-	private:
+	/*Public Functions--------------------------------------------------------*/
+
+	bool	append_read(std::vector<char>);
+
+	/*Debug only--------------------------------------------------------------*/	
+
+	void	print_request() const;
+
+	/*Getter------------------------------------------------------------------*/
+
+	const std::string&				get_method() const;
+	const std::string&				get_target() const;
+	const std::string&				get_host() const;
+	uint32_t						get_port() const;
+	const std::string&				get_query() const;
+	const std::string&				get_http_ver() const;
+	std::pair<bool, std::string>	get_header_entry(std::string) const;
+	const ByteArr&					get_body() const;
+	uint32_t						get_err_code() const;
+	const std::map<std::string, std::string>&	get_header() const;
+
+	/*Setter------------------------------------------------------------------*/
+
+	void decrypt_cookie(std::string & cookie_value);
+	//todo implement
+	void substitute_default_target(const std::string &);
+
+
+private:
 
 	/*Utils-------------------------------------------------------------------*/
 
@@ -69,7 +95,7 @@ class Request
 
 	/*Internal MemberVariabels------------------------------------------------*/
 
-	std::vector<char> m_buffer;
+	ByteArr m_buffer;
 	size_t		m_offset;
 	
 	e_req_state	m_state;
@@ -92,37 +118,5 @@ class Request
 
 	std::string m_http_ver;
 	std::map<std::string, std::string> m_header; 
-	std::vector<char> m_body;
-
-	public:
-
-	/*Public Functions--------------------------------------------------------*/
-
-	bool	append_read(std::vector<char>);
-
-	/*Debug only--------------------------------------------------------------*/	
-
-	void	print_request() const;
-
-	/*Getter------------------------------------------------------------------*/
-
-	const std::string & get_method() const;
-	const std::string & get_target() const;
-	const std::string & get_host() const;
-	uint32_t get_port() const;
-	const std::string & get_query() const;
-	const std::string & get_http_ver() const;
-	std::pair<bool, std::string> get_header_entry(std::string) const;
-	const std::vector<char> & get_body() const;
-	uint32_t get_err_code() const;
-	const std::map<std::string, std::string> & get_header() const;
-
-	/*Setter------------------------------------------------------------------*/
-
-	void decrypt_cookie(std::string & cookie_value);
-	//todo implement
-	void substitute_default_target(const std::string &);
-
+	ByteArr m_body;
 };
-
-#endif

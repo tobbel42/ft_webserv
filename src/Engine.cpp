@@ -1,4 +1,12 @@
-#include "../inc/Engine.hpp"
+#include "Engine.hpp"
+
+#include <algorithm>
+
+#include <unistd.h>
+#include <cstdio>
+
+#include "ConfigParser.hpp"
+#include "utils.hpp"
 
 /*NonMemberOverloads----------------------------------------------------------*/
 
@@ -43,23 +51,6 @@ Engine::~Engine()
 	close_sockets();
 }
 
-Engine::Engine(const Engine & copy)
-{
-	#ifdef VERBOSE
-		std::cout << "Engine: Copy Constructor called" << std::endl;
-	#endif
-	*this = copy;
-}
-
-Engine &	
-Engine::operator=(const Engine &rhs)
-{
-	#ifdef VERBOSE
-		std::cout << "Engine: Assignation operator called" << std::endl;
-	#endif
-	(void)rhs;
-	return (*this);
-}
 
 /*InternalMemberFunctions-----------------------------------------------------*/
 
@@ -117,7 +108,7 @@ Engine::listen_sockets()
 	}
 	return true;
 }
-#endif
+#endif // KQUEUE
 
 void
 Engine::close_sockets()
@@ -145,7 +136,8 @@ Engine::set_kevent( fd_type fd, int16_t filter, uint16_t flag)
 }
 #else
 void
-Engine::set_poll(fd_type fd, short events) {
+Engine::set_poll(fd_type fd, short events)
+{
 	s_pollfd	poll;
 
 	poll.fd = fd;
@@ -183,7 +175,7 @@ Engine::accept_connect(Socket & sock)
 	if (fd == -1)
 	{
 		EPRINT("ERROR: failed to accept connection");
-		return ;
+		return;
 	}
 
 	Connect	newConnect(fd, sock.getIp(), sock.getPort(), &m_cookie_base);
@@ -193,7 +185,7 @@ Engine::accept_connect(Socket & sock)
 
 	set_poll(fd, POLLIN);
 }
-#endif
+#endif // KQUEUE
 
 Server*
 Engine::find_server(const Connect& cnct)
@@ -271,7 +263,7 @@ Engine::socket_event(s_pollfd & poll)
 	#endif
 	accept_connect(iter->second);
 }
-#endif
+#endif // KQUEUE
 
 #ifdef KQUEUE
 void
@@ -393,7 +385,7 @@ Engine::connect_event(s_pollfd & poll)
 			m_connects.erase(iter);
 	}
 }
-#endif
+#endif // KQUEUE
 
 void
 Engine::check_for_timeout() {

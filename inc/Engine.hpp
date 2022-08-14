@@ -1,19 +1,15 @@
-#ifndef ENGINE_HPP
-# define ENGINE_HPP
+#pragma once
 
 #include <string>
 #include <iostream>
 #include <vector>
 #include <map>
-#include <algorithm>
-#include <stdio.h>
+
 #include <ctime>
 
-#include <Socket.hpp>
-#include <Connect.hpp>
-#include <Server.hpp>
-#include <utils.hpp>
-#include "ConfigParser.hpp"
+#include "Socket.hpp"
+#include "Connect.hpp"
+#include "Server.hpp"
 #include "typedefs.hpp"
 
 
@@ -25,11 +21,23 @@ std::ostream	&operator<<(std::ostream & out, s_pollfd const & in);
 
 enum	Type { SOCKET, CONNECTION };
 
-class Socket;
-class Connect;
-
 class Engine
 {
+	/*Constructors------------------------------------------------------------*/
+public:
+	Engine();
+	~Engine();
+
+	/*UserInterface-----------------------------------------------------------*/
+public:
+
+	ServerArr&	get_servers();
+
+	//ToDo: ErrorHandling
+	bool		init_sockets();
+	bool		launch();
+
+
 private:
 
 	/*MemberVariabels---------------------------------------------------------*/
@@ -92,25 +100,8 @@ private:
 
 	bool		user_event();
 
-	/*Constructors------------------------------------------------------------*/
-public:
-	Engine();
-	~Engine();
-
-	private:
+private:
 	Engine(const Engine &copy);
 	Engine	&operator=(const Engine &rhs);
 
-	/*UserInterface-----------------------------------------------------------*/
-public:
-
-	ServerArr&	get_servers();
-
-	//ToDo: ErrorHandling
-	bool		init_sockets();
-	bool		launch();
-
-
 };
-
-#endif

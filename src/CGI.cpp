@@ -230,7 +230,7 @@ CGI::wait_for_child(pid_t worker_pid)
 			kill(timeout_pid, SIGKILL);
 			if (!WIFSIGNALED(stat_loc) && WEXITSTATUS(stat_loc) == 0)
 				return true;
-			m_status_code = 500; // might be changed to the status code of the CGI
+			m_status_code = 500;
 			EPRINT("cgi execution failed");
 			return false;
 		}

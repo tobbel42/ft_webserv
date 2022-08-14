@@ -1,8 +1,10 @@
 #include "ConfigParser.hpp"
-#include "Socket.hpp"
 #include "Engine.hpp"
 
-int main(int argc, char **argv, char **)
+#include <cstdlib>
+#include <iostream>
+
+int main(int argc, char** argv, char**)
 {
 	if (argc > 2)
 	{
@@ -32,7 +34,7 @@ int main(int argc, char **argv, char **)
 	catch (const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
-		return 1;
+		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
 }

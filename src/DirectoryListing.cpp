@@ -1,5 +1,10 @@
 #include "DirectoryListing.hpp"
 
+#include <sys/stat.h>
+#include <time.h>
+#include <cerrno>
+
+#include "utils.hpp"
 
 DirectoryListing::DirectoryListing(const std::string& dirpath, const std::string& url):
 	m_dirpath(dirpath),
@@ -26,6 +31,9 @@ DirectoryListing::operator=(const DirectoryListing& other)
 	}
 	return *this;
 }
+
+int
+DirectoryListing::get_status_code() const { return m_status_code; }
 
 std::string
 DirectoryListing::run()
@@ -61,9 +69,13 @@ DirectoryListing::generate_table_row(const std::string& entry_name) const
 		return std::string();
 
 	std::string full_path = "http://" + utils::compr_slash(m_url + "/" + entry_name);
-	PRINT("URL = " << m_url);
-	PRINT("entry_name = " << entry_name);
-	PRINT("full path = " << full_path);
+
+	#ifdef VERBOSE
+		PRINT("URL = " << m_url);
+		PRINT("entry_name = " << entry_name);
+		PRINT("full path = " << full_path);
+	#endif
+
 	return
 		"<tr>"
 			"<td>"

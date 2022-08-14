@@ -1,5 +1,11 @@
 #include "Request.hpp"
 
+#include <algorithm>
+
+#include <cctype>
+
+#include "utils.hpp"
+
 /*Constructors----------------------------------------------------------------*/
 
 Request::Request():
@@ -11,7 +17,7 @@ m_err_code(0),
 m_expectedPort(80)
 {
 	#ifdef VERBOSE
-		std::cout << "Request: Constructor called" << std::endl;
+		PRINT("Request: Constructor called");
 	#endif
 }
 
@@ -24,47 +30,54 @@ m_err_code(0),
 m_expectedPort(expectedPort)
 {
 	#ifdef VERBOSE
-		std::cout << "Request: Constructor called" << std::endl;
+		PRINT("Request: Constructor called");
 	#endif
 }
 
-Request::Request(const Request & cpy) {
+Request::Request(const Request & cpy)
+{
 	#ifdef VERBOSE
-		std::cout << "Request: Copy Constructor called" << std::endl;
+		PRINT("Request: Copy Constructor called");
 	#endif
 	*this = cpy;
 }
 
-Request::~Request() {
+Request::~Request()
+{
 	#ifdef VERBOSE
-		std::cout << "Request: Destructor called" << std::endl;
+		PRINT("Request: Destructor called");
 	#endif
 }
 
 Request & 
-Request::operator=(const Request & rhs) {
+Request::operator=(const Request & rhs)
+{
 	#ifdef VERBOSE
-		std::cout << "Request: Assignation operator called" << std::endl;
+		PRINT("Request: Assignation operator called");
 	#endif
-	m_buffer = rhs.m_buffer;
-	m_offset = rhs.m_offset;
-	m_state = rhs.m_state;
-	m_done = rhs.m_done;
-	m_content_len = rhs.m_content_len;
-	m_err_code = rhs.m_err_code;
-	m_method = rhs.m_method;
-	m_uri = rhs.m_uri;
 
-	m_host = rhs.m_host;
-	m_expectedPort = rhs.m_expectedPort;
-	m_port = rhs.m_port;
-	m_target = rhs.m_target;
-	m_query = rhs.m_query;
+	if (this != &rhs)
+	{
+		m_buffer = rhs.m_buffer;
+		m_offset = rhs.m_offset;
+		m_state = rhs.m_state;
+		m_done = rhs.m_done;
+		m_content_len = rhs.m_content_len;
+		m_err_code = rhs.m_err_code;
+		m_method = rhs.m_method;
+		m_uri = rhs.m_uri;
 
-	m_http_ver = rhs.m_http_ver;
-	m_header = rhs.m_header;
-	m_body = rhs.m_body;
-	return (*this);
+		m_host = rhs.m_host;
+		m_expectedPort = rhs.m_expectedPort;
+		m_port = rhs.m_port;
+		m_target = rhs.m_target;
+		m_query = rhs.m_query;
+
+		m_http_ver = rhs.m_http_ver;
+		m_header = rhs.m_header;
+		m_body = rhs.m_body;
+	}
+	return *this;
 }
 
 /*Getter----------------------------------------------------------------------*/
@@ -86,8 +99,10 @@ Request::get_http_ver() const { return m_http_ver; }
 
 //returns an empty string when field_name not found
 std::pair<bool, std::string>
-Request::get_header_entry(std::string field_name) const {
+Request::get_header_entry(std::string field_name) const
+{
 	utils::str_tolower(field_name);
+
 	std::map<std::string,std::string>::const_iterator iter;
 	iter = m_header.find(field_name);
 	if (iter != m_header.end())
@@ -96,7 +111,7 @@ Request::get_header_entry(std::string field_name) const {
 		return std::make_pair(false, "");
 }
 
-const std::vector<char> &
+const ByteArr&
 Request::get_body() const { return m_body; }
 
 unsigned int
@@ -111,7 +126,8 @@ Request::get_header() const { return m_header; }
 /*Utils-----------------------------------------------------------------------*/
 
 void
-Request::set_host() {
+Request::set_host()
+{
 	std::pair<bool, std::string> hostField = get_header_entry("host");
 
 	if (hostField.first == false)
@@ -128,7 +144,8 @@ Request::set_host() {
 }
 
 bool 
-Request::is_done() {
+Request::is_done()
+{
 	//deleting already parsed buffer
 	m_buffer.erase(m_buffer.begin(), m_buffer.begin() + m_offset);
 	m_offset = 0;
@@ -144,8 +161,10 @@ Request::is_done() {
 }
 
 bool 
-Request::check_invalid_char(const std::string & s, char *c, size_t size) {
-	for (size_t i = 0; i < size; ++i) {
+Request::check_invalid_char(const std::string & s, char *c, size_t size)
+{
+	for (size_t i = 0; i < size; ++i)
+	{
 		if (s.find(c[i]) != std::string::npos)
 			return true;
 	}
@@ -153,7 +172,8 @@ Request::check_invalid_char(const std::string & s, char *c, size_t size) {
 }
 
 bool
-Request::set_error(size_t err_code) {
+Request::set_error(size_t err_code)
+{
 	m_err_code = err_code;
 	return false;
 }
@@ -161,7 +181,8 @@ Request::set_error(size_t err_code) {
 /*RequestLineParsing----------------------------------------------------------*/
 
 void
-Request::parse_uri(const std::string & host_field) {
+Request::parse_uri(const std::string & host_field)
+{
 	std::string port;
 	if (m_uri.substr(0, 7) == "http://")
 	{
@@ -201,13 +222,14 @@ Request::parse_uri(const std::string & host_field) {
 }
 
 bool
-Request::get_next_req_line(std::string & line) {
-	std::vector<char> CRLF;
+Request::get_next_req_line(std::string & line)
+{
+	ByteArr CRLF;
 	CRLF.push_back('\r');
 	CRLF.push_back('\n');
-	std::vector<char>::iterator pos = std::search(
+	ByteArr::iterator pos = std::search(
 		m_buffer.begin() + m_offset, m_buffer.end(),
-		CRLF.begin(), CRLF.end()); 
+		CRLF.begin(), CRLF.end());
 	if (pos == m_buffer.end())
 	{
 		PRINT("THE wierd shit");
@@ -224,7 +246,8 @@ Request::get_next_req_line(std::string & line) {
 }
 
 bool
-Request::parse_request_line(const std::string & line){
+Request::parse_request_line(const std::string & line)
+{
 	size_t pos, pos1; 
 
 	pos = line.find(' ');
@@ -242,11 +265,14 @@ Request::parse_request_line(const std::string & line){
 }
 
 void
-Request::parse_target() {
+Request::parse_target()
+{
 	char c[2];
 	c[1] = '\0' ;
-	for (size_t i = 0; i < m_uri.size(); ++i) {
-		if (m_uri[i] == '%' && i <= m_uri.size() - 2) {
+	for (size_t i = 0; i < m_uri.size(); ++i)
+	{
+		if (m_uri[i] == '%' && i <= m_uri.size() - 2)
+		{
 			std::string hexcode = m_uri.substr(i + 1, 2);
 			c[0] = utils::hex_str_to_i(hexcode);
 			m_uri.erase(i, 3);
@@ -256,10 +282,12 @@ Request::parse_target() {
 }
 
 bool
-Request::is_valid_http_ver() {
+Request::is_valid_http_ver()
+{
 	if (m_http_ver.substr(0, 5) != "HTTP/")
 		return false;
-	const char * ptr = m_http_ver.c_str() + 5;
+
+	const char* ptr = m_http_ver.c_str() + 5;
 	if (!isdigit(*ptr))
 		return false;
 	while(isdigit(*ptr))
@@ -508,7 +536,7 @@ Request::is_chunked() {
 //todo: what about illigal bodys
 
 bool
-Request::append_read(std::vector<char> buf) {
+Request::append_read(ByteArr buf) {
 
 	m_buffer.insert(m_buffer.end(), buf.begin(), buf.end());
 	if (m_state == REQUEST_LINE)
@@ -558,26 +586,27 @@ Request::append_read(std::vector<char> buf) {
 /*Debug-----------------------------------------------------------------------*/
 
 void
-Request::print_request() const {
-	std::cout << m_method << "##" << std::endl;
-	std::cout << m_uri << "##" << std::endl;
-	std::cout << m_http_ver << "##" << std::endl;
-	std::cout << "HEADER" << "##" << std::endl;
+Request::print_request() const
+{
+	PRINT(m_method << "##");
+	PRINT(m_uri << "##");
+	PRINT(m_http_ver << "##");
+	PRINT("HEADER" << "##");
 	for (std::map<std::string, std::string>::const_iterator iter = m_header.begin();
-		iter != m_header.end(); ++iter) {
-		std::cout << (*iter).first << ": " 
-			<< (*iter).second << "##" << std::endl;
+		iter != m_header.end(); ++iter)
+	{
+		PRINT(iter->first << ": " << iter->second << "##");
 	}
-	std::cout << "BODY" << std::endl;
-	for (size_t i = 0; i < m_body.size(); ++i) {
+	PRINT("BODY");
+	for (size_t i = 0; i < m_body.size(); ++i)
 		std::cout << m_body[i];
-	}
 }
 
 /*Setter----------------------------------------------------------------------*/
 
 void
-Request::decrypt_cookie(std::string & cookie_value) {
+Request::decrypt_cookie(std::string & cookie_value)
+{
 	PRINT(m_query);
 	if (m_query != "")
 		m_query += "&";
@@ -586,8 +615,8 @@ Request::decrypt_cookie(std::string & cookie_value) {
 }
 
 void
-Request::substitute_default_target(const std::string & serverDefault) {
-	if (m_target == "" || m_target == "/") {
+Request::substitute_default_target(const std::string & serverDefault)
+{
+	if (m_target == "" || m_target == "/")
 		m_target = serverDefault;
-	}
 }

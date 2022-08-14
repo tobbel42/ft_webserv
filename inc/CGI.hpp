@@ -49,6 +49,8 @@ private: // attributes
 	const Request&						m_req;
 	std::map<std::string, std::string>	m_env;
 	std::map<std::string, std::string>	m_cgi_header;
+	// the status code will only be used if the executed script didn't provide one
+	// or an error occured during preparation
 	int									m_status_code;
 
 
