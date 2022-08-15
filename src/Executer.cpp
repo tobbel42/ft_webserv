@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include <unistd.h>
+#include <cstring>
 
 #include "utils.hpp"
 #include "CGI.hpp"

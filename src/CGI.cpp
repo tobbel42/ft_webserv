@@ -3,6 +3,7 @@
 #include <csignal>
 #include <sys/wait.h>
 #include <cstdlib>
+#include <cstring>
 
 #include "utils.hpp"
 

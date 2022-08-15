@@ -3,6 +3,7 @@
 #include <climits>
 #include <cctype>
 #include <cstdlib>
+#include <cstring>
 
 #include "utils.hpp"
 
