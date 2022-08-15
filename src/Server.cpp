@@ -1,7 +1,8 @@
-
-
 #include "Server.hpp"
 
+#include <unistd.h>
+
+#include "utils.hpp"
 
 Server::Server():
 	server_names(),
@@ -35,6 +36,8 @@ Server::Server(const Server& other):
 	m_checks(other.m_checks)
 {}
 
+Server::~Server() {}
+
 Server&
 Server::operator=(const Server& other)
 {
@@ -58,8 +61,7 @@ Server::operator=(const Server& other)
 bool
 Server::set_server_name(const std::string& name)
 {
-	if (std::find(server_names.begin(), server_names.end(), name)
-		== server_names.end())
+	if (!utils::is_element_of(server_names, name))
 		server_names.push_back(name);
 	return true;
 }
@@ -107,6 +109,8 @@ Server::set_ip_address(uint32_t ip)
 bool
 Server::set_port(uint32_t port)
 {
+	if (utils::is_element_of(ports, port))
+		return false;
 	ports.push_back(port);
 	return true;
 }
@@ -194,6 +198,8 @@ Server::Location::Location(const Location& other):
 	directory_listing_enabled(other.directory_listing_enabled),
 	m_checks(other.m_checks)
 {}
+
+Server::Location::~Location() {}
 
 Server::Location&
 Server::Location::operator=(const Location& other)

@@ -95,28 +95,23 @@ private:
 
 	/*Internal MemberVariabels------------------------------------------------*/
 
-	ByteArr m_buffer;
+	ByteArr		m_buffer;
 	size_t		m_offset;
-	
 	e_req_state	m_state;
 	bool		m_done;
-
 	size_t		m_content_len;
 
 	/*DataMemberVariabels-----------------------------------------------------*/
 
-	uint32_t	m_err_code;
-	std::string m_method;
-	std::string m_uri;
-
-	std::string m_host;
-
-	uint32_t	m_expectedPort;
-	uint32_t	m_port;
-	std::string m_target;
-	std::string m_query;
-
-	std::string m_http_ver;
-	std::map<std::string, std::string> m_header; 
-	ByteArr m_body;
+	uint32_t							m_err_code;
+	std::string							m_method;
+	std::string							m_uri;
+	std::string							m_host;
+	uint32_t							m_expectedPort;
+	uint32_t							m_port;
+	std::string							m_target;
+	std::string							m_query;
+	std::string							m_http_ver;
+	std::map<std::string, std::string>	m_header; 
+	ByteArr								m_body;
 };

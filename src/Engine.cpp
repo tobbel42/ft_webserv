@@ -70,9 +70,9 @@ Engine::init_sockets()
 		for (size_t j = 0; j < server.ports.size(); ++j)
 		{
 			Socket	newSock(server.ip_address, server.ports[j]);
-			if (newSock.m_init() == false)
+			if (newSock.init() == false)
 				return false;
-			m_sockets.insert(std::make_pair(newSock.getSockFd(), newSock));
+			m_sockets.insert(std::make_pair(newSock.get_sock_fd(), newSock));
 		}
 	}
 	return true;
@@ -151,7 +151,7 @@ Engine::set_poll(fd_type fd, short events)
 void
 Engine::accept_connect(Socket & sock)
 {
-	fd_type	fd = sock.acceptConnect();
+	fd_type	fd = sock.accept_connect();
 
 	if (fd == -1)
 	{
@@ -159,7 +159,7 @@ Engine::accept_connect(Socket & sock)
 		return ;
 	}
 
-	Connect	newConnect(fd, sock.getIp(), sock.getPort(), &m_cookie_base);
+	Connect	newConnect(fd, sock.get_ip(), sock.get_port(), &m_cookie_base);
 
 	m_connects.insert(std::pair<fd_type, Connect>(fd, newConnect));
 	m_timers.insert(std::make_pair(fd, std::time(nullptr)));
@@ -170,7 +170,7 @@ Engine::accept_connect(Socket & sock)
 void
 Engine::accept_connect(Socket & sock)
 {
-	fd_type	fd = sock.acceptConnect();
+	fd_type	fd = sock.accept_connect();
 
 	if (fd == -1)
 	{
@@ -178,7 +178,7 @@ Engine::accept_connect(Socket & sock)
 		return;
 	}
 
-	Connect	newConnect(fd, sock.getIp(), sock.getPort(), &m_cookie_base);
+	Connect	newConnect(fd, sock.get_ip(), sock.get_port(), &m_cookie_base);
 
 	m_connects.insert(std::pair<fd_type, Connect>(fd, newConnect));
 	m_timers.insert(std::make_pair(fd, std::time(nullptr)));

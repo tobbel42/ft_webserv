@@ -5,11 +5,8 @@
 #include <string>
 #include <utility>
 
-#include <unistd.h>
-
 #include "Server.hpp"
 #include "Request.hpp"
-#include "utils.hpp"
 #include "typedefs.hpp"
 
 #define DEFAULT_MIME_TYPE "application/octet-stream"

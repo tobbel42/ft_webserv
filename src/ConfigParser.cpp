@@ -141,7 +141,12 @@ ConfigParser::parse_server()
 					"every server must have only one ip address");
 		}
 		else if (word == "port")
-			server.set_port(check_uint(gnw_protected()));
+		{
+			if (!server.set_port(check_uint(gnw_protected())))
+				throw ConfigParser::InvalidConfig(m_line_number,
+					"each port of a sever must be unique");
+
+		}
 		else if (word == "allowed_methods")
 		{
 			while (m_line_stream >> word)

@@ -1,8 +1,11 @@
 #include "Response.hpp"
 
-#include <ctime>
-
 #include <fstream>
+
+#include <ctime>
+#include <unistd.h>
+
+#include "utils.hpp"
 
 //				Layout of http response headers:
 // status line:

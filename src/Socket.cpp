@@ -1,50 +1,35 @@
 #include "Socket.hpp"
 
-/*
-//Careful son, ports 0-1024 are a big nono 
-*/
-Socket::Socket():
-	m_ip(INADDR_ANY),
-	m_port(80),
-	m_address(),
-	m_sockfd(),
-	m_addLen(sizeof(m_address))//accept braucht den pointer 
-{
-	#ifdef VERBOSE
-		std::cout << "Socket: Default Constructor called" << std::endl;
-	#endif
-}
+#include "utils.hpp"
 
 Socket::Socket(uint32_t ip, uint32_t port):
 	m_ip(ip),
 	m_port(port),
 	m_address(),
 	m_sockfd(),
-	m_addLen(sizeof(m_address))
+	m_add_len(sizeof(m_address))
 {
 	#ifdef VERBOSE
-		std::cout << "Socket: Constructor called" << std::endl;
+		PRINT("Socket: Constructor called");
 	#endif
-	//m_init();
 }
 
 Socket::Socket(const Socket& other):
-	m_ip(),
-	m_port(),
-	m_address(),
-	m_sockfd(),
-	m_addLen(sizeof(m_address))
+	m_ip(other.m_ip),
+	m_port(other.m_port),
+	m_address(other.m_address),
+	m_sockfd(other.m_sockfd),
+	m_add_len(sizeof(m_address))
 {
 	#ifdef VERBOSE
-		std::cout << "Socket: Copy Constructor called" << std::endl;
+		PRINT("Socket: Copy Constructor called");
 	#endif
-	*this = other;
 }
 
 Socket::~Socket()
 {
 	#ifdef VERBOSE
-		std::cout << "Socket: Destructor called" << std::endl;
+		PRINT("Socket: Destructor called");
 	#endif
 	//Socket closing moved to Engine Destructor for convenience
 }
@@ -53,8 +38,9 @@ Socket&
 Socket::operator=(const Socket& other)
 {
 	#ifdef VERBOSE
-		std::cout << "Socket: Assignation operator called" << std::endl;
+		PRINT("Socket: Assignation operator called");
 	#endif
+
 	if (this != &other)
 	{
 		m_ip = other.m_ip;
@@ -62,11 +48,23 @@ Socket::operator=(const Socket& other)
 		m_address = other.m_address;
 		m_sockfd = other.m_sockfd;
 	}
-	return (*this);
+	return *this;
 }
 
 bool
-Socket::m_init()
+Socket::operator==(fd_type fd) const { return m_sockfd == fd; }
+
+fd_type
+Socket::get_sock_fd() const { return m_sockfd; }
+
+uint32_t
+Socket::get_ip() const { return m_ip; }
+
+uint32_t
+Socket::get_port() const { return m_port; }
+
+bool
+Socket::init()
 {
 	m_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_sockfd < 0)
@@ -92,7 +90,7 @@ Socket::m_init()
 		return false;
 	}
 
-	if (bind(m_sockfd, reinterpret_cast<sockaddr*>(&m_address), sizeof m_address) == -1)
+	if (bind(m_sockfd, reinterpret_cast<sockaddr*>(&m_address), sizeof(m_address)) == -1)
 	{
 		EPRINT("ERROR: bind failed");
 		return false;
@@ -101,26 +99,11 @@ Socket::m_init()
 }
 
 fd_type
-Socket::getSockFd( void ) const { return(m_sockfd); }
-
-uint32_t
-Socket::getIp () const { return m_ip; }
-
-uint32_t
-Socket::getPort () const { return m_port; }
-
-bool
-Socket::operator==( fd_type fd )
-{
-	return(m_sockfd == fd);
-}
-
-fd_type
-Socket::acceptConnect() 
+Socket::accept_connect() 
 {
 	fd_type	fd = accept(
 				m_sockfd,
 				reinterpret_cast<sockaddr*>(&m_address),
-				&m_addLen);
+				&m_add_len);
 	return (fd);
 }

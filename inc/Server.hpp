@@ -1,44 +1,40 @@
 #pragma once
 
-#include <unistd.h>
-
 #include <string>
 #include <vector>
 #include <map>
-#include <algorithm>
-#include <limits>
 #include <utility>
 #include <iostream>
 
 #include "typedefs.hpp"
-#include "utils.hpp"
 
-
+/*
+The server class is a dataclass containing all the information of
+one server block in the config file.
+The setters perform the first group of checks on the input data
+and check_attributes() checks all the mandatory parts of the
+class in the end
+*/
 class Server
 {
 public: // methods
 
 	Server();
 	Server(const Server& other);
-	~Server() {}
+	~Server();
 
 	Server& operator=(const Server& other);
 
+	bool	set_server_name(const std::string& name);
+	bool	set_root(const std::string& word);
+	bool	set_index(const std::string& word);
+	bool	set_error_pages(const std::string& word);
+	bool	set_ip_address(uint32_t ip);
+	bool	set_port(uint32_t port);
+	bool	set_method(const std::string& method);
+	bool	set_max_client_body_size(uint32_t n);
 
-	bool set_server_name(const std::string& name);
-	bool set_root(const std::string& word);
-	bool set_index(const std::string& word);
-	bool set_error_pages(const std::string& word);
-	bool set_ip_address(uint32_t ip);
-	bool set_port(uint32_t port);
-	bool set_method(const std::string& method);
-	bool set_max_client_body_size(uint32_t n);
-
-	const char* check_attributes() const;
-
-	std::string	getDirectory( void ) const;
-	fd_type		getSocket( void ) const;
-	std::string getHostname( void ) const;
+	const char*	check_attributes() const;
 
 
 public: // attributes
@@ -56,29 +52,51 @@ public: // attributes
 	std::vector<Location>	locations;
 
 
-public: // subclass
+private: // attributes
+	std::vector<bool> m_checks;
 
+private: // enum
+	enum e_server_options
+	{
+		SERVER_NAME = 0,
+		ROOT,
+		INDEX,
+		ERROR_PAGES,
+		IP_ADDRESS,
+		PORT,
+		MAX_CLIENT_BODY_SIZE
+	};
+
+
+public: // subclass
+	/* 
+	In the same way as the server class resembles one server block
+	the location class resembles all data of one location block.
+	Setters and check_attributes() work in the same way as in the
+	server class
+	*/
 	class Location
 	{
 	public: // methods
 		Location();
 		Location(const Location& other);
-		~Location() {}
+		~Location();
 
 		Location& operator=(const Location& other);
 
-		bool set_prefix(const std::string& word);
-		bool set_root(const std::string& word);
-		bool set_index(const std::string& word);
-		bool set_method(const std::string& method);
-		bool set_script(const std::pair<std::string,std::string>& script);
-		bool set_max_client_body_size(uint32_t n);
-		const char* set_dir_listing(const std::string& state);
+		bool		set_prefix(const std::string& word);
+		bool		set_root(const std::string& word);
+		bool		set_index(const std::string& word);
+		bool		set_method(const std::string& method);
+		bool		set_script(const std::pair<std::string,std::string>& script);
+		bool		set_max_client_body_size(uint32_t n);
+		const char*	set_dir_listing(const std::string& state);
 
-		const char* check_attributes() const;
+		const char*	check_attributes() const;
 
 
 	public: // attributes
+
 		std::string		prefix;
 		std::string		root;
 		std::string		index;
@@ -87,7 +105,6 @@ public: // subclass
 		std::map<std::string,std::string> scripts;
 		uint32_t		max_client_body_size;
 		bool			directory_listing_enabled;
-
 
 
 	private: // attributes
@@ -105,21 +122,6 @@ public: // subclass
 		};
 	};
 
-
-private: // attributes
-	std::vector<bool> m_checks;
-
-private: // enum
-	enum e_server_options
-	{
-		SERVER_NAME = 0,
-		ROOT,
-		INDEX,
-		ERROR_PAGES,
-		IP_ADDRESS,
-		PORT,
-		MAX_CLIENT_BODY_SIZE
-	};
 };
 
 
