@@ -62,6 +62,7 @@ private: // methods
 	Connect();
 
 	std::string find_dir(const std::string& name) const;
+	bool	check_redirect();
 
 
 private: // attributes
