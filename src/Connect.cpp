@@ -160,9 +160,64 @@ Connect::writeResponse(s_pollfd & poll)
 
 #endif // KQUEUE
 
+bool
+Connect::check_redirect()
+{
+	std::string parsed_target;
+	if (p_location)
+	{
+		parsed_target = m_req.get_target();
+		parsed_target = parsed_target.erase(0, p_location->prefix.size());
+	}
+	else
+	{
+		parsed_target = m_req.get_target();
+		if (parsed_target.front() == '/')
+			parsed_target = parsed_target.erase(0, 1);
+	}
+
+	//parsed_target = utils::compr_slash("/" + parsed_target);
+
+	PRINT(parsed_target);
+
+	std::string redirection = "";
+	std::map<std::string, std::string>::const_iterator red_iter;
+	if (p_location){
+		red_iter = p_location->redirections.find(parsed_target);
+		if (red_iter != p_location->redirections.end())
+			redirection = red_iter->second;
+		else
+			return false;
+	}
+	else
+	{
+		red_iter = p_server->redirections.find(parsed_target);
+		if (red_iter != p_server->redirections.end())
+			redirection = red_iter->second;
+		else
+			return false;
+	}
+
+	if (p_location)
+		m_res.set_content_location(
+			utils::compr_slash(p_location->prefix + "/" + redirection));
+	else
+		m_res.set_content_location(
+			utils::compr_slash("/" + redirection));
+	m_res.set_server(p_server);
+	m_res.set_location(p_location);
+	m_res.set_status_code(307);
+	PRINT("hello world");
+	m_action = WRITE;
+	return true;
+}
+
 void
 Connect::composeResponse()
 {
+	if (check_redirect())
+		return;
+
 	bool is_valid_cookie = false;
 
 	if (m_req.get_header_entry("Cookie").first) 
