@@ -163,6 +163,30 @@ Connect::writeResponse(s_pollfd & poll)
 void
 Connect::composeResponse()
 {
+
+	std::string parsed_target;
+	if (p_location)
+		parsed_target = m_req.get_target().substr(p_location->prefix.size() - 1);
+	else
+		parsed_target = m_req.get_target();
+	parsed_target = utils::compr_slash("/" + parsed_target);
+
+	PRINT(parsed_target);
+
+	std::string redirection = "/test.php";
+
+	if (parsed_target == "/helo")
+	{
+		m_res.set_content_location(
+			utils::compr_slash(p_location->prefix + "/" + redirection));
+		m_res.set_server(p_server);
+		m_res.set_location(p_location);
+		m_res.set_status_code(307);
+		m_action = WRITE;
+		return;
+	}
+
+
 	bool is_valid_cookie = false;
 
 	if (m_req.get_header_entry("Cookie").first) 

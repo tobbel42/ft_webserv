@@ -24,6 +24,7 @@ public: // methods
 
 	void			set_server(const Server* server);
 	void			set_location(const Server::Location* location);
+	void			set_content_location(const std::string & content_loc);
 	void			set_status_code(int status_code);
 	void			set_body(const std::string& body);
 	void			set_filename(const std::string& filename);
@@ -74,6 +75,7 @@ private: // attributes
 	std::string					m_payload;
 	std::string					m_filename;
 	std::string					m_cookie;
+	std::string					m_content_location;
 
 
 private: // statics

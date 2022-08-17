@@ -49,7 +49,8 @@ Response::Response():
 	m_body(),
 	m_payload(),
 	m_filename(),
-	m_cookie()
+	m_cookie(),
+	m_content_location()
 {
 	#ifdef VERBOSE
 		PRINT("Response: Constructor called");
@@ -65,7 +66,8 @@ Response::Response(const Response& other):
 	m_body(other.m_body),
 	m_payload(other.m_payload),
 	m_filename(other.m_filename),
-	m_cookie(other.m_cookie)
+	m_cookie(other.m_cookie),
+	m_content_location(other.m_content_location)
 {
 	#ifdef VERBOSE
 		PRINT("Response: Copy Constructor called");
@@ -82,7 +84,8 @@ Response::Response(int status_code, const std::string& body,
 	m_body(body),
 	m_payload(),
 	m_filename(),
-	m_cookie()
+	m_cookie(),
+	m_content_location()
 {}
 
 Response::~Response()
@@ -108,6 +111,7 @@ Response & Response::operator=( const Response & rhs )
 		m_payload = rhs.m_payload;
 		m_filename = rhs.m_filename;
 		m_cookie = rhs.m_cookie;
+		m_content_location = rhs.m_content_location;
 	}
 	return (*this);
 }
@@ -129,6 +133,11 @@ Response::set_filename(const std::string& filename) { m_filename = filename; }
 
 void
 Response::set_cookie(const std::string & cookie) { m_cookie = cookie; }
+
+void
+Response::set_content_location(const std::string & content_loc) {
+	m_content_location = content_loc;
+}
 
 std::string
 Response::get_payload() const { return m_payload; }
@@ -198,7 +207,7 @@ Response::generate()
 		error();
 		break;
 	}
-	add_to_head("Server", "lil l and the beachboys 1.0");
+	// add_to_head("Server", "lil l and the beachboys 1.0");
 	add_to_payload(m_header);
 	m_payload += m_body;
 	return std::make_pair(m_payload, m_body.size());
@@ -225,7 +234,10 @@ Response::success()
 	else if (p_server != nullptr)
 		add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
 	add_to_head("Content-Length", utils::to_string(m_body.size()));
-	add_to_head("Content-Location", m_filename);
+
+	if (m_content_location != "")
+		add_to_head("Content-Location", m_content_location);
+
 	add_to_head("Content-Type", get_mime_type(m_filename));
 	if (m_cookie != "")
 		add_to_head("Set-Cookie", m_cookie);
@@ -252,7 +264,13 @@ Response::redirect()
 {
 	init_header();
 
-	add_to_head("Retry-after", utils::to_string(120));
+	//add_to_head("Retry-after", utils::to_string(120));
+	if (m_content_location != "")
+	{
+		add_to_head("Location", m_content_location);
+		add_to_head("Cache-Control", "no-cache");
+	}
+
 }
 
 void
@@ -313,7 +331,10 @@ Response::error()
 	else if (p_server != nullptr)
 		add_to_head("Allow", utils::arr_to_csv(p_server->allowed_methods, ", "));
 	add_to_head("Content-Length", utils::to_string(m_body.size()));
-	add_to_head("Content-Location", filename);
+
+	if (m_content_location != "")
+		add_to_head("Content-Location", m_content_location);
+
 	add_to_head("Content-Type", get_mime_type(filename));
 }
 
@@ -347,7 +368,7 @@ Response::init_header(const std::string& header_lines)
 
 	m_header += "\r\n";
 
-	add_to_head("Date", get_http_time());
+	// add_to_head("Date", get_http_time());
 
 	if (!header_lines.empty())
 		m_header += header_lines;
