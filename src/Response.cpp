@@ -142,7 +142,7 @@ Response::send(const s_kevent& kevent)
 {
 	ssize_t i;
 	i = write(kevent.ident, m_payload.c_str(), m_payload.size());
-	if (i == -1)
+	if (i == -1 || i == 0)
 		return RW_ERROR;
 	else if (i !=  static_cast<int32_t>(m_payload.size()))
 		return RW_CONTINUE;
@@ -168,7 +168,7 @@ Response::send(const s_pollfd& poll)
 	// else
 	ssize_t i;
 	i = write(poll.fd, m_payload.c_str(), m_payload.size());
-	if (i == -1)
+	if (i == -1 || i == 0)
 		return RW_ERROR;
 	else if (i !=  static_cast<int32_t>(m_payload.size()))
 		return RW_CONTINUE;

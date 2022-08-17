@@ -135,7 +135,7 @@ Connect::readRequest(s_pollfd & poll)
 	ssize_t read_len = read(poll.fd, &(*buf.begin()), READSIZE);
 
 	//TODO errhandling
-	if (read_len == -1)
+	if (read_len == -1 || read_len == 0)
 	{
 		EPRINT("ERROR: read");
 		return RW_ERROR;
