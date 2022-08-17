@@ -162,6 +162,15 @@ ConfigParser::parse_server()
 						"invalid http-method type", word.c_str());
 			}
 		}
+		else if (word == "redirection")
+		{
+			std::pair<std::string,std::string> pr = parse_key_value();
+
+			if (!server.set_redirection(pr))
+				throw ConfigParser::InvalidConfig(m_line_number,
+					"ambiguous redirection detected",
+					(pr.first + " = " + pr.second).c_str());
+		}
 		else if (word == "location")
 		{
 			Server::Location location;
@@ -231,6 +240,15 @@ ConfigParser::parse_location(Server::Location& location)
 			if (!location.set_script(pr))
 				throw ConfigParser::InvalidConfig(m_line_number,
 					"invalid script name or binary",
+					(pr.first + " = " + pr.second).c_str());
+		}
+		else if (word == "redirection")
+		{
+			std::pair<std::string,std::string> pr = parse_key_value();
+
+			if (!location.set_redirection(pr))
+				throw ConfigParser::InvalidConfig(m_line_number,
+					"ambiguous redirection detected",
 					(pr.first + " = " + pr.second).c_str());
 		}
 		else if (word == "max_client_body_size")
@@ -322,7 +340,8 @@ ConfigParser::parse_key_value()
 	}
 	if (i != 3)
 		throw ConfigParser::InvalidConfig(m_line_number,
-			"invalid layout for a pair");
+			"invalid layout for a pair. The correct layout is",
+			"key = value");
 
 	return std::make_pair(first, second);
 }

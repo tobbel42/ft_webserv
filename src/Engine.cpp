@@ -100,7 +100,7 @@ Engine::listen_sockets()
 {
 	for (SockIter iter = m_sockets.begin(); iter != m_sockets.end(); ++iter)
 	{
-		if (listen(iter->first, ENGINE_BACKLOG == -1))
+		if (listen(iter->first, ENGINE_BACKLOG) == -1)
 		{
 			EPRINT("ERROR: listen failed");
 			return false;
