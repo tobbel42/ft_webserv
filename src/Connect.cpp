@@ -5,17 +5,9 @@
 #include "utils.hpp"
 #include "Executer.hpp"
 
-Connect::Connect(const Connect& other):
-	m_fd(other.m_fd),
-	m_ip(other.m_ip),
-	m_port(other.m_port),
-	p_server(other.p_server),
-	p_location(other.p_location),
-	m_action(other.m_action),
-	m_status_code(other.m_status_code),
-	m_req(other.m_req),
-	m_res(other.m_res)
+Connect::Connect(const Connect& other)
 {
+	*this = other;
 	#ifdef VERBOSE
 		PRINT("Connect: Copy Constructor called");
 	#endif
@@ -34,19 +26,16 @@ Connect::operator=(const Connect& rhs)
 	#ifdef VERBOSE
 		PRINT("Connect: Assignation operator called");
 	#endif
-	if (this != &rhs)
-	{
-		m_fd = rhs.getFd();
-		m_ip = rhs.getIp();
-		m_port = rhs.getPort();
-		p_server = rhs.getServer();
-		p_location = rhs.get_location();
-		m_action = rhs.getAction();
-		m_status_code = rhs.m_status_code;
-		m_req = rhs.m_req;
-		m_res = rhs.m_res;
-		p_cookie_base = rhs.p_cookie_base;
-	}
+	m_fd = rhs.getFd();
+	m_ip = rhs.getIp();
+	m_port = rhs.getPort();
+	p_server = rhs.getServer();
+	p_location = rhs.get_location();
+	m_action = rhs.getAction();
+	m_status_code = rhs.m_status_code;
+	m_req = rhs.m_req;
+	m_res = rhs.m_res;
+	p_cookie_base = rhs.p_cookie_base;
 	return *this;
 }
 
@@ -96,7 +85,10 @@ Connect::set_status(int status_code) { m_status_code = status_code; }
 
 #ifdef KQUEUE
 
-bool
+// 1 on success
+// 0 on not done yet
+//-1 on error
+int32_t
 Connect::readRequest(s_kevent & kevent)
 {
 	ByteArr buf;
@@ -109,14 +101,19 @@ Connect::readRequest(s_kevent & kevent)
 
 	//TODO errhandling
 	if (len != read_len)
+	{
 		EPRINT("ERROR: read");
-
-	return m_req.append_read(buf);
+		return RW_ERROR;
+	}
+	if (m_req.append_read(buf))
+		return RW_DONE;
+	else
+		return RW_CONTINUE;
 }
 
 #else
 
-bool
+int32_t
 Connect::readRequest(s_pollfd & poll)
 {
 	ByteArr buf;
@@ -127,11 +124,17 @@ Connect::readRequest(s_pollfd & poll)
 	ssize_t read_len = read(poll.fd, &(*buf.begin()), READSIZE);
 
 	//TODO errhandling
-	if (read_len == -1)
-		std::cerr << "ERROR: read" << std::endl;
+	if (read_len == -1 || read_len == 0)
+	{
+		EPRINT("ERROR: read");
+		return RW_ERROR;
+	}
 
 	buf.resize(read_len);
-	return m_req.append_read(buf);
+	if (m_req.append_read(buf))
+		return RW_DONE;
+	else
+		return RW_CONTINUE;
 }
 
 #endif // KQUEUE
@@ -139,20 +142,20 @@ Connect::readRequest(s_pollfd & poll)
 
 #ifdef KQUEUE
 
-void
+int32_t
 Connect::writeResponse(s_kevent & kevent)
 {
 	m_res.generate();
-	m_res.send(kevent);
+	return m_res.send(kevent);
 }
 
 #else
 
-void
+int32_t
 Connect::writeResponse(s_pollfd & poll)
 {
 	m_res.generate();
-	m_res.send(poll);
+	return m_res.send(poll);
 }
 
 #endif // KQUEUE
@@ -185,6 +188,7 @@ Connect::composeResponse()
 		p_cookie_base->insert(std::make_pair(cookies_key, cookies_value));
 		m_res.set_cookie("helloCookie=" + cookies_key + "; SameSite=Lax");
 	}
+
 
 	m_res.set_server(p_server);
 	m_res.set_location(p_location);

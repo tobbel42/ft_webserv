@@ -78,7 +78,9 @@ Executer::set_server(Server* server) { p_server = server; }
 void
 Executer::run()
 {
+	#ifdef VERBOSE
 	PRINT("EXEC FILENAME " << m_filename);
+	#endif
 	if (p_server == nullptr)
 	{
 		EPRINT("no viable server found");
@@ -130,7 +132,9 @@ Executer::run_server()
 		file_type = OTHER;
 	}
 
+	#ifdef VERBOSE
 	PRINT("in server:\n" << m_filename << " file type = " << file_type);
+	#endif
 
 	switch (file_type)
 	{
@@ -194,9 +198,10 @@ Executer::run_location()
 		m_filename = utils::compr_slash(m_filename + "/" + p_loc->index);
 		file_type = OTHER;
 	}
-	
-	PRINT("in location: " << p_loc->root << '\n' << m_filename << " file type = " << file_type);
 
+	#ifdef VERBOSE
+	PRINT("in location: " << p_loc->root << '\n' << m_filename << " file type = " << file_type);
+	#endif
 
 	if (m_req.get_method() == "GET")
 		get_handler();
