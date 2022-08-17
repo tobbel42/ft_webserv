@@ -13,8 +13,9 @@ Server::Server():
 	ports(),
 	allowed_methods(),
 	max_client_body_size(UINT32_MAX),
+	redirections(),
 	locations(),
-	m_checks(7, false)
+	m_checks(9, false)
 {
 	// reserving memory beforehand to avoid copies
 	server_names.reserve(3);
@@ -32,6 +33,7 @@ Server::Server(const Server& other):
 	ports(other.ports),
 	allowed_methods(other.allowed_methods),
 	max_client_body_size(other.max_client_body_size),
+	redirections(other.redirections),
 	locations(other.locations),
 	m_checks(other.m_checks)
 {}
@@ -51,6 +53,7 @@ Server::operator=(const Server& other)
 		ports = other.ports;
 		allowed_methods = other.allowed_methods;
 		max_client_body_size = other.max_client_body_size;
+		redirections = other.redirections;
 		locations = other.locations;
 		m_checks = other.m_checks;
 	}
@@ -130,6 +133,17 @@ Server::set_method(const std::string& method)
 }
 
 bool
+Server::set_redirection(const std::pair<std::string,std::string>& file_pr)
+{
+	std::pair<std::map<std::string,std::string>::iterator, bool> ret;
+	ret = redirections.insert(file_pr);
+	const std::string& old_value = ret.first->second;
+	if (ret.second == false && file_pr.second != old_value)
+		return false;
+	return true;
+}
+
+bool
 Server::set_max_client_body_size(uint32_t n)
 {
 	if (m_checks[MAX_CLIENT_BODY_SIZE])
@@ -167,6 +181,11 @@ std::ostream& operator<<(std::ostream& out, const Server& rhs)
 	for (size_t i = 0; i < rhs.allowed_methods.size(); ++i)
 		out << rhs.allowed_methods[i] << ", ";
 	out << std::endl;
+	out << "\nredirections:" << std::endl;
+	for (std::map<std::string,std::string>::const_iterator it = rhs.redirections.begin();
+		it != rhs.redirections.end(); ++it)
+		out << it->first << " = " << it->second << '\n';
+	out << std::endl << "locations:\n";
 	for (size_t i = 0; i < rhs.locations.size(); ++i)
 		out << rhs.locations[i] << std::endl;
 	return out;
@@ -181,6 +200,7 @@ Server::Location::Location():
 	root(),
 	index(),
 	scripts(),
+	redirections(),
 	max_client_body_size(UINT32_MAX),
 	directory_listing_enabled(false),
 	m_checks(6, false)
@@ -194,6 +214,7 @@ Server::Location::Location(const Location& other):
 	index(other.index),
 	allowed_methods(other.allowed_methods),
 	scripts(other.scripts),
+	redirections(other.redirections),
 	max_client_body_size(other.max_client_body_size),
 	directory_listing_enabled(other.directory_listing_enabled),
 	m_checks(other.m_checks)
@@ -211,6 +232,7 @@ Server::Location::operator=(const Location& other)
 		index = other.index;
 		allowed_methods = other.allowed_methods;
 		scripts = other.scripts;
+		redirections = other.redirections;
 		max_client_body_size = other.max_client_body_size;
 		directory_listing_enabled = other.directory_listing_enabled;
 		m_checks = other.m_checks;
@@ -283,6 +305,17 @@ Server::Location::set_script(const std::pair<std::string,std::string>& script)
 }
 
 bool
+Server::Location::set_redirection(const std::pair<std::string,std::string>& file_pr)
+{
+	std::pair<std::map<std::string,std::string>::iterator, bool> ret;
+	ret = redirections.insert(file_pr);
+	const std::string& old_value = ret.first->second;
+	if (ret.second == false && file_pr.second != old_value)
+		return false;
+	return true;
+}
+
+bool
 Server::Location::set_max_client_body_size(uint32_t n)
 {
 	if (m_checks[MAX_CLIENT_BODY_SIZE])
@@ -326,6 +359,10 @@ std::ostream& operator<<(std::ostream& out, const Server::Location& rhs)
 	out << "\nscripts:" << std::endl;
 	for (std::map<std::string,std::string>::const_iterator it = rhs.scripts.begin();
 		it != rhs.scripts.end(); ++it)
+		out << it->first << " = " << it->second << '\n';
+	out << "\nredirections:" << std::endl;
+	for (std::map<std::string,std::string>::const_iterator it = rhs.redirections.begin();
+		it != rhs.redirections.end(); ++it)
 		out << it->first << " = " << it->second << '\n';
 	out << "\nmax client body size: " << rhs.max_client_body_size
 		<< "\ndirectory listing: " << rhs.directory_listing_enabled;

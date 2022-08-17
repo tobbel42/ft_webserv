@@ -32,6 +32,8 @@ public: // methods
 	bool	set_ip_address(uint32_t ip);
 	bool	set_port(uint32_t port);
 	bool	set_method(const std::string& method);
+	// key = redirected file, value = redirection target
+	bool	set_redirection(const std::pair<std::string,std::string>& file_pr);
 	bool	set_max_client_body_size(uint32_t n);
 
 	const char*	check_attributes() const;
@@ -39,14 +41,15 @@ public: // methods
 
 public: // attributes
 
-	StringArr				server_names;
-	std::string				root;
-	std::string				index;
-	std::string				error_pages;
-	uint32_t				ip_address;
-	std::vector<uint32_t>	ports;
-	StringArr				allowed_methods;
-	uint32_t				max_client_body_size;
+	StringArr							server_names;
+	std::string							root;
+	std::string							index;
+	std::string							error_pages;
+	uint32_t							ip_address;
+	std::vector<uint32_t>				ports;
+	StringArr							allowed_methods;
+	uint32_t							max_client_body_size;
+	std::map<std::string,std::string>	redirections;
 
 	class Location;
 	std::vector<Location>	locations;
@@ -64,6 +67,8 @@ private: // enum
 		ERROR_PAGES,
 		IP_ADDRESS,
 		PORT,
+		ALLOWED_METHODS,
+		REDIRECTIONS,
 		MAX_CLIENT_BODY_SIZE
 	};
 
@@ -89,6 +94,7 @@ public: // subclass
 		bool		set_index(const std::string& word);
 		bool		set_method(const std::string& method);
 		bool		set_script(const std::pair<std::string,std::string>& script);
+		bool		set_redirection(const std::pair<std::string,std::string>& file_pr);
 		bool		set_max_client_body_size(uint32_t n);
 		const char*	set_dir_listing(const std::string& state);
 
@@ -103,6 +109,8 @@ public: // subclass
 		StringArr		allowed_methods;
 		// key = script identifier, value = script executable
 		std::map<std::string,std::string> scripts;
+		// key = redirected file, value = redirection target
+		std::map<std::string,std::string> redirections;
 		uint32_t		max_client_body_size;
 		bool			directory_listing_enabled;
 
@@ -117,6 +125,7 @@ public: // subclass
 			INDEX,
 			ALLOWED_METHODS,
 			ALLOWED_SCRIPTS,
+			REDIRECTIONS,
 			MAX_CLIENT_BODY_SIZE,
 			DIRECTORY_LISTING
 		};
