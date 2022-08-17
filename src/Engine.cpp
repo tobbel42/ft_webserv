@@ -161,7 +161,6 @@ Engine::accept_connect(Socket & sock)
 	}
 
 	Connect	newConnect(fd, sock.get_ip(), sock.get_port(), &m_cookie_base);
-
 	m_connects.insert(std::pair<fd_type, Connect>(fd, newConnect));
 	m_timers.insert(std::make_pair(fd, std::time(nullptr)));
 
@@ -209,14 +208,20 @@ Engine::find_server(const Connect& cnct)
 					if (default_server == nullptr)
 						default_server = &server;
 
+					#ifdef VERBOSE
 					PRINT("connection hostname: " << cnct.get_hostname());
+					#endif
 					// look for a matching server_name
 					for (size_t k = 0; k < server.server_names.size(); ++k)
 					{
+						#ifdef VERBOSE
 						PRINT("server name: " << server.server_names[k]);
+						#endif
 						if (cnct.get_hostname() == server.server_names[k])
 						{
+							#ifdef VERBOSE
 							PRINT("found a server name");
+							#endif
 							return &server;
 						}
 					}
@@ -277,7 +282,6 @@ Engine::drop_cnct(fd_type ident)
 	m_timers.erase(ident);
 	close(ident);
 	m_connects.erase(ident);
-	PRINT("DROPPING cnct");
 }
 
 #ifdef KQUEUE
@@ -293,6 +297,7 @@ Engine::connect_event(s_kevent & kevent)
 	#ifdef VERBOSE
 		std::cout << "ConnectEvent" << std::endl;
 	#endif
+
 
 	//eyeCandy
 
@@ -311,7 +316,9 @@ Engine::connect_event(s_kevent & kevent)
 		//reset connection timer
 		m_timers[cnct.getFd()] = std::time(nullptr);
 
+
 		status_flag = cnct.readRequest(kevent);
+
 
 		if (status_flag == RW_ERROR)
 			drop_cnct(kevent.ident);
@@ -560,7 +567,6 @@ Engine::launch()
 			&(*m_changes.begin()), m_changes.size(),
 			&(*m_events.begin()), m_events.size(),
 			&timeout);
-
 		#ifdef VERBOSE_EVENTS
 		{
 			std::cout << "\nEvents: " << n_events << std::endl;

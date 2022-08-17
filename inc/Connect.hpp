@@ -75,5 +75,8 @@ private: // attributes
 	int						m_status_code;
 	request_type			m_req;
 	response_type			m_res;
+
+	public:
+	
 	cookies*				p_cookie_base;
 };

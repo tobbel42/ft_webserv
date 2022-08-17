@@ -5,17 +5,9 @@
 #include "utils.hpp"
 #include "Executer.hpp"
 
-Connect::Connect(const Connect& other):
-	m_fd(other.m_fd),
-	m_ip(other.m_ip),
-	m_port(other.m_port),
-	p_server(other.p_server),
-	p_location(other.p_location),
-	m_action(other.m_action),
-	m_status_code(other.m_status_code),
-	m_req(other.m_req),
-	m_res(other.m_res)
+Connect::Connect(const Connect& other)
 {
+	*this = other;
 	#ifdef VERBOSE
 		PRINT("Connect: Copy Constructor called");
 	#endif
@@ -34,19 +26,16 @@ Connect::operator=(const Connect& rhs)
 	#ifdef VERBOSE
 		PRINT("Connect: Assignation operator called");
 	#endif
-	if (this != &rhs)
-	{
-		m_fd = rhs.getFd();
-		m_ip = rhs.getIp();
-		m_port = rhs.getPort();
-		p_server = rhs.getServer();
-		p_location = rhs.get_location();
-		m_action = rhs.getAction();
-		m_status_code = rhs.m_status_code;
-		m_req = rhs.m_req;
-		m_res = rhs.m_res;
-		p_cookie_base = rhs.p_cookie_base;
-	}
+	m_fd = rhs.getFd();
+	m_ip = rhs.getIp();
+	m_port = rhs.getPort();
+	p_server = rhs.getServer();
+	p_location = rhs.get_location();
+	m_action = rhs.getAction();
+	m_status_code = rhs.m_status_code;
+	m_req = rhs.m_req;
+	m_res = rhs.m_res;
+	p_cookie_base = rhs.p_cookie_base;
 	return *this;
 }
 
@@ -199,6 +188,7 @@ Connect::composeResponse()
 		p_cookie_base->insert(std::make_pair(cookies_key, cookies_value));
 		m_res.set_cookie("helloCookie=" + cookies_key + "; SameSite=Lax");
 	}
+
 
 	m_res.set_server(p_server);
 	m_res.set_location(p_location);
