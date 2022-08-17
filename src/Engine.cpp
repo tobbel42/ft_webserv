@@ -16,7 +16,8 @@ operator<<( std::ostream & out, s_kevent const & in )
 {
 	out << "\nident:\t" << in.ident;
 	out << "\nfilter:\t" << in.filter;
-	out << "\nflags:\t" << std::bitset<16>(in.flags);
+	// out << "\nflags:\t" << std::bitset<16>(in.flags);
+	out << "\nflags:\t" << (in.flags);
 	out << "\nfflags:\t" << in.fflags;
 	out << "\ndata:\t" << in.data;
 	out << "\nudata:\t" << in.udata;
@@ -164,7 +165,7 @@ Engine::accept_connect(Socket & sock)
 	m_connects.insert(std::pair<fd_type, Connect>(fd, newConnect));
 	m_timers.insert(std::make_pair(fd, std::time(nullptr)));
 
-	set_kevent(fd, EVFILT_READ, EV_ADD);
+	set_kevent(fd, EVFILT_READ , EV_ADD);
 }
 #else
 void
@@ -265,6 +266,20 @@ Engine::socket_event(s_pollfd & poll)
 }
 #endif // KQUEUE
 
+void 
+Engine::drop_cnct(fd_type ident)
+{
+	#ifdef KQUEUE
+	m_changes.erase(std::find(m_changes.begin(), m_changes.end(), ident));
+	#else
+	m_polls.erase(std::find(m_polls.begin(), m_polls.end(), ident));
+	#endif
+	m_timers.erase(ident);
+	close(ident);
+	m_connects.erase(ident);
+	PRINT("DROPPING cnct");
+}
+
 #ifdef KQUEUE
 void
 Engine::connect_event(s_kevent & kevent)
@@ -283,14 +298,24 @@ Engine::connect_event(s_kevent & kevent)
 
 	Connect	& cnct = iter->second;
 
+	int32_t	status_flag;
+
 	//connection can have multible states
 
+	//errorchecking
+	if ((kevent.flags & EV_EOF) || (kevent.flags & EV_ERROR))
+		drop_cnct(kevent.ident);
 	//on read we read as many bytes, as in the kevent specified
-	if (cnct.getAction() == READ)
+	else if (cnct.getAction() == READ && (kevent.filter & EVFILT_READ))
 	{
+		//reset connection timer
 		m_timers[cnct.getFd()] = std::time(nullptr);
 
-		if (cnct.readRequest(kevent))
+		status_flag = cnct.readRequest(kevent);
+
+		if (status_flag == RW_ERROR)
+			drop_cnct(kevent.ident);
+		else if (status_flag == RW_DONE)
 		{
 			//removing the read event from the from the change vector
 			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
@@ -314,20 +339,16 @@ Engine::connect_event(s_kevent & kevent)
 		}
 	}
 	//On write 
-	else if (cnct.getAction() == WRITE)
+	else if (cnct.getAction() == WRITE && (kevent.filter & EVFILT_READ))
 	{
 		//write the response
-		cnct.writeResponse(kevent);
-
-		//if write done
-			//remove the event form the change vector
-			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
-
-			//close the connection
-			close(cnct.getFd());
-
-			//remove connection from FD pool
-			m_connects.erase(iter);
+		status_flag = cnct.writeResponse(kevent);
+		//error handling
+		if (status_flag == RW_ERROR)
+			drop_cnct(kevent.ident);
+		//if done close the connection
+		else if (status_flag == RW_DONE)
+			drop_cnct(kevent.ident);
 	}
 }
 #else
@@ -346,14 +367,18 @@ Engine::connect_event(s_pollfd & poll)
 
 	//eyeCandy
 	Connect	& cnct = iter->second;
-
+	int32_t status_flag;
 	//connection can have multible states
 
 	//on read we read as many bytes, as in the kevent specified
 	if (cnct.getAction() == READ)
 	{
 		m_timers[cnct.getFd()] = std::time(nullptr);
-		if (cnct.readRequest(poll))
+
+		status_flag = cnct.readRequest(poll);
+		if (status_flag == RW_ERROR)
+			drop_cnct(poll.fd);
+		else if (status_flag == RW_DONE)
 		{
 			poll.events = POLLOUT;
 

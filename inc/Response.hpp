@@ -35,9 +35,9 @@ public: // methods
 	std::pair<std::string, size_t> generate();
 
 	#ifdef KQUEUE
-	void							send(const s_kevent& kevent);
+	int32_t							send(const s_kevent& kevent);
 	#else
-	void							send(const s_pollfd & poll);
+	int32_t							send(const s_pollfd & poll);
 	#endif
 
 

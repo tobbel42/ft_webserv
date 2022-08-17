@@ -48,11 +48,11 @@ public: // methods
 
 	void		find_location();
 	#ifdef KQUEUE
-	bool		readRequest(s_kevent & kevent);
-	void		writeResponse(s_kevent & kevent);
+	int32_t		readRequest(s_kevent & kevent);
+	int32_t		writeResponse(s_kevent & kevent);
 	#else
-	bool		readRequest(s_pollfd & poll);
-	void		writeResponse(s_pollfd & poll);
+	int32_t		readRequest(s_pollfd & poll);
+	int32_t		writeResponse(s_pollfd & poll);
 	#endif
 	void		composeResponse();
 

@@ -26,6 +26,10 @@
 #define PHP_PATH "/usr/bin/php"
 #define PYTHON_PATH "/usr/bin/python"
 
+#define RW_ERROR -1
+#define RW_CONTINUE 0
+#define RW_DONE 1
+
 
 #ifndef nullptr
 #define nullptr NULL

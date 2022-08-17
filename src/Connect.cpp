@@ -96,7 +96,10 @@ Connect::set_status(int status_code) { m_status_code = status_code; }
 
 #ifdef KQUEUE
 
-bool
+// 1 on success
+// 0 on not done yet
+//-1 on error
+int32_t
 Connect::readRequest(s_kevent & kevent)
 {
 	ByteArr buf;
@@ -109,14 +112,19 @@ Connect::readRequest(s_kevent & kevent)
 
 	//TODO errhandling
 	if (len != read_len)
+	{
 		EPRINT("ERROR: read");
-
-	return m_req.append_read(buf);
+		return RW_ERROR;
+	}
+	if (m_req.append_read(buf))
+		return RW_DONE;
+	else
+		return RW_CONTINUE;
 }
 
 #else
 
-bool
+int32_t
 Connect::readRequest(s_pollfd & poll)
 {
 	ByteArr buf;
@@ -128,10 +136,16 @@ Connect::readRequest(s_pollfd & poll)
 
 	//TODO errhandling
 	if (read_len == -1)
-		std::cerr << "ERROR: read" << std::endl;
+	{
+		EPRINT("ERROR: read");
+		return RW_ERROR;
+	}
 
 	buf.resize(read_len);
-	return m_req.append_read(buf);
+	if (m_req.append_read(buf))
+		return RW_DONE;
+	else
+		return RW_CONTINUE;
 }
 
 #endif // KQUEUE
@@ -139,20 +153,20 @@ Connect::readRequest(s_pollfd & poll)
 
 #ifdef KQUEUE
 
-void
+int32_t
 Connect::writeResponse(s_kevent & kevent)
 {
 	m_res.generate();
-	m_res.send(kevent);
+	return m_res.send(kevent);
 }
 
 #else
 
-void
+int32_t
 Connect::writeResponse(s_pollfd & poll)
 {
 	m_res.generate();
-	m_res.send(poll);
+	return m_res.send(poll);
 }
 
 #endif // KQUEUE
