@@ -137,28 +137,21 @@ size_t
 Response::get_body_size() const { return m_body.size(); }
 
 #ifdef KQUEUE
-void
+int32_t
 Response::send(const s_kevent& kevent)
 {
-	int i;
-	// if (p_server != nullptr)
-	// {
-	// 	if (p_server->max_client_body_size > m_body.size())
-	// 		i = write(kevent.ident, m_payload.c_str(), m_payload.size());
-	// 	else
-	// 	{
-	// 		set_status_code(413); // request too large
-	// 		m_payload.clear();
-	// 		generate();
-	// 		i = write(kevent.ident, m_payload.c_str(), m_payload.size());
-	// 	}
-	// }
-	// else
+	ssize_t i;
 	i = write(kevent.ident, m_payload.c_str(), m_payload.size());
+	if (i == -1 || i == 0)
+		return RW_ERROR;
+	else if (i !=  static_cast<int32_t>(m_payload.size()))
+		return RW_CONTINUE;
+	else
+		return RW_DONE;
 }
 #else
 
-void
+int32_t
 Response::send(const s_pollfd& poll)
 {
 	// if (p_server != nullptr)
@@ -173,7 +166,14 @@ Response::send(const s_pollfd& poll)
 	// 	}
 	// }
 	// else
-	write(poll.fd, m_payload.c_str(), m_payload.size());
+	ssize_t i;
+	i = write(poll.fd, m_payload.c_str(), m_payload.size());
+	if (i == -1 || i == 0)
+		return RW_ERROR;
+	else if (i !=  static_cast<int32_t>(m_payload.size()))
+		return RW_CONTINUE;
+	else
+		return RW_DONE;
 }
 #endif
 

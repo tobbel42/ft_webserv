@@ -80,6 +80,7 @@ private:
 	void		connect_event(s_pollfd & poll);
 	#endif
 
+	void		drop_cnct(fd_type ident);
 	void		accept_connect(Socket & sock);
 	void		close_connects();
 	void		close_sockets();
