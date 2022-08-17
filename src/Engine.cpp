@@ -361,8 +361,13 @@ Engine::connect_event(s_pollfd & poll)
 			m_timers.erase(cnct.getFd());
 			//assign a server, if not yet given
 			//(search for Hostname in Socket servers/ default server)
-			if (cnct.getServer() == NULL)
+			if (cnct.getServer() == nullptr)
 				assign_server(cnct);
+			
+			// look for a location block with a matching prefix string 
+			// in the server
+			cnct.find_location();
+
 			//formulate the request (result or error)
 			cnct.composeResponse();
 
@@ -583,8 +588,10 @@ Engine::launch()
 		#endif
 
 
-		if (n_events > 0) {
-			for (size_t i = 0; i < m_polls.size(); ++i) {
+		if (n_events > 0)
+		{
+			for (size_t i = 0; i < m_polls.size(); ++i)
+			{
 				if (m_polls[i].revents & 0x0008 ||
 					m_polls[i].revents & 0x0010 ||
 					m_polls[i].revents & 0x0020)
@@ -594,7 +601,8 @@ Engine::launch()
 					m_connects.erase(m_polls[i].fd);
 					m_timers.erase(m_polls[i].fd);
 				}
-				else if (m_polls[i].revents == m_polls[i].events) {
+				else if (m_polls[i].revents == m_polls[i].events)
+				{
 					if (m_polls[i].fd == 0)
 						flag = user_event();
 					socket_event(m_polls[i]);
