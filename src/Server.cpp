@@ -307,8 +307,13 @@ Server::Location::set_script(const std::pair<std::string,std::string>& script)
 bool
 Server::Location::set_redirection(const std::pair<std::string,std::string>& file_pr)
 {
+	if (file_pr.first == file_pr.second ||
+		redirections.find(file_pr.second) != redirections.end())
+		return false;
+
 	std::pair<std::map<std::string,std::string>::iterator, bool> ret;
 	ret = redirections.insert(file_pr);
+
 	const std::string& old_value = ret.first->second;
 	if (ret.second == false && file_pr.second != old_value)
 		return false;
