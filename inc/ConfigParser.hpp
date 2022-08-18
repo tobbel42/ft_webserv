@@ -9,10 +9,17 @@
 #include "Server.hpp"
 #include "typedefs.hpp"
 
-
+/*
+The config parser class reads the config file line by line and populates
+an Array of server classes (that belongs to the engine class) with the
+values it has read.
+If a misconfiguration is detected, the config parser throws a
+InvalidConfig exception that is catchable as a std::exception
+*/
 class ConfigParser
 {
 public: // methods
+
 	ConfigParser(ServerArr& servers);
 	ConfigParser(ServerArr& servers, const std::string& filename);
 	~ConfigParser();
@@ -58,6 +65,6 @@ private: // subclass
 		~InvalidConfig() throw();
 		const char *what() const throw();
 	private:
-		std::string m_errorMsg;
+		std::string m_error_msg;
 	};
 };

@@ -135,7 +135,8 @@ void
 Response::set_cookie(const std::string & cookie) { m_cookie = cookie; }
 
 void
-Response::set_content_location(const std::string & content_loc) {
+Response::set_content_location(const std::string & content_loc)
+{
 	m_content_location = content_loc;
 }
 
@@ -241,22 +242,6 @@ Response::success()
 	add_to_head("Content-Type", get_mime_type(m_filename));
 	if (m_cookie != "")
 		add_to_head("Set-Cookie", m_cookie);
-
-	switch (m_status_code)
-	{
-	case 200:
-		
-		break;
-	case 201: 
-		// add_to_head("Content-Location", m_filename);
-		break;
-	case 202:
-		break;
-	
-	default:
-		break;
-	}
-	
 }
 
 void
@@ -282,8 +267,7 @@ Response::error()
 	if (p_server != nullptr)
 	{
 		// attempt to use the error pages of the config file
-		filename = p_server->error_pages;
-		filename += '/';
+		filename = utils::compr_slash(p_server->error_pages + '/');
 		filename += utils::to_string(m_status_code);
 		filename += ".html";
 
@@ -307,10 +291,20 @@ Response::error()
 			init_header();
 
 			std::string reason = get_reason_phrase();
-			m_body = "<html>\r\n<head>"
-						"<title>" + reason +  "</title></head>\r\n"
-						"<body><h1>errorcode " + utils::to_string(m_status_code) +
-						": " + reason + "</h1> </body></html>\r\n";
+			m_body = "<html>\r\n"
+						"<head>"
+							"<title>"
+								+ reason +
+							"</title>"
+						"</head>\r\n"
+						"<body>"
+							"<h1>"
+								"errorcode "
+								+ utils::to_string(m_status_code) +
+								": " + reason +
+							"</h1>"
+						"</body>"
+					"</html>\r\n";
 			
 			add_to_head("Content-Length", utils::to_string(m_body.size()));
 			return;

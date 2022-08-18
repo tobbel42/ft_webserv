@@ -203,7 +203,7 @@ Server::Location::Location():
 	redirections(),
 	max_client_body_size(UINT32_MAX),
 	directory_listing_enabled(false),
-	m_checks(6, false)
+	m_checks(7, false)
 {
 	allowed_methods.reserve(3);
 }
@@ -290,6 +290,7 @@ Server::Location::set_script(const std::pair<std::string,std::string>& script)
 {
 	if (script.first != "php" && script.first != "python")
 		return false;
+
 	const std::string& binary = script.second;
 	if (binary[0] == '/' || binary[0] == '.') // absolute path
 	{
@@ -336,6 +337,7 @@ Server::Location::set_dir_listing(const std::string& state)
 	if (m_checks[DIRECTORY_LISTING])
 		return "directory listing shall only be specified once per location block";
 	m_checks[DIRECTORY_LISTING] = true;
+
 	if (state == "true")
 		directory_listing_enabled = true;
 	else if (state == "false")

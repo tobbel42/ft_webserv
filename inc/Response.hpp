@@ -11,6 +11,12 @@
 
 #define DEFAULT_MIME_TYPE "application/octet-stream"
 
+/*
+The response class creates a HTTP response according to the status code
+that was provided.
+After generating the payload it may be sent to a client using the send
+method.
+*/
 class Response
 {
 public: // methods
@@ -21,16 +27,16 @@ public: // methods
 
 	Response& operator=(const Response& other);
 
+	std::string		get_payload() const;
+	size_t			get_body_size() const;
 
 	void			set_server(const Server* server);
 	void			set_location(const Server::Location* location);
-	void			set_content_location(const std::string & content_loc);
+	void			set_content_location(const std::string& content_loc);
 	void			set_status_code(int status_code);
 	void			set_body(const std::string& body);
 	void			set_filename(const std::string& filename);
 	void			set_cookie(const std::string& cookie);
-	std::string		get_payload() const;
-	size_t			get_body_size() const;
 
 	// first = payload, second = client body size
 	std::pair<std::string, size_t> generate();
@@ -38,7 +44,7 @@ public: // methods
 	#ifdef KQUEUE
 	int32_t							send(const s_kevent& kevent);
 	#else
-	int32_t							send(const s_pollfd & poll);
+	int32_t							send(const s_pollfd& poll);
 	#endif
 
 

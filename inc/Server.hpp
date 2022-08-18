@@ -32,7 +32,6 @@ public: // methods
 	bool	set_ip_address(uint32_t ip);
 	bool	set_port(uint32_t port);
 	bool	set_method(const std::string& method);
-	// key = redirected file, value = redirection target
 	bool	set_redirection(const std::pair<std::string,std::string>& file_pr);
 	bool	set_max_client_body_size(uint32_t n);
 
@@ -49,6 +48,7 @@ public: // attributes
 	std::vector<uint32_t>				ports;
 	StringArr							allowed_methods;
 	uint32_t							max_client_body_size;
+	// key = redirected file, value = redirection target
 	std::map<std::string,std::string>	redirections;
 
 	class Location;

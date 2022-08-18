@@ -86,7 +86,7 @@ ConfigParser::run()
 			throw ConfigParser::InvalidConfig(m_line_number,
 				"invalid server identifier", token.c_str());
 
-		const char *error_msg = server.check_attributes();
+		const char* error_msg = server.check_attributes();
 		if (error_msg != nullptr)
 			throw ConfigParser::InvalidConfig(m_line_number, error_msg);
 
@@ -457,21 +457,21 @@ ConfigParser::check_configs()
 ConfigParser::InvalidConfig::InvalidConfig(size_t line, const char *msg,
 											const char *details):
 	exception(),
-	m_errorMsg("\nconfig file error in line ")
+	m_error_msg("\nconfig file error in line ")
 {
-	m_errorMsg += utils::to_string(line);
-	m_errorMsg += ":\n";
-	m_errorMsg += RED;
-	m_errorMsg += BOLD;
-	m_errorMsg += msg;
+	m_error_msg += utils::to_string(line);
+	m_error_msg += ":\n";
+	m_error_msg += RED;
+	m_error_msg += BOLD;
+	m_error_msg += msg;
 	if (details != nullptr)
 	{
-		m_errorMsg += ": ";
-		m_errorMsg += YELLOW;
-		m_errorMsg += details;
+		m_error_msg += ": ";
+		m_error_msg += YELLOW;
+		m_error_msg += details;
 	}
-	m_errorMsg += RESET;
-	m_errorMsg += '\n';
+	m_error_msg += RESET;
+	m_error_msg += '\n';
 }
 
 ConfigParser::InvalidConfig::~InvalidConfig() throw() {}
@@ -479,5 +479,5 @@ ConfigParser::InvalidConfig::~InvalidConfig() throw() {}
 const char*
 ConfigParser::InvalidConfig::what() const throw()
 {
-	return m_errorMsg.c_str();
+	return m_error_msg.c_str();
 }

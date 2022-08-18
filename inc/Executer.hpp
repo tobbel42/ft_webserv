@@ -7,6 +7,18 @@
 #include "Server.hpp"
 #include "Request.hpp"
 
+/*
+The executer class takes the parsed request aswell as an associated server and/or
+location block, decides what action has to be performed and returns the output of
+the action (and the status code) to the response.
+
+Those actions can be:
+	- Reading a file
+	- Creating files and writing to them
+	- Deleting files
+	- Launching CGI scripts
+	- Running directory listing
+*/
 class Executer
 {
 public: // methods
