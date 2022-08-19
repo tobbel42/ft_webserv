@@ -1,6 +1,7 @@
 #include "Connect.hpp"
 
 #include <unistd.h>
+#include <string>
 
 #include "utils.hpp"
 #include "Executer.hpp"
@@ -99,7 +100,6 @@ Connect::readRequest(s_kevent & kevent)
 	buf.resize(len, '\0');
 	ssize_t read_len = read(kevent.ident, &(*buf.begin()), len);
 
-	//TODO errhandling
 	if (len != read_len)
 	{
 		EPRINT("ERROR: read");
@@ -123,7 +123,6 @@ Connect::readRequest(s_pollfd & poll)
 	buf.resize(READSIZE, '\0');
 	ssize_t read_len = read(poll.fd, &(*buf.begin()), READSIZE);
 
-	//TODO errhandling
 	if (read_len == -1 || read_len == 0)
 	{
 		EPRINT("ERROR: read");
@@ -163,51 +162,55 @@ Connect::writeResponse(s_pollfd & poll)
 bool
 Connect::check_redirect()
 {
-	std::string parsed_target;
+	std::string parsed_target, redirection;
+
+	std::map<std::string, std::string>::const_iterator red_iter;
+
 	if (p_location)
 	{
 		parsed_target = m_req.get_target();
+
+		//trunctate the location prefix
 		parsed_target = parsed_target.erase(0, p_location->prefix.size());
-	}
-	else
-	{
-		parsed_target = m_req.get_target();
-		if (parsed_target.front() == '/')
-			parsed_target = parsed_target.erase(0, 1);
-	}
 
-	//parsed_target = utils::compr_slash("/" + parsed_target);
-
-	PRINT(parsed_target);
-
-	std::string redirection = "";
-	std::map<std::string, std::string>::const_iterator red_iter;
-	if (p_location){
+		//check if an redirection exists
 		red_iter = p_location->redirections.find(parsed_target);
+
 		if (red_iter != p_location->redirections.end())
 			redirection = red_iter->second;
 		else
 			return false;
+
+		//append the prefix onto the redirection
+		m_res.set_content_location(
+			utils::compr_slash(p_location->prefix + "/" + redirection));
 	}
 	else
 	{
+		parsed_target = m_req.get_target();
+
+		//truncate the leading dash
+		if (parsed_target[0] == '/')
+			parsed_target = parsed_target.erase(0, 1);
+
+		//check if an redirection exists
 		red_iter = p_server->redirections.find(parsed_target);
 		if (red_iter != p_server->redirections.end())
 			redirection = red_iter->second;
 		else
 			return false;
-	}
 
-	if (p_location)
-		m_res.set_content_location(
-			utils::compr_slash(p_location->prefix + "/" + redirection));
-	else
+		//append the prefix onto the redirection
 		m_res.set_content_location(
 			utils::compr_slash("/" + redirection));
+	}
+
+
 	m_res.set_server(p_server);
 	m_res.set_location(p_location);
+
+	//301 are saved permanently, using 307 so we can tinker with redirections
 	m_res.set_status_code(307);
-	PRINT("hello world");
 	m_action = WRITE;
 	return true;
 }
@@ -243,7 +246,6 @@ Connect::composeResponse()
 		p_cookie_base->insert(std::make_pair(cookies_key, cookies_value));
 		m_res.set_cookie("helloCookie=" + cookies_key + "; SameSite=Lax");
 	}
-
 
 	m_res.set_server(p_server);
 	m_res.set_location(p_location);

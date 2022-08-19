@@ -190,23 +190,27 @@ Executer::run_location()
 		m_status_code = 405; // method not allowed
 		return;
 	}
-
 	// Apply local index 
-	if (file_type == DIRECTORY && !p_loc->directory_listing_enabled &&
-		p_loc->prefix == m_req.get_target()) // only append the root for exact matches
+	if (file_type == DIRECTORY && !p_loc->directory_listing_enabled)
 	{
+
 		m_filename = utils::compr_slash(m_filename + "/" + p_loc->index);
+		// if (p_loc->prefix == m_req.get_target()) // only append the root for exact matches
+		// {
+		// }
+
 		file_type = OTHER;
 	}
+	
 
 	#ifdef VERBOSE
 	PRINT("in location: " << p_loc->root << '\n' << m_filename << " file type = " << file_type);
 	#endif
 
 	if (m_req.get_method() == "GET")
-		get_handler();
+		get_handler(file_type);
 	else if (m_req.get_method() == "POST")
-		post_handler();
+		post_handler(file_type);
 	else if (m_req.get_method() == "PUT")
 		put_handler();
 	else if (m_req.get_method() == "DELETE")
@@ -214,9 +218,8 @@ Executer::run_location()
 }
 
 void
-Executer::get_handler()
+Executer::get_handler(e_FileType file_type)
 {
-	e_FileType file_type = get_file_type();
 	if (resource_exist())
 	{
 		switch (file_type)
@@ -246,9 +249,8 @@ Executer::get_handler()
 }
 
 void
-Executer::post_handler()
+Executer::post_handler(e_FileType file_type)
 {
-	e_FileType file_type = get_file_type();
 	if (file_type == PHP || file_type == PYTHON)
 	{
 		if (cgi_is_allowed(p_loc->scripts, file_type))

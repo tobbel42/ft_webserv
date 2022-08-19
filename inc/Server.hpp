@@ -133,7 +133,6 @@ public: // subclass
 
 };
 
-
 std::ostream& operator<<(std::ostream& out, const Server::Location& rhs);
 
 std::ostream& operator<<(std::ostream& out, const Server& rhs);

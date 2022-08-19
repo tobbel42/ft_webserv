@@ -298,66 +298,64 @@ Engine::connect_event(s_kevent & kevent)
 		std::cout << "ConnectEvent" << std::endl;
 	#endif
 
-
-	//eyeCandy
-
-	Connect	& cnct = iter->second;
-
-	int32_t	status_flag;
-
 	//connection can have multible states
 
 	//errorchecking
 	if ((kevent.flags & EV_EOF) || (kevent.flags & EV_ERROR))
 		drop_cnct(kevent.ident);
 	//on read we read as many bytes, as in the kevent specified
-	else if (cnct.getAction() == READ && (kevent.filter & EVFILT_READ))
-	{
-		//reset connection timer
-		m_timers[cnct.getFd()] = std::time(nullptr);
-
-
-		status_flag = cnct.readRequest(kevent);
-
-
-		if (status_flag == RW_ERROR)
-			drop_cnct(kevent.ident);
-		else if (status_flag == RW_DONE)
-		{
-			//removing the read event from the from the change vector
-			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
-			//remove the fd from the timerlist
-			m_timers.erase(cnct.getFd());
-
-			//assign a server, if not yet given
-			//(search for Hostname in Socket servers/ default server)
-			if (cnct.getServer() == nullptr)
-				assign_server(cnct);
-
-			// look for a location block with a matching prefix string 
-			// in the server
-			cnct.find_location();
-
-			//formulate the request (result or error)
-			cnct.composeResponse();
-
-			//adding the write event to the change vector
-			set_kevent(kevent.ident, EVFILT_WRITE, EV_ADD);
-		}
-	}
+	else if (iter->second.getAction() == READ && (kevent.filter & EVFILT_READ))
+		connect_read(kevent, iter->second);
 	//On write 
-	else if (cnct.getAction() == WRITE && (kevent.filter & EVFILT_READ))
+	else if (iter->second.getAction() == WRITE && (kevent.filter & EVFILT_READ))
+		connect_write(kevent, iter->second);
+}
+void Engine::connect_read(s_kevent & kevent, Connect & cnct)
+{
+
+	int32_t	status_flag;
+
+	//reset connection timer
+	m_timers[cnct.getFd()] = std::time(nullptr);
+	status_flag = cnct.readRequest(kevent);
+	if (status_flag == RW_ERROR)
+		drop_cnct(kevent.ident);
+	else if (status_flag == RW_DONE)
 	{
-		//write the response
-		status_flag = cnct.writeResponse(kevent);
-		//error handling
-		if (status_flag == RW_ERROR)
-			drop_cnct(kevent.ident);
-		//if done close the connection
-		else if (status_flag == RW_DONE)
-			drop_cnct(kevent.ident);
+		//removing the read event from the from the change vector
+		m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
+
+		//remove the fd from the timerlist
+		m_timers.erase(cnct.getFd());
+
+		//assign a server, if not yet given
+		//(search for Hostname in Socket servers/ default server)
+		if (cnct.getServer() == nullptr)
+			assign_server(cnct);
+
+		// look for a location block with a matching prefix string 
+		// in the server
+		cnct.find_location();
+
+		//formulate the request (result or error)
+		cnct.composeResponse();
+
+		//adding the write event to the change vector
+		set_kevent(kevent.ident, EVFILT_WRITE, EV_ADD);
 	}
 }
+void Engine::connect_write(s_kevent & kevent, Connect & cnct)
+{
+	int32_t status_flag = cnct.writeResponse(kevent);
+	//error handling
+	if (status_flag == RW_ERROR)
+		drop_cnct(kevent.ident);
+	//if done close the connection
+	else if (status_flag == RW_DONE)
+		drop_cnct(kevent.ident);
+
+}
+
 #else
 void
 Engine::connect_event(s_pollfd & poll)
@@ -372,55 +370,53 @@ Engine::connect_event(s_pollfd & poll)
 		std::cout << "ConnectEvent" << std::endl;
 	#endif
 
-	//eyeCandy
-	Connect	& cnct = iter->second;
-	int32_t status_flag;
 	//connection can have multible states
 
 	//on read we read as many bytes, as in the kevent specified
-	if (cnct.getAction() == READ)
-	{
-		m_timers[cnct.getFd()] = std::time(nullptr);
+	if (iter->second.getAction() == READ)
+		connect_read(poll, iter->second);
+	//On write 
+	else if (iter->second.getAction() == WRITE)
+		connect_write(poll, iter->second);
+}
+void
+Engine::connect_read(s_pollfd & poll, Connect & cnct)
+{
+	int32_t status_flag;
+	m_timers[cnct.getFd()] = std::time(nullptr);
 
-		status_flag = cnct.readRequest(poll);
+	status_flag = cnct.readRequest(poll);
+	if (status_flag == RW_ERROR)
+		drop_cnct(poll.fd);
+	else if (status_flag == RW_DONE)
+	{
+		poll.events = POLLOUT;
+		//remove the fd from the timerlist
+
+		m_timers.erase(cnct.getFd());
+		//assign a server, if not yet given
+		//(search for Hostname in Socket servers/ default server)
+		if (cnct.getServer() == nullptr)
+			assign_server(cnct);
+
+		// look for a location block with a matching prefix string 
+		// in the server
+		cnct.find_location();
+		//formulate the request (result or error)
+		cnct.composeResponse();
+	}
+
+}
+void
+Engine::connect_write(s_pollfd & poll, Connect & cnct)
+{
+		int32_t status_flag = cnct.writeResponse(poll);
+
 		if (status_flag == RW_ERROR)
 			drop_cnct(poll.fd);
 		else if (status_flag == RW_DONE)
-		{
-			poll.events = POLLOUT;
+			drop_cnct(poll.fd);
 
-			//remove the fd from the timerlist
-			m_timers.erase(cnct.getFd());
-			//assign a server, if not yet given
-			//(search for Hostname in Socket servers/ default server)
-			if (cnct.getServer() == nullptr)
-				assign_server(cnct);
-			
-			// look for a location block with a matching prefix string 
-			// in the server
-			cnct.find_location();
-
-			//formulate the request (result or error)
-			cnct.composeResponse();
-
-		}
-	}
-	//On write 
-	else if (cnct.getAction() == WRITE)
-	{
-		//write the response
-		cnct.writeResponse(poll);
-
-		//if write done
-			//remove the event form the change vector
-			m_polls.erase(std::find(m_polls.begin(), m_polls.end(), poll.fd));
-
-			//close the connection
-			close(cnct.getFd());
-
-			//remove connection from FD pool
-			m_connects.erase(iter);
-	}
 }
 #endif // KQUEUE
 
@@ -435,14 +431,7 @@ Engine::check_for_timeout() {
 		{
 			fd = i->first;
 			++i;
-			close(fd);
-			#ifdef KQUEUE
-			m_changes.erase(std::find(m_changes.begin(), m_changes.end(), fd));
-			#else
-			m_polls.erase(std::find(m_polls.begin(), m_polls.end(), fd));
-			#endif
-			m_connects.erase(fd);
-			m_timers.erase(fd);
+			drop_cnct(fd);
 		}
 		else
 			++i;

@@ -164,18 +164,6 @@ Response::send(const s_kevent& kevent)
 int32_t
 Response::send(const s_pollfd& poll)
 {
-	// if (p_server != nullptr)
-	// {
-	// 	if (p_server->max_client_body_size > m_body.size())
-	// 		write(poll.fd, m_payload.c_str(), m_payload.size());
-	// 	else
-	// 	{
-	// 		set_status_code(413); // request too large
-	// 		generate();
-	// 		write(poll.fd, m_payload.c_str(), m_payload.size());
-	// 	}
-	// }
-	// else
 	ssize_t i;
 	i = write(poll.fd, m_payload.c_str(), m_payload.size());
 	if (i == -1 || i == 0)
@@ -208,7 +196,7 @@ Response::generate()
 		error();
 		break;
 	}
-	// add_to_head("Server", "lil l and the beachboys 1.0");
+	add_to_head("Server", "lil l and the beachboys 1.0");
 	add_to_payload(m_header);
 	m_payload += m_body;
 	return std::make_pair(m_payload, m_body.size());
@@ -249,7 +237,6 @@ Response::redirect()
 {
 	init_header();
 
-	//add_to_head("Retry-after", utils::to_string(120));
 	if (m_content_location != "")
 	{
 		add_to_head("Location", m_content_location);
@@ -362,7 +349,7 @@ Response::init_header(const std::string& header_lines)
 
 	m_header += "\r\n";
 
-	// add_to_head("Date", get_http_time());
+	add_to_head("Date", get_http_time());
 
 	if (!header_lines.empty())
 		m_header += header_lines;

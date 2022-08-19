@@ -74,10 +74,14 @@ private:
 	void		set_kevent(fd_type fd, int16_t filter, uint16_t flag );
 	void		socket_event(s_kevent & kevent);
 	void		connect_event(s_kevent & kevent);
+	void		connect_read(s_kevent & kevent, Connect & cnct);
+	void		connect_write(s_kevent & kevent, Connect & cnct);
 	#else
 	void		set_poll(fd_type fd, short events);
 	void		socket_event(s_pollfd & poll);
 	void		connect_event(s_pollfd & poll);
+	void		connect_read(s_pollfd & poll, Connect & cnct);
+	void		connect_write(s_pollfd & poll, Connect & cnct);
 	#endif
 
 	void		drop_cnct(fd_type ident);

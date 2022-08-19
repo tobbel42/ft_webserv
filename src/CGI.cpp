@@ -34,7 +34,6 @@ CGI::operator=(const CGI& other)
 	{
 		m_filename = other.m_filename;
 		m_content = other.m_content;
-		// m_req = other.m_req;
 		m_env = other.m_env;
 		m_cgi_header = other.m_cgi_header;
 		m_status_code = other.m_status_code;
@@ -67,8 +66,6 @@ CGI::run(e_FileType file_type, const std::string& input,
 	switch (file_type)
 	{
 		case PHP:
-			argv[0] = (char *)executable.c_str(); //cpp is killing me ;_;
-			break;
 		case PYTHON:
 			argv[0] = (char *)executable.c_str();
 			break;
@@ -255,11 +252,9 @@ CGI::read_output(FileWrap& outfile)
 	while (fgets(buf, sizeof(buf), outfile) != nullptr)
 		output += buf;
 
-
 	//we truncate the cgi response header and storing the key value
 	//pairs inside the gci_header map 
 	parse_header(output);
-
 
 	if (ferror(outfile))
 	{

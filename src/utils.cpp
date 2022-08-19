@@ -103,7 +103,6 @@ bool isCRLF(const ByteArr& vec, size_t pos)
 	return false;
 }
 
-
 uint32_t
 string_to_ip(const std::string& ip_string)
 {
