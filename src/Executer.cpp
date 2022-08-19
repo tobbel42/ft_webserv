@@ -229,7 +229,10 @@ Executer::get_handler()
 				m_status_code = 403;
 			break;
 		case DIRECTORY:
-			run_directory_listing();
+			if (p_loc->directory_listing_enabled)
+				run_directory_listing();
+			else
+				m_status_code = 403;
 			break;
 		case OTHER:
 			read_from_file();

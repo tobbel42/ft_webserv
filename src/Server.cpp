@@ -121,7 +121,7 @@ Server::set_port(uint32_t port)
 bool
 Server::set_method(const std::string& method)
 {
-	if (method == "GET" || method == "PUT" || method == "POST"||
+	if (method == "GET" || method == "PUT" || method == "POST" ||
 		method == "DELETE")
 	{
 		if (!utils::is_element_of(allowed_methods, method))
@@ -135,8 +135,18 @@ Server::set_method(const std::string& method)
 bool
 Server::set_redirection(const std::pair<std::string,std::string>& file_pr)
 {
+	std::map<std::string,std::string>::const_iterator it;
+	it = redirections.find(file_pr.second);
+
+	// check for recursive redirections
+	if (file_pr.first == file_pr.second ||
+		(it != redirections.end() && it->first == file_pr.second))
+		return false;
+
+
 	std::pair<std::map<std::string,std::string>::iterator, bool> ret;
 	ret = redirections.insert(file_pr);
+
 	const std::string& old_value = ret.first->second;
 	if (ret.second == false && file_pr.second != old_value)
 		return false;
@@ -375,3 +385,5 @@ std::ostream& operator<<(std::ostream& out, const Server::Location& rhs)
 		<< "\ndirectory listing: " << rhs.directory_listing_enabled;
 	return out;
 }
+
+
