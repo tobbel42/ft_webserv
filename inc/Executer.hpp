@@ -44,8 +44,8 @@ private: // methods
 	void	run_directory_listing();
 
 	void	server_method_execution();
-	void	get_handler();
-	void	post_handler();
+	void	get_handler(e_FileType file_type);
+	void	post_handler(e_FileType file_type);
 	void	put_handler();
 	void	delete_handler();
 

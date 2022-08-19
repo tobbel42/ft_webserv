@@ -101,6 +101,9 @@ private:
 	bool		m_done;
 	size_t		m_content_len;
 
+	u_int32_t	m_chunk_size;
+	bool		m_reading_chunk_size;
+
 	/*DataMemberVariabels-----------------------------------------------------*/
 
 	uint32_t							m_err_code;
