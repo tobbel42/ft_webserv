@@ -310,7 +310,6 @@ Executer::run_cgi(e_FileType file_type)
 	}
 	else
 		executable = it->second;
-	PRINT("EXEC PATH " << executable);
 
 	m_is_cgi = true;
 

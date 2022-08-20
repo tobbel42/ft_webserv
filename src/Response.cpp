@@ -363,6 +363,7 @@ Response::get_mime_type(const std::string& filename) const
 	{
 		// directory listing and cgi are html, since they will be executed
 		// by the server
+
 		if ((p_loc->directory_listing_enabled && extension.empty()) ||
 			p_loc->scripts.find(extension) != p_loc->scripts.end())
 			return "text/html";

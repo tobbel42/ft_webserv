@@ -256,8 +256,6 @@ CGI::read_output(FileWrap& outfile)
 
 	parse_header(output);
 
-	PRINT(output.size());
-
 	if (ferror(outfile))
 	{
 		m_status_code = 500;

@@ -216,7 +216,10 @@ std::string
 get_file_ext(const std::string& filename)
 {
 	size_t pos = filename.find_last_of('.');
-	if (pos == std::string::npos)
+	size_t pos2 = filename.find_last_of('/');
+	if (pos2 == std::string::npos)
+		pos2 = 0;
+	if (pos == std::string::npos || pos < pos2)
 		return std::string();
 	return filename.substr(pos + 1);
 }
