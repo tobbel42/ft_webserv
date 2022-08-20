@@ -256,9 +256,7 @@ CGI::read_output(FileWrap& outfile)
 	//we truncate the cgi response header and storing the key value
 	//pairs inside the gci_header map
 
-	//PRINT("OUTPUT##" << output << "##");
 	parse_header(output);
-	//PRINT("OUTPUT##" << output << "##");
 
 	PRINT(output.size());
 

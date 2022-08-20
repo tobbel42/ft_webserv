@@ -67,11 +67,11 @@ if (cookie_data == ""):
 	print "	</body>"
 	print "</html>"
 else:
-	print "Content-type: text/html\r\n"
-	print "Status: 200\r\n"
 	if (has_cookie is None):
-		print "Cookie_data: " + cookie_data + "\r\n"
-	print "\r\n"
+		print "Content-type: text/html\r\nStatus: 200\r\nCookie_data: " + cookie_data + "\r\n\r\n"
+	else:
+		print "Content-type: text/html\r\nStatus: 200\r\n\r\n"
+
 	print "<!DOCTYPE html>"
 	print "<html>"
 	print " <head>"

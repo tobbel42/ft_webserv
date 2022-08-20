@@ -201,7 +201,8 @@ Executer::run_location()
 		// {
 		// }
 
-		file_type = OTHER;
+		// file_type = OTHER;
+		file_type = get_file_type();
 	}
 	
 
