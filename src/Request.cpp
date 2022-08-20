@@ -414,15 +414,20 @@ Request::parse_header() {
 
 	while (m_offset < m_buffer.size())
 	{
+		//check if a complete header line can be read
 		if (get_next_header_line(line) == false)
 			return false;
+		
+		//check if empty line (terminates the header)
 		if (line == "")
-			break;
+			return true;
 		
 		//parse the FieldName
-		pos = line.find(":"); 
-		if (pos == std::string::npos)
+		pos = line.find(":");
+		//check for malformed lines
+		if (pos == std::string::npos){
 			return set_error(400);
+		}
 		key = line.substr(0, pos);
 
 		//parse the FieldValue
@@ -445,12 +450,15 @@ Request::parse_header() {
 		//multible instances of the same fieldnames are combined into a csv list
 		if (i.second == false)
 		{
-			if (key == "host")
+			//only one host filed allowed
+			if (key == "host"){
 				return set_error(400);
+			}
 			i.first->second.append("," + value);
 		}
 	}
-	return true;
+	//whole buffer was read
+	return false;
 }
 
 /*RequestBodyParsing----------------------------------------------------------*/
@@ -466,80 +474,44 @@ Request::parse_body() {
 }
 
 bool
-Request::parse_chunked_body(){
-	std::string line;
+Request::parse_chunk(){
+
+	//first we read the chunk size as a hex string
 	if (m_reading_chunk_size)
 	{
+		std::string line;
 		if (!get_next_req_line(line))
 			return false;
 		if (line == "")
 			return true;
 		m_chunk_size = utils::hex_str_to_i(line);
-		PRINT("##" << line << "##" << "CHUNKSIZE:" << m_chunk_size);
 		m_reading_chunk_size = false;
 	}
 	else
 	{
-		PRINT("CHUNKBODY" << m_chunk_size << " " << m_buffer.size() - m_offset);
 		//check if the whole chunk has been read;
 		if (m_chunk_size + 2 > m_buffer.size() - m_offset)
 			return false;
 		
+		//check for the last chunk
 		if (m_chunk_size == 0)
 		{
 			m_done = true;
 			return false;
 		}
 
-		std::string chunk(m_buffer.begin() + m_offset, m_buffer.begin() + m_offset + m_chunk_size);
-
+		//append thge chunk to the request body
 		m_body.insert(m_body.end(),
 			m_buffer.begin() + m_offset, m_buffer.begin() + m_offset + m_chunk_size);
-		PRINT("CHUNK:##" << chunk << "##");
+		
+		//skipping CRLF
 		m_offset += m_chunk_size + 2;
+
+		//switch back to reading the chunk size
 		m_reading_chunk_size = true;
 	}
 	return true;
 }
-
-// bool
-// Request::parse_chunked_body() {
-// 	std::string line;
-// 	bool done_line_read = get_next_req_line(line);
-
-// 	if (done_line_read)
-// 		return false;
-	
-// 	//getting the chunksize
-// 	u_int32_t  chunk_size;
-// 	if (line != "")
-// 		chunk_size = utils::hex_str_to_i(line);
-// 	else
-// 		chunk_size = 0;
-
-// 	//checking if the chunksize matches actual size
-// 	if (m_offset + chunk_size + 2 > m_buffer.size()
-// 		|| m_buffer[m_offset + chunk_size] != '\r' 
-// 		|| m_buffer[m_offset + chunk_size + 1] != '\n')
-// 		return set_error(400);
-
-// 	//checking for last chunk
-
-// 	if (chunk_size == 0)
-// 	{
-// 		m_done = true;
-// 		return true;
-// 	}
-// 	//appending chunk to body
-
-// 	m_body.insert(m_body.end(),
-// 		m_buffer.begin() + m_offset, m_buffer.begin() + m_offset + chunk_size);
-// 	m_offset += chunk_size + 2; // skipping CRLF
-
-// 	//check if more there are more chunks in the buffer;
-
-// 	return (m_offset >= m_buffer.size())?false:true;
-// }
 
 bool
 Request::is_chunked() {
@@ -596,7 +568,7 @@ Request::append_read(ByteArr buf) {
 	{
 		while (m_done != true)
 		{
-			if (parse_chunked_body() == false)
+			if (parse_chunk() == false)
 				break;
 		}
 	}
@@ -622,9 +594,9 @@ Request::print_request() const
 	{
 		PRINT(iter->first << ": " << iter->second << "##");
 	}
-	// PRINT("BODY");
-	// for (size_t i = 0; i < m_body.size(); ++i)
-	// 	std::cout << m_body[i];
+	PRINT("BODY");
+	for (size_t i = 0; i < m_body.size(); ++i)
+		std::cout << m_body[i];
 }
 
 /*Setter----------------------------------------------------------------------*/

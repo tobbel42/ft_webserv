@@ -91,7 +91,7 @@ private:
 
 	bool parse_body();
 	bool is_chunked();
-	bool parse_chunked_body();
+	bool parse_chunk();
 
 	/*Internal MemberVariabels------------------------------------------------*/
 
