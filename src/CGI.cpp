@@ -67,6 +67,7 @@ CGI::run(e_FileType file_type, const std::string& input,
 	{
 		case PHP:
 		case PYTHON:
+		case CGI_SCRIPT:
 			argv[0] = (char *)executable.c_str();
 			break;
 		default:
@@ -253,8 +254,13 @@ CGI::read_output(FileWrap& outfile)
 		output += buf;
 
 	//we truncate the cgi response header and storing the key value
-	//pairs inside the gci_header map 
+	//pairs inside the gci_header map
+
+	//PRINT("OUTPUT##" << output << "##");
 	parse_header(output);
+	//PRINT("OUTPUT##" << output << "##");
+
+	PRINT(output.size());
 
 	if (ferror(outfile))
 	{
@@ -277,13 +283,16 @@ CGI::parse_header(std::string & output)
 	{
 		line = output.substr(offset, pos - offset);
 		if (line == "")
+		{
+			offset += 2;
 			break;
+		}
 
 		key = line.substr(0, line.find(":"));
 		value = line.substr(line.find(":") + 2);
 		m_cgi_header[key] = value;
 
-		pos += 3;
+		pos += 2;
 		offset = pos;
 		pos = output.find("\r\n", offset);
 	}

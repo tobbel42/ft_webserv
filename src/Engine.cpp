@@ -254,6 +254,7 @@ Engine::socket_event(s_kevent & kevent)
 	#ifdef VERBOSE
 		std::cout << "Socket Event" << std::endl;
 	#endif
+	PRINT("NEW CONNECT");
 	accept_connect(iter->second);
 }
 #else
@@ -282,6 +283,7 @@ Engine::drop_cnct(fd_type ident)
 	m_timers.erase(ident);
 	close(ident);
 	m_connects.erase(ident);
+	PRINT("DROP CCNCT");
 }
 
 #ifdef KQUEUE
@@ -322,6 +324,7 @@ void Engine::connect_read(s_kevent & kevent, Connect & cnct)
 		drop_cnct(kevent.ident);
 	else if (status_flag == RW_DONE)
 	{
+		PRINT("REQUEST_READ_DONE");
 		//removing the read event from the from the change vector
 		m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
 
@@ -352,7 +355,10 @@ void Engine::connect_write(s_kevent & kevent, Connect & cnct)
 		drop_cnct(kevent.ident);
 	//if done close the connection
 	else if (status_flag == RW_DONE)
+	{
+		PRINT("WRITE_DONE");
 		drop_cnct(kevent.ident);
+	}
 
 }
 
@@ -431,6 +437,7 @@ Engine::check_for_timeout() {
 		{
 			fd = i->first;
 			++i;
+			PRINT("TIMEOUT");
 			drop_cnct(fd);
 		}
 		else
@@ -576,6 +583,8 @@ Engine::launch()
 			connect_event(m_events[i]);
 		}
 		check_for_timeout();
+		m_events.clear();
+		m_events.resize(m_changes.size());
 	}
 	return true;
 	//closing of sockets is happening in the Engine destructor

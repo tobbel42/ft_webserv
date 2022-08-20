@@ -136,6 +136,8 @@ Executer::run_server()
 	PRINT("in server:\n" << m_filename << " file type = " << file_type);
 	#endif
 
+
+	//TODODO
 	switch (file_type)
 	{
 		case PHP:
@@ -226,7 +228,9 @@ Executer::get_handler(e_FileType file_type)
 		{
 		case PHP:
 		case PYTHON:
-			if (cgi_is_allowed(p_loc->scripts, file_type))
+		case CGI_SCRIPT:
+			// if (cgi_is_allowed(p_loc->scripts, file_type))
+			if (true)
 				run_cgi(file_type);
 			else
 				m_status_code = 403;
@@ -251,11 +255,14 @@ Executer::get_handler(e_FileType file_type)
 void
 Executer::post_handler(e_FileType file_type)
 {
-	if (file_type == PHP || file_type == PYTHON)
+	// if (file_type == PHP || file_type == PYTHON)
+	if (file_type == CGI_SCRIPT)
 	{
-		if (cgi_is_allowed(p_loc->scripts, file_type))
+		// if (cgi_is_allowed(p_loc->scripts, file_type))
+		if (true)
 		{
-			if (resource_exist())
+			if (true)
+			// if (resource_exist())
 				run_cgi(file_type);
 			else
 				m_status_code = 404;
@@ -269,7 +276,8 @@ Executer::post_handler(e_FileType file_type)
 		//only test/plain request are allowed to create files
 		//the rest is getting 404 
 		std::string content_type = m_req.get_header_entry("Content-Type").second;
-		if (content_type == "text/plain")
+		// if (content_type == "text/plain")
+		if (true)
 			put_handler();
 		else
 			m_status_code = 404;
@@ -316,26 +324,29 @@ Executer::delete_handler()
 void
 Executer::run_cgi(e_FileType file_type)
 {
-	typedef std::map<std::string,std::string>::const_iterator MapIt;
+	//typedef std::map<std::string,std::string>::const_iterator MapIt;
 
 	// find the executable of the cgi
 	std::string executable;
-	if (file_type == PYTHON)
-	{
-		MapIt it = p_loc->scripts.find("python");
-		if (it != p_loc->scripts.end())
-			executable = it->second;
-		else
-			executable = PYTHON_PATH;
-	}
-	else if (file_type == PHP)
-	{
-		MapIt it = p_loc->scripts.find("php");
-		if (it != p_loc->scripts.end())
-			executable = it->second;
-		else
-			executable = PHP_PATH;
-	}
+	executable = p_loc->scripts.find(
+	utils::get_file_ext(m_filename))->second;
+	PRINT("EXEC PATH" << executable);
+	// if (file_type == PYTHON)
+	// {
+	// 	MapIt it = p_loc->scripts.find("python");
+	// 	if (it != p_loc->scripts.end())
+	// 		executable = it->second;
+	// 	else
+	// 		executable = PYTHON_PATH;
+	// }
+	// else if (file_type == PHP)
+	// {
+	// 	MapIt it = p_loc->scripts.find("php");
+	// 	if (it != p_loc->scripts.end())
+	// 		executable = it->second;
+	// 	else
+	// 		executable = PHP_PATH;
+	// }
 
 	CGI cgi(m_filename, m_req);
 
@@ -394,12 +405,22 @@ Executer::get_file_type() const
 	if (utils::is_dir(m_filename))
 		return DIRECTORY;
 	std::string extension = utils::get_file_ext(m_filename);
-	if (extension == "py")
-		return PYTHON;
-	else if (extension == "php")
-		return PHP;
+
+	if (!p_loc)
+		return OTHER;
+
+	std::map<std::string, std::string>::const_iterator i = p_loc->scripts.find(extension);
+	if (i != p_loc->scripts.end())
+		return CGI_SCRIPT;
 	else
 		return OTHER;
+
+	// if (extension == "py")
+	// 	return PYTHON;
+	// else if (extension == "php")
+	// 	return PHP;
+	// else
+	// 	return OTHER;
 }
 
 bool

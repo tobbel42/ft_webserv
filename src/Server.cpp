@@ -298,8 +298,10 @@ Server::Location::set_method(const std::string& method)
 bool
 Server::Location::set_script(const std::pair<std::string,std::string>& script)
 {
-	if (script.first != "php" && script.first != "python")
-		return false;
+	//Trying to get a file ending -> executable map
+	
+	// if (script.first != "php" && script.first != "python")
+	// 	return false;
 
 	const std::string& binary = script.second;
 	if (binary[0] == '/' || binary[0] == '.') // absolute path

@@ -218,6 +218,7 @@ Connect::check_redirect()
 void
 Connect::composeResponse()
 {
+	PRINT("COMPOSING_REQUEST");
 	if (check_redirect())
 		return;
 
@@ -235,7 +236,9 @@ Connect::composeResponse()
 
 	Executer exec(p_server, p_location, m_req);
 
+	PRINT("EXEC_START");
 	exec.run();
+	PRINT("EXEC_DONE");
 
 	if (exec.is_cgi()
 		&& exec.get_cgi_header().find("Cookie_data") != exec.get_cgi_header().end()
