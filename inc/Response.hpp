@@ -63,6 +63,8 @@ private: // methods
 
 	const char*	get_reason_phrase() const;
 
+	const char*	get_mime_type(const std::string& filename) const;
+
 
 private: // typedefs
 
@@ -87,7 +89,6 @@ private: // attributes
 private: // statics
 
 	static std::string	get_http_time();
-	static const char*	get_mime_type(const std::string& filename);
 
 	static std::map<int, const char*>			init_status_codes();
 	static std::map<std::string, const char*>	init_mime_types();

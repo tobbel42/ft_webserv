@@ -312,7 +312,9 @@ Engine::connect_event(s_kevent & kevent)
 	else if (iter->second.getAction() == WRITE && (kevent.filter & EVFILT_READ))
 		connect_write(kevent, iter->second);
 }
-void Engine::connect_read(s_kevent & kevent, Connect & cnct)
+
+void
+Engine::connect_read(s_kevent & kevent, Connect & cnct)
 {
 
 	int32_t	status_flag;
@@ -347,7 +349,9 @@ void Engine::connect_read(s_kevent & kevent, Connect & cnct)
 		set_kevent(kevent.ident, EVFILT_WRITE, EV_ADD);
 	}
 }
-void Engine::connect_write(s_kevent & kevent, Connect & cnct)
+
+void
+Engine::connect_write(s_kevent & kevent, Connect & cnct)
 {
 	int32_t status_flag = cnct.writeResponse(kevent);
 	//error handling

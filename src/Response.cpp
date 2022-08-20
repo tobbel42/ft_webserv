@@ -356,12 +356,17 @@ Response::init_header(const std::string& header_lines)
 }
 
 const char*
-Response::get_mime_type(const std::string& filename)
+Response::get_mime_type(const std::string& filename) const
 {
 	std::string extension = utils::get_file_ext(filename);
-	if (extension.empty() ||						// directory listing and
-		extension == "py" || extension == "php")	// CGI needs to be excluded
-		return "text/html";
+	if (p_loc != nullptr)
+	{
+		// directory listing and cgi are html, since they will be executed
+		// by the server
+		if ((p_loc->directory_listing_enabled && extension.empty()) ||
+			p_loc->scripts.find(extension) != p_loc->scripts.end())
+			return "text/html";
+	}
 
 	MimeIter mime_type = s_mime_types.find(extension);
 	if (mime_type == s_mime_types.end()) // file extension is not in the list
