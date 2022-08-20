@@ -407,14 +407,14 @@ Executer::get_file_type() const
 		return DIRECTORY;
 	std::string extension = utils::get_file_ext(m_filename);
 
-	if (!p_loc)
+	if (p_loc == nullptr)
 		return OTHER;
-
-	std::map<std::string, std::string>::const_iterator i = p_loc->scripts.find(extension);
-	if (i != p_loc->scripts.end())
+	
+	if (p_loc->scripts.find(extension) != p_loc->scripts.end())
 		return CGI_SCRIPT;
 	else
 		return OTHER;
+
 
 	// if (extension == "py")
 	// 	return PYTHON;
