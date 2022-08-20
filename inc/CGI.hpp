@@ -17,9 +17,9 @@ public: // methods
 	CGI(const std::string& filename, const Request & req);
 	~CGI();
 
-	int											get_status_code() const;
-	const std::map<std::string, std::string>&	get_cgi_header() const;
-	const std::string&							get_content() const;
+	int						get_status_code() const;
+	const StringMap&		get_cgi_header() const;
+	const std::string&		get_content() const;
 
 	std::string run(e_FileType file_type, const std::string& input,
 					const std::string& executable);
@@ -44,14 +44,14 @@ private: // methods
 
 private: // attributes
 
-	std::string							m_filename;
-	std::string							m_content;
-	const Request&						m_req;
-	std::map<std::string, std::string>	m_env;
-	std::map<std::string, std::string>	m_cgi_header;
+	std::string			m_filename;
+	std::string			m_content;
+	const Request&		m_req;
+	StringMap			m_env;
+	StringMap			m_cgi_header;
 	// the status code will only be used if the executed script didn't provide one
 	// or an error occured during preparation
-	int									m_status_code;
+	int					m_status_code;
 
 
 private: // subclass

@@ -31,12 +31,12 @@ public: // methods
 
 	~Executer();
 
-	const std::string&							get_content() const;
-	int											get_status_code() const;
-	const std::string&							get_filename() const;
-	const std::map<std::string,std::string>&	get_cgi_header() const;
-	std::string									get_full_url() const;
-	bool										is_cgi() const;
+	const std::string&	get_content() const;
+	int					get_status_code() const;
+	const std::string&	get_filename() const;
+	const StringMap&	get_cgi_header() const;
+	std::string			get_full_url() const;
+	bool				is_cgi() const;
 
 	void set_server(Server* server);
 
@@ -65,19 +65,16 @@ private: // methods
 	bool		resource_exist() const;
 	void		read_from_file();
 
-	static bool cgi_is_allowed(const std::map<std::string,std::string>& scripts,
-								e_FileType type);
-
 
 private: // attributes
 
-	const Server*						p_server;
-	const Server::Location*				p_loc;
-	int									m_status_code;
-	const Request&						m_req;
-	std::string							m_content;
-	std::string							m_filename;
-	bool								m_is_cgi;
-	std::map<std::string, std::string>	m_cgi_header;
+	const Server*				p_server;
+	const Server::Location*		p_loc;
+	int							m_status_code;
+	const Request&				m_req;
+	std::string					m_content;
+	std::string					m_filename;
+	bool						m_is_cgi;
+	StringMap					m_cgi_header;
 
 };

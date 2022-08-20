@@ -41,7 +41,7 @@ CGI::operator=(const CGI& other)
 	return *this;
 }
 
-const std::map<std::string, std::string>&
+const StringMap&
 CGI::get_cgi_header() const { return m_cgi_header; }
 
 int
@@ -65,8 +65,6 @@ CGI::run(e_FileType file_type, const std::string& input,
 
 	switch (file_type)
 	{
-		case PHP:
-		case PYTHON:
 		case CGI_SCRIPT:
 			argv[0] = (char *)executable.c_str();
 			break;
@@ -102,7 +100,7 @@ CGI::prep_env() //toDo prep some env
 	m_env["PATH_INFO"] = utils::get_abs_path(m_filename);
 	m_env["PATH_TRANSLATED"] = utils::get_abs_path(m_filename);
 
-	for (std::map<std::string, std::string>::const_iterator iter = m_req.get_header().begin();
+	for (StringMapIter iter = m_req.get_header().begin();
 		iter != m_req.get_header().end(); ++iter)
 	{
 		m_env["HTTP_" + utils::cgi_str_toupper(iter->first)] = iter->second;
@@ -171,7 +169,7 @@ CGI::map_to_env()
 	
 	char* ptr = nullptr;
 	int i = 0;
-	for (std::map<std::string, std::string>::iterator iter = m_env.begin();
+	for (StringMapIter iter = m_env.begin();
 		iter != m_env.end(); ++iter, ++i)
 	{
 		const std::string& key = iter->first;

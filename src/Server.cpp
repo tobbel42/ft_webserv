@@ -135,17 +135,14 @@ Server::set_method(const std::string& method)
 bool
 Server::set_redirection(const std::pair<std::string,std::string>& file_pr)
 {
-	std::map<std::string,std::string>::const_iterator it;
-	it = redirections.find(file_pr.second);
+	StringMapIter it = redirections.find(file_pr.second);
 
 	// check for recursive redirections
 	if (file_pr.first == file_pr.second ||
 		(it != redirections.end() && it->first == file_pr.second))
 		return false;
 
-
-	std::pair<std::map<std::string,std::string>::iterator, bool> ret;
-	ret = redirections.insert(file_pr);
+	std::pair<StringMap::iterator, bool> ret = redirections.insert(file_pr);
 
 	const std::string& old_value = ret.first->second;
 	if (ret.second == false && file_pr.second != old_value)
@@ -192,7 +189,7 @@ std::ostream& operator<<(std::ostream& out, const Server& rhs)
 		out << rhs.allowed_methods[i] << ", ";
 	out << std::endl;
 	out << "\nredirections:" << std::endl;
-	for (std::map<std::string,std::string>::const_iterator it = rhs.redirections.begin();
+	for (StringMapIter it = rhs.redirections.begin();
 		it != rhs.redirections.end(); ++it)
 		out << it->first << " = " << it->second << '\n';
 	out << std::endl << "locations:\n";
@@ -299,9 +296,6 @@ bool
 Server::Location::set_script(const std::pair<std::string,std::string>& script)
 {
 	//Trying to get a file ending -> executable map
-	
-	// if (script.first != "php" && script.first != "python")
-	// 	return false;
 
 	const std::string& binary = script.second;
 	if (binary[0] == '/' || binary[0] == '.') // absolute path
@@ -324,8 +318,7 @@ Server::Location::set_redirection(const std::pair<std::string,std::string>& file
 		redirections.find(file_pr.second) != redirections.end())
 		return false;
 
-	std::pair<std::map<std::string,std::string>::iterator, bool> ret;
-	ret = redirections.insert(file_pr);
+	std::pair<StringMap::iterator, bool> ret = redirections.insert(file_pr);
 
 	const std::string& old_value = ret.first->second;
 	if (ret.second == false && file_pr.second != old_value)
@@ -376,11 +369,11 @@ std::ostream& operator<<(std::ostream& out, const Server::Location& rhs)
 	for (size_t i = 0; i < rhs.allowed_methods.size(); ++i)
 		out << rhs.allowed_methods[i] << ", ";
 	out << "\nscripts:" << std::endl;
-	for (std::map<std::string,std::string>::const_iterator it = rhs.scripts.begin();
+	for (StringMapIter it = rhs.scripts.begin();
 		it != rhs.scripts.end(); ++it)
 		out << it->first << " = " << it->second << '\n';
 	out << "\nredirections:" << std::endl;
-	for (std::map<std::string,std::string>::const_iterator it = rhs.redirections.begin();
+	for (StringMapIter it = rhs.redirections.begin();
 		it != rhs.redirections.end(); ++it)
 		out << it->first << " = " << it->second << '\n';
 	out << "\nmax client body size: " << rhs.max_client_body_size

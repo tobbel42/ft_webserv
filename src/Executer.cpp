@@ -56,7 +56,7 @@ Executer::get_status_code() const {return m_status_code; }
 const std::string&
 Executer::get_filename() const { return m_filename; }
 
-const std::map<std::string,std::string>&
+const StringMap&
 Executer::get_cgi_header() const { return m_cgi_header; }
 
 std::string
@@ -140,8 +140,7 @@ Executer::run_server()
 	//TODODO
 	switch (file_type)
 	{
-		case PHP:
-		case PYTHON:
+		case CGI_SCRIPT:
 		case DIRECTORY:
 			m_status_code = 403; // cgi and directory listing
 			break; // are forbidden in server blocks
@@ -195,13 +194,7 @@ Executer::run_location()
 	// Apply local index 
 	if (file_type == DIRECTORY && !p_loc->directory_listing_enabled)
 	{
-
 		m_filename = utils::compr_slash(m_filename + "/" + p_loc->index);
-		// if (p_loc->prefix == m_req.get_target()) // only append the root for exact matches
-		// {
-		// }
-
-		// file_type = OTHER;
 		file_type = get_file_type();
 	}
 	
@@ -227,14 +220,8 @@ Executer::get_handler(e_FileType file_type)
 	{
 		switch (file_type)
 		{
-		case PHP:
-		case PYTHON:
 		case CGI_SCRIPT:
-			// if (cgi_is_allowed(p_loc->scripts, file_type))
-			if (true)
 				run_cgi(file_type);
-			else
-				m_status_code = 403;
 			break;
 		case DIRECTORY:
 			if (p_loc->directory_listing_enabled)
@@ -256,29 +243,15 @@ Executer::get_handler(e_FileType file_type)
 void
 Executer::post_handler(e_FileType file_type)
 {
-	// if (file_type == PHP || file_type == PYTHON)
 	if (file_type == CGI_SCRIPT)
-	{
-		// if (cgi_is_allowed(p_loc->scripts, file_type))
-		if (true)
-		{
-			if (true)
-			// if (resource_exist())
-				run_cgi(file_type);
-			else
-				m_status_code = 404;
-		}
-		else
-			m_status_code = 403;
-	}
+		run_cgi(file_type);
 	else
 	{
 		//here the file creation stuff is happening
 		//only test/plain request are allowed to create files
 		//the rest is getting 404 
 		std::string content_type = m_req.get_header_entry("Content-Type").second;
-		// if (content_type == "text/plain")
-		if (true)
+		if (content_type == "text/plain")
 			put_handler();
 		else
 			m_status_code = 404;
@@ -325,29 +298,21 @@ Executer::delete_handler()
 void
 Executer::run_cgi(e_FileType file_type)
 {
-	//typedef std::map<std::string,std::string>::const_iterator MapIt;
-
 	// find the executable of the cgi
+	std::string extension = utils::get_file_ext(m_filename);
 	std::string executable;
-	executable = p_loc->scripts.find(
-	utils::get_file_ext(m_filename))->second;
-	PRINT("EXEC PATH" << executable);
-	// if (file_type == PYTHON)
-	// {
-	// 	MapIt it = p_loc->scripts.find("python");
-	// 	if (it != p_loc->scripts.end())
-	// 		executable = it->second;
-	// 	else
-	// 		executable = PYTHON_PATH;
-	// }
-	// else if (file_type == PHP)
-	// {
-	// 	MapIt it = p_loc->scripts.find("php");
-	// 	if (it != p_loc->scripts.end())
-	// 		executable = it->second;
-	// 	else
-	// 		executable = PHP_PATH;
-	// }
+	StringMapIter it = p_loc->scripts.find(extension);
+
+	if (it == p_loc->scripts.end())
+	{
+		m_status_code = 404;
+		return;
+	}
+	else
+		executable = it->second;
+	PRINT("EXEC PATH " << executable);
+
+	m_is_cgi = true;
 
 	CGI cgi(m_filename, m_req);
 
@@ -355,14 +320,12 @@ Executer::run_cgi(e_FileType file_type)
 	const ByteArr& req_body = m_req.get_body();
 	std::string input(req_body.begin(), req_body.end());
 
-	m_is_cgi = true;
-
 	m_content = cgi.run(file_type, input, executable);
 
 	m_cgi_header = cgi.get_cgi_header();
 
 	// look for the status code of the CGI and use that if it's provided
-	std::map<std::string, std::string>::iterator iter = m_cgi_header.find("Status");
+	StringMapIter iter = m_cgi_header.find("Status");
 	if (iter != m_cgi_header.end())
 		m_status_code = utils::from_string<int>(iter->second);
 	else
@@ -414,27 +377,4 @@ Executer::get_file_type() const
 		return CGI_SCRIPT;
 	else
 		return OTHER;
-
-
-	// if (extension == "py")
-	// 	return PYTHON;
-	// else if (extension == "php")
-	// 	return PHP;
-	// else
-	// 	return OTHER;
-}
-
-bool
-Executer::cgi_is_allowed(const std::map<std::string,std::string>& scripts,
-						e_FileType type)
-{
-	typedef std::map<std::string,std::string>::const_iterator	MapIt;
-
-	for (MapIt it = scripts.begin(); it != scripts.end(); ++it)
-	{
-		if ((type == PYTHON && it->first == "python") ||
-			(type == PHP && it->first == "php"))
-			return true;
-	}
-	return false;
 }

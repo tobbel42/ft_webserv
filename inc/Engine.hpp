@@ -55,7 +55,7 @@ private:
 	ServerArr						m_servers;
 	std::map<fd_type, std::time_t>	m_timers;
 
-	std::map<std::string, std::string> m_cookie_base;
+	StringMap						m_cookie_base;
 
 	/*Typedefs----------------------------------------------------------------*/
 

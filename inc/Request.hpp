@@ -50,7 +50,7 @@ public:
 	std::pair<bool, std::string>	get_header_entry(std::string) const;
 	const ByteArr&					get_body() const;
 	uint32_t						get_err_code() const;
-	const std::map<std::string, std::string>&	get_header() const;
+	const StringMap&				get_header() const;
 
 	/*Setter------------------------------------------------------------------*/
 
@@ -95,26 +95,26 @@ private:
 
 	/*Internal MemberVariabels------------------------------------------------*/
 
-	ByteArr		m_buffer;
-	size_t		m_offset;
-	e_req_state	m_state;
-	bool		m_done;
-	size_t		m_content_len;
+	ByteArr			m_buffer;
+	size_t			m_offset;
+	e_req_state		m_state;
+	bool			m_done;
+	size_t			m_content_len;
 
-	uint32_t	m_chunk_size;
-	bool		m_reading_chunk_size;
+	uint32_t		m_chunk_size;
+	bool			m_reading_chunk_size;
 
 	/*DataMemberVariabels-----------------------------------------------------*/
 
-	uint32_t							m_err_code;
-	std::string							m_method;
-	std::string							m_uri;
-	std::string							m_host;
-	uint32_t							m_expectedPort;
-	uint32_t							m_port;
-	std::string							m_target;
-	std::string							m_query;
-	std::string							m_http_ver;
-	std::map<std::string, std::string>	m_header; 
-	ByteArr								m_body;
+	uint32_t		m_err_code;
+	std::string		m_method;
+	std::string		m_uri;
+	std::string		m_host;
+	uint32_t		m_expectedPort;
+	uint32_t		m_port;
+	std::string		m_target;
+	std::string		m_query;
+	std::string		m_http_ver;
+	StringMap		m_header; 
+	ByteArr			m_body;
 };

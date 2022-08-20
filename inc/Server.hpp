@@ -40,16 +40,16 @@ public: // methods
 
 public: // attributes
 
-	StringArr							server_names;
-	std::string							root;
-	std::string							index;
-	std::string							error_pages;
-	uint32_t							ip_address;
-	std::vector<uint32_t>				ports;
-	StringArr							allowed_methods;
-	uint32_t							max_client_body_size;
+	StringArr				server_names;
+	std::string				root;
+	std::string				index;
+	std::string				error_pages;
+	uint32_t				ip_address;
+	std::vector<uint32_t>	ports;
+	StringArr				allowed_methods;
+	uint32_t				max_client_body_size;
 	// key = redirected file, value = redirection target
-	std::map<std::string,std::string>	redirections;
+	StringMap				redirections;
 
 	class Location;
 	std::vector<Location>	locations;
@@ -108,9 +108,9 @@ public: // subclass
 		std::string		index;
 		StringArr		allowed_methods;
 		// key = script identifier, value = script executable
-		std::map<std::string,std::string> scripts;
+		StringMap		scripts;
 		// key = redirected file, value = redirection target
-		std::map<std::string,std::string> redirections;
+		StringMap		redirections;
 		uint32_t		max_client_body_size;
 		bool			directory_listing_enabled;
 

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include <stdint.h>
 
 #include <climits>
@@ -48,13 +49,13 @@ class Server;
 typedef std::vector<std::string>			StringArr;
 typedef std::vector<Server>					ServerArr;
 typedef std::vector<char>					ByteArr;
+typedef std::map<std::string,std::string>	StringMap;
+typedef StringMap::const_iterator			StringMapIter;
 
 
 enum e_FileType
 {
 	HTML,
-	PHP,
-	PYTHON,
 	CGI_SCRIPT,
 	DIRECTORY,
 	OTHER

@@ -164,7 +164,7 @@ Connect::check_redirect()
 {
 	std::string parsed_target, redirection;
 
-	std::map<std::string, std::string>::const_iterator red_iter;
+	StringMapIter red_iter;
 
 	if (p_location)
 	{

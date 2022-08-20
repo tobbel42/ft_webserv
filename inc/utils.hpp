@@ -8,8 +8,12 @@
 
 #include "typedefs.hpp"
 
+#define RESET "\033[0m"
+#define BOLD "\033[1m"
+#define RED "\033[91m"
+
 #define PRINT(msg) (std::cout << msg << std::endl)
-#define EPRINT(msg) (std::cerr << msg << std::endl)
+#define EPRINT(msg) (std::cerr << RED << BOLD << msg << RESET << std::endl)
 
 
 namespace utils {

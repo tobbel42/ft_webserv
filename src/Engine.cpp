@@ -34,14 +34,31 @@ operator<<(std::ostream & out, s_pollfd const & in) {
 #endif
 
 /*Constructors----------------------------------------------------------------*/
-// ToDo: initialisation of all the member attributes
 
-Engine::Engine()
+
+Engine::Engine():
+
+#ifdef KQUEUE
+	m_kqueue(),
+	m_changes(),
+	m_events(),
+#else
+	m_polls(),
+#endif // KQUEUE
+
+	m_sockets(),
+	m_connects(),
+	m_servers(),
+	m_timers(),
+	m_cookie_base()
 {
 	#ifdef VERBOSE
 		std::cout << "Engine: Default Constructor called" << std::endl;
 	#endif
 }
+
+
+
 
 Engine::~Engine()
 {

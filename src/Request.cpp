@@ -9,13 +9,13 @@
 /*Constructors----------------------------------------------------------------*/
 
 Request::Request():
-m_offset(0),
-m_state(REQUEST_LINE),
-m_done(0),
-m_content_len(0),
-m_reading_chunk_size(true),
-m_err_code(0),
-m_expectedPort(80)
+	m_offset(0),
+	m_state(REQUEST_LINE),
+	m_done(0),
+	m_content_len(0),
+	m_reading_chunk_size(true),
+	m_err_code(0),
+	m_expectedPort(80)
 {
 	#ifdef VERBOSE
 		PRINT("Request: Constructor called");
@@ -23,13 +23,13 @@ m_expectedPort(80)
 }
 
 Request::Request(uint32_t expectedPort):
-m_offset(0),
-m_state(REQUEST_LINE),
-m_done(0),
-m_content_len(0),
-m_reading_chunk_size(true),
-m_err_code(0),
-m_expectedPort(expectedPort)
+	m_offset(0),
+	m_state(REQUEST_LINE),
+	m_done(0),
+	m_content_len(0),
+	m_reading_chunk_size(true),
+	m_err_code(0),
+	m_expectedPort(expectedPort)
 {
 	#ifdef VERBOSE
 		PRINT("Request: Constructor called");
