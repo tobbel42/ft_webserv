@@ -43,7 +43,7 @@ A guide on how to write custom configurations can be found [here](https://github
 
 
 The webserver supports: \
-    \t- The GET, PUT, POST and DELETE methods \
+    - The GET, PUT, POST and DELETE methods \
     - Displaying static websites \
     - Defining proxies in subdirectories of the server \
     - Executing CGI scripts based on certain extensions (e.g. .php for php-CGI) \
