@@ -39,11 +39,11 @@ or use a custom configuration file:
 The webserver listens to all its specified ip:port addresses at the same
 time by using [kqueue] on MACOS and [poll] on other operating systems for its I/O Multiplexing. \
 For the default configuration the server listens to ``127.0.0.1:8080`` and ``127.0.0.1:8081`` and is rooted at ``testServerDir``. \
-A guide on how to write custom configurations can be found [here](https://github.com/tobbel42/ft_webserv/blob/main/config/default.conf). \
+A guide on how to write custom configurations can be found [here](https://github.com/tobbel42/ft_webserv/blob/main/config/default.conf).
 
 
 The webserver supports: \
-    - The GET, PUT, POST and DELETE methods \
+    \t- The GET, PUT, POST and DELETE methods \
     - Displaying static websites \
     - Defining proxies in subdirectories of the server \
     - Executing CGI scripts based on certain extensions (e.g. .php for php-CGI) \
