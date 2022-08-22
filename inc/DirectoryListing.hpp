@@ -6,6 +6,11 @@
 
 #include "typedefs.hpp"
 
+/*
+The directory listing class creates a html table out of the entries
+inside the directory specified as dirpath.
+The entries current working directory and parent directory are removed
+*/
 class DirectoryListing
 {
 public: // methods
@@ -22,7 +27,6 @@ public: // methods
 
 
 private: // methods
-	DirectoryListing();
 
 	std::string	get_mod_date(const std::string& entry_name) const;
 	std::string	generate_table_row(const std::string& entry_name) const;
@@ -61,5 +65,8 @@ private: // subclass
 		DIR* p_dir;
 	};
 
+
+private:
+	DirectoryListing();
 };
 

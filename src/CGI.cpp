@@ -82,7 +82,7 @@ CGI::run(e_FileType file_type, const std::string& input,
 }
 
 bool
-CGI::prep_env() //toDo prep some env
+CGI::prep_env()
 {
 	if (m_req.get_header_entry("Content-length").first)
 		m_env["CONTENT_LENGTH"] = m_req.get_header_entry("Content-length").second;

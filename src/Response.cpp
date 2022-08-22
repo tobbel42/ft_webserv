@@ -370,7 +370,7 @@ Response::get_mime_type(const std::string& filename) const
 	}
 
 	MimeIter mime_type = s_mime_types.find(extension);
-	if (mime_type == s_mime_types.end()) // file extension is not in the list
+	if (mime_type == s_mime_types.end())
 		return DEFAULT_MIME_TYPE;
 
 	return mime_type->second;

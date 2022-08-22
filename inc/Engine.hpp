@@ -21,26 +21,31 @@ std::ostream	&operator<<(std::ostream & out, s_pollfd const & in);
 
 enum	Type { SOCKET, CONNECTION };
 
+/*
+The engine class is the heart of our project.
+It manages all sockets, the connections of all fds kqueue/poll
+made available and maps a server with matching host:port combination
+or server name to the connections
+*/
 class Engine
 {
-	/*Constructors------------------------------------------------------------*/
 public:
+	/*Constructors------------------------------------------------------------*/
 	Engine();
 	~Engine();
 
-	/*UserInterface-----------------------------------------------------------*/
 public:
+	/*UserInterface-----------------------------------------------------------*/
 
 	ServerArr&	get_servers();
 
-	//ToDo: ErrorHandling
 	bool		init_sockets();
 	bool		launch();
 
 
 private:
-
 	/*MemberVariabels---------------------------------------------------------*/
+
 	#ifdef KQUEUE
 	fd_type							m_kqueue;
 	std::vector<s_kevent>			m_changes;
@@ -57,6 +62,8 @@ private:
 
 	StringMap						m_cookie_base;
 
+
+private:
 	/*Typedefs----------------------------------------------------------------*/
 
 	#ifdef KQUEUE
@@ -69,6 +76,8 @@ private:
 	typedef	std::map<fd_type, Connect>::iterator		CnctIter;
 	typedef std::map<fd_type, std::time_t>::iterator	TimerIter;
 
+
+private:
 	/*InternalMemberFunctions-------------------------------------------------*/
 	#ifdef KQUEUE
 	void		set_kevent(fd_type fd, int16_t filter, uint16_t flag );
@@ -94,8 +103,8 @@ private:
 	void		check_for_timeout();
 
 
-	/*Debug-------------------------------------------------------------------*/
 private:
+	/*Debug-------------------------------------------------------------------*/
 
 	void		debug();
 
@@ -105,8 +114,8 @@ private:
 
 	bool		user_event();
 
+
 private:
 	Engine(const Engine &copy);
 	Engine	&operator=(const Engine &rhs);
-
 };

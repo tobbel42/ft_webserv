@@ -24,8 +24,6 @@ int main(int argc, char** argv, char**)
 			parser.assign_file(argv[1]);
 		parser.run();
 
-	//atm müssen die server vor den Sockets initialisiert werden, sonst segfault
-
 		if (e.init_sockets() == false)
 			return EXIT_FAILURE;
 		if (e.launch() == false)

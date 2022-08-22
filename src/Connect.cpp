@@ -27,27 +27,27 @@ Connect::operator=(const Connect& rhs)
 	#ifdef VERBOSE
 		PRINT("Connect: Assignation operator called");
 	#endif
-	m_fd = rhs.getFd();
-	m_ip = rhs.getIp();
-	m_port = rhs.getPort();
-	p_server = rhs.getServer();
+	p_cookie_base = rhs.p_cookie_base;
+	m_fd = rhs.get_fd();
+	m_ip = rhs.get_ip();
+	m_port = rhs.get_port();
+	p_server = rhs.get_server();
 	p_location = rhs.get_location();
-	m_action = rhs.getAction();
+	m_action = rhs.get_action();
 	m_status_code = rhs.m_status_code;
 	m_req = rhs.m_req;
 	m_res = rhs.m_res;
-	p_cookie_base = rhs.p_cookie_base;
 	return *this;
 }
 
 Connect::Connect(fd_type fd, uint32_t ip, uint32_t port, cookies * cookie_base):
+	p_cookie_base(cookie_base),
 	m_fd(fd),
 	m_ip(ip),
 	m_port(port),
 	p_server(nullptr),
 	m_action(READ),
-	m_req(port),
-	p_cookie_base(cookie_base)
+	m_req(port)
 {
 	#ifdef VERBOSE
 		PRINT("Connect: Constructor called");
@@ -55,22 +55,22 @@ Connect::Connect(fd_type fd, uint32_t ip, uint32_t port, cookies * cookie_base):
 }
 
 const Server*
-Connect::getServer() const { return p_server; }
+Connect::get_server() const { return p_server; }
 
 const Server::Location*
 Connect::get_location() const { return p_location; }
 
 uint32_t
-Connect::getIp() const { return m_ip; }
+Connect::get_ip() const { return m_ip; }
 
 uint32_t
-Connect::getPort() const { return m_port; }
+Connect::get_port() const { return m_port; }
 
 fd_type
-Connect::getFd() const { return m_fd; }
+Connect::get_fd() const { return m_fd; }
 
 e_action
-Connect::getAction() const { return m_action; }
+Connect::get_action() const { return m_action; }
 
 std::string
 Connect::get_hostname() const { return m_req.get_host(); }
@@ -90,7 +90,7 @@ Connect::set_status(int status_code) { m_status_code = status_code; }
 // 0 on not done yet
 //-1 on error
 int32_t
-Connect::readRequest(s_kevent & kevent)
+Connect::read_request(s_kevent & kevent)
 {
 	ByteArr buf;
 	int	len = ((READSIZE < kevent.data) ? READSIZE : kevent.data);
@@ -114,7 +114,7 @@ Connect::readRequest(s_kevent & kevent)
 #else
 
 int32_t
-Connect::readRequest(s_pollfd & poll)
+Connect::read_request(s_pollfd & poll)
 {
 	ByteArr buf;
 
@@ -142,7 +142,7 @@ Connect::readRequest(s_pollfd & poll)
 #ifdef KQUEUE
 
 int32_t
-Connect::writeResponse(s_kevent & kevent)
+Connect::write_response(s_kevent & kevent)
 {
 	m_res.generate();
 	return m_res.send(kevent);
@@ -151,7 +151,7 @@ Connect::writeResponse(s_kevent & kevent)
 #else
 
 int32_t
-Connect::writeResponse(s_pollfd & poll)
+Connect::write_response(s_pollfd & poll)
 {
 	m_res.generate();
 	return m_res.send(poll);
@@ -216,7 +216,7 @@ Connect::check_redirect()
 }
 
 void
-Connect::composeResponse()
+Connect::compose_response()
 {
 	PRINT("COMPOSING_REQUEST");
 	if (check_redirect())
@@ -296,7 +296,7 @@ Connect::find_dir(const std::string& name) const
 	{
 		size_t pos = name.find_last_of('/');
 		if (pos == std::string::npos)
-			return "/"; // is this appropriate?
+			return "/";
 		return name.substr(0, pos + 1);
 	}
 }

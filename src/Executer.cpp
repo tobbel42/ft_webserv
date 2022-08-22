@@ -165,7 +165,7 @@ Executer::server_method_execution()
 	else if (m_req.get_method() == "POST")
 	{
 		std::string content_type = m_req.get_header_entry("Content-Type").second;
-		if (content_type == "tex/plain")
+		if (content_type == "text/plain")
 			put_handler();
 		else
 			m_status_code = 404;

@@ -6,9 +6,9 @@
 #include "typedefs.hpp"
 
 /*
-//a Socket listens to an ip and port and accepts incomming connection
-//maybe ToDo: assign a default Server to the port, to make the assignment of 
-//incomming connections easier 
+The socket class is a wrapper for the required syscalls to
+establish connections through sockets.
+It creates and binds sockets and accepts connections to them
 */
 class Socket
 {

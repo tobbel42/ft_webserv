@@ -31,11 +31,6 @@ public: // methods
 
 private: // methods
 
-	ConfigParser();
-	ConfigParser(const ConfigParser&);
-
-	ConfigParser& operator=(const ConfigParser&);
-
 	std::string	get_next_word();
 	// gnw = get next word
 	std::string	gnw_protected(bool is_on_same_line = true);
@@ -67,4 +62,10 @@ private: // subclass
 	private:
 		std::string m_error_msg;
 	};
+
+
+private:
+	ConfigParser();
+	ConfigParser(const ConfigParser&);
+	ConfigParser& operator=(const ConfigParser&);
 };

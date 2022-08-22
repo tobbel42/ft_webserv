@@ -13,11 +13,15 @@ enum e_req_state
 	CHUNKED_BODY
 };
 
-//TODo WHat about empty header
+/*
+The request class parses the data read from a connection into a map of
+header entries and a body.
+Individual header entries and the body can then be accessed through
+their getters.
+It also detects malformed requests
 
-//Data class which parses the Requests and exposens the elements to the User
-//Detects Malformed requests
-//trivia: LWS(linearwhiteSpace) = (' ' or '\t' or "\r\n" followed by ' ' or '\t'
+trivia: LWS(linearwhiteSpace) = (' ' or '\t' or "\r\n" followed by ' ' or '\t'
+*/
 class Request
 {
 
@@ -55,8 +59,6 @@ public:
 	/*Setter------------------------------------------------------------------*/
 
 	void decrypt_cookie(std::string & cookie_value);
-	//todo implement
-	void substitute_default_target(const std::string &);
 
 
 private:

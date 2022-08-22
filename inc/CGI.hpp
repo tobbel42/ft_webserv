@@ -9,6 +9,12 @@
 #include "typedefs.hpp"
 #include "Request.hpp"
 
+/*
+The cgi (common gateway interface) class prepares the
+stdin, stdout and enviroment of scripts before launching them.
+Afterwards their output is read, parsed and passed to the
+executer class
+*/
 class CGI
 {
 public: // methods
@@ -26,8 +32,6 @@ public: // methods
 
 
 private: // methods
-	CGI();
-	CGI& operator=(const CGI& other);
 
 	class FileWrap;
 
@@ -83,4 +87,9 @@ private: // subclass
 
 		FILE* p_file;
 	};
+
+
+private:
+	CGI();
+	CGI& operator=(const CGI& other);
 };

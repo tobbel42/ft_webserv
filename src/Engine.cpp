@@ -213,13 +213,13 @@ Engine::find_server(const Connect& cnct)
 		// look for a matching ip:port combination
 		Server& server = m_servers[i];
 
-		if (cnct.getIp() == server.ip_address)
+		if (cnct.get_ip() == server.ip_address)
 		{
 			for (size_t j = 0; j < server.ports.size(); ++j)
 			{
 				uint32_t port = server.ports[j];
 
-				if (port == cnct.getPort())
+				if (port == cnct.get_port())
 				{
 					// the first one is the default server
 					if (default_server == nullptr)
@@ -300,7 +300,7 @@ Engine::drop_cnct(fd_type ident)
 	m_timers.erase(ident);
 	close(ident);
 	m_connects.erase(ident);
-	PRINT("DROP CCNCT");
+	PRINT("DROP CNCT");
 }
 
 #ifdef KQUEUE
@@ -323,10 +323,10 @@ Engine::connect_event(s_kevent & kevent)
 	if ((kevent.flags & EV_EOF) || (kevent.flags & EV_ERROR))
 		drop_cnct(kevent.ident);
 	//on read we read as many bytes, as in the kevent specified
-	else if (iter->second.getAction() == READ && (kevent.filter & EVFILT_READ))
+	else if (iter->second.get_action() == READ && (kevent.filter & EVFILT_READ))
 		connect_read(kevent, iter->second);
 	//On write 
-	else if (iter->second.getAction() == WRITE && (kevent.filter & EVFILT_READ))
+	else if (iter->second.get_action() == WRITE && (kevent.filter & EVFILT_READ))
 		connect_write(kevent, iter->second);
 }
 
@@ -337,8 +337,8 @@ Engine::connect_read(s_kevent & kevent, Connect & cnct)
 	int32_t	status_flag;
 
 	//reset connection timer
-	m_timers[cnct.getFd()] = std::time(nullptr);
-	status_flag = cnct.readRequest(kevent);
+	m_timers[cnct.get_fd()] = std::time(nullptr);
+	status_flag = cnct.read_request(kevent);
 	if (status_flag == RW_ERROR)
 		drop_cnct(kevent.ident);
 	else if (status_flag == RW_DONE)
@@ -348,11 +348,11 @@ Engine::connect_read(s_kevent & kevent, Connect & cnct)
 		m_changes.erase(std::find(m_changes.begin(), m_changes.end(), kevent.ident));
 
 		//remove the fd from the timerlist
-		m_timers.erase(cnct.getFd());
+		m_timers.erase(cnct.get_fd());
 
 		//assign a server, if not yet given
 		//(search for Hostname in Socket servers/ default server)
-		if (cnct.getServer() == nullptr)
+		if (cnct.get_server() == nullptr)
 			assign_server(cnct);
 
 		// look for a location block with a matching prefix string 
@@ -360,7 +360,7 @@ Engine::connect_read(s_kevent & kevent, Connect & cnct)
 		cnct.find_location();
 
 		//formulate the request (result or error)
-		cnct.composeResponse();
+		cnct.compose_response();
 
 		//adding the write event to the change vector
 		set_kevent(kevent.ident, EVFILT_WRITE, EV_ADD);
@@ -370,7 +370,7 @@ Engine::connect_read(s_kevent & kevent, Connect & cnct)
 void
 Engine::connect_write(s_kevent & kevent, Connect & cnct)
 {
-	int32_t status_flag = cnct.writeResponse(kevent);
+	int32_t status_flag = cnct.write_response(kevent);
 	//error handling
 	if (status_flag == RW_ERROR)
 		drop_cnct(kevent.ident);
@@ -400,19 +400,19 @@ Engine::connect_event(s_pollfd & poll)
 	//connection can have multible states
 
 	//on read we read as many bytes, as in the kevent specified
-	if (iter->second.getAction() == READ)
+	if (iter->second.get_action() == READ)
 		connect_read(poll, iter->second);
 	//On write 
-	else if (iter->second.getAction() == WRITE)
+	else if (iter->second.get_action() == WRITE)
 		connect_write(poll, iter->second);
 }
 void
 Engine::connect_read(s_pollfd & poll, Connect & cnct)
 {
 	int32_t status_flag;
-	m_timers[cnct.getFd()] = std::time(nullptr);
+	m_timers[cnct.get_fd()] = std::time(nullptr);
 
-	status_flag = cnct.readRequest(poll);
+	status_flag = cnct.read_request(poll);
 	if (status_flag == RW_ERROR)
 		drop_cnct(poll.fd);
 	else if (status_flag == RW_DONE)
@@ -420,24 +420,24 @@ Engine::connect_read(s_pollfd & poll, Connect & cnct)
 		poll.events = POLLOUT;
 		//remove the fd from the timerlist
 
-		m_timers.erase(cnct.getFd());
+		m_timers.erase(cnct.get_fd());
 		//assign a server, if not yet given
 		//(search for Hostname in Socket servers/ default server)
-		if (cnct.getServer() == nullptr)
+		if (cnct.get_server() == nullptr)
 			assign_server(cnct);
 
 		// look for a location block with a matching prefix string 
 		// in the server
 		cnct.find_location();
 		//formulate the request (result or error)
-		cnct.composeResponse();
+		cnct.compose_response();
 	}
 
 }
 void
 Engine::connect_write(s_pollfd & poll, Connect & cnct)
 {
-		int32_t status_flag = cnct.writeResponse(poll);
+		int32_t status_flag = cnct.write_response(poll);
 
 		if (status_flag == RW_ERROR)
 			drop_cnct(poll.fd);
@@ -448,7 +448,8 @@ Engine::connect_write(s_pollfd & poll, Connect & cnct)
 #endif // KQUEUE
 
 void
-Engine::check_for_timeout() {
+Engine::check_for_timeout()
+{
 	std::time_t	time = std::time(nullptr);
 	TimerIter 	i = m_timers.begin();
 	fd_type 	fd;
@@ -490,7 +491,8 @@ Engine::debug()
 
 
 void
-Engine::print_start_msg() {
+Engine::print_start_msg()
+{
 	srand(std::time(NULL));
 	int i = rand() % 255;
 	PRINT("\033[38;5;" << i 
@@ -526,7 +528,8 @@ Engine::print_start_msg() {
 /*ControlStuff---------------------------------------------------------------*/
 
 bool
-Engine::user_event() {
+Engine::user_event()
+{
 	std::string user_input;
 	std::getline(std::cin, user_input);
 	if (user_input == "exit")
@@ -642,9 +645,9 @@ Engine::launch()
 		{
 			for (size_t i = 0; i < m_polls.size(); ++i)
 			{
-				if (m_polls[i].revents & 0x0008 ||
-					m_polls[i].revents & 0x0010 ||
-					m_polls[i].revents & 0x0020)
+				if (m_polls[i].revents & POLLERR ||
+					m_polls[i].revents & POLLHUP ||
+					m_polls[i].revents & POLLNVAL)
 				{
 					close(m_polls[i].fd);
 					m_polls.erase(std::find(m_polls.begin(), m_polls.end(), m_polls[i].fd));

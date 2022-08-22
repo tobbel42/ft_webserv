@@ -610,10 +610,3 @@ Request::decrypt_cookie(std::string & cookie_value)
 	m_query += "cookie=true&";
 	m_query += cookie_value;
 }
-
-void
-Request::substitute_default_target(const std::string & serverDefault)
-{
-	if (m_target == "" || m_target == "/")
-		m_target = serverDefault;
-}

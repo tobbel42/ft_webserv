@@ -40,7 +40,6 @@
 #define UINT32_MAX 0xFFFFFFFF
 #endif
 
-//#define PYTHON_PATH "./IntraTesterDirectory/cgi_tester"
 
 typedef	int	fd_type;
 
@@ -71,7 +70,7 @@ struct	s_kevent: public kevent
 	}
 /*
 inherited from struct kevent:
-    uintptr_t ident;	     identifier for this event
+    uintptr_t ident;	     file descriptor
     short     filter;	     filter for event
     u_short   flags;	     action flags for kqueue
     u_int     fflags;	     filter flag value
